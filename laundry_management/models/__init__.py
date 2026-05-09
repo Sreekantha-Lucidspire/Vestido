@@ -1,3 +1,4 @@
+from . import laundry_service_type
 from . import laundry_premium
 from . import laundry_product
 from . import laundry_pricing

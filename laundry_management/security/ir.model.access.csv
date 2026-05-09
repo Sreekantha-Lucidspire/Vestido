@@ -18,5 +18,8 @@ access_laundry_tag_staff,laundry.tag.staff,model_laundry_tag,laundry_management.
 access_laundry_premium_manager,laundry.premium.manager,model_laundry_premium,laundry_management.group_laundry_manager,1,1,1,1
 access_laundry_premium_staff,laundry.premium.staff,model_laundry_premium,laundry_management.group_laundry_staff,1,1,1,0
 
+access_laundry_service_type_manager,laundry.service_type.manager,model_laundry_service_type,laundry_management.group_laundry_manager,1,1,1,1
+access_laundry_service_type_staff,laundry.service_type.staff,model_laundry_service_type,laundry_management.group_laundry_staff,1,1,1,0
+
 access_laundry_dashboard_manager,laundry.dashboard.manager,model_laundry_dashboard,laundry_management.group_laundry_manager,1,1,1,1
 access_laundry_dashboard_staff,laundry.dashboard.staff,model_laundry_dashboard,laundry_management.group_laundry_staff,1,1,1,1

@@ -12,6 +12,8 @@
 	    'data/ir_sequence.xml',
 	    'report/laundry_tag_report.xml',
     	'report/laundry_tag_report_action.xml',
+    	'views/laundry_service_type_views.xml',
+    	'data/data.xml',
     	'views/laundry_dashboard_views.xml',
     	'views/laundry_premium_views.xml',
     	'views/laundry_tag_views.xml',

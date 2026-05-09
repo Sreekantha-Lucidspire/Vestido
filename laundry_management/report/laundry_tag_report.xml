@@ -109,11 +109,9 @@
                     <!-- <div style="font-weight:bold; font-size:32px;">
                         <t t-esc="tag.order_id.name"/>
                     </div> -->
-                    <t t-set="service_dict" t-value="dict(tag.order_line_id._fields['service_type'].selection)"/>
-
                     <div style="font-weight:bold; font-size:32px;">
                         <t t-esc="tag.name"/> -
-                        <t t-esc="service_dict.get(tag.order_line_id.service_type)"/>
+                        <t t-esc="tag.order_line_id.service_type_id.name"/>
                     </div>
 
                     <!-- Customer -->
@@ -287,7 +285,7 @@
                     <t t-esc="l.product_id.name"/>
                 </div>
                 <div style="font-size:9px; color:#333;">
-                    <t t-esc="dict(l._fields['service_type'].selection).get(l.service_type)"/>
+                    <t t-esc="l.service_type_id.name"/>
                     <t t-if="l.premium_id">
                         <span> | </span>
                         <t t-esc="l.premium_id.name"/>
@@ -459,7 +457,7 @@
                                     </div>
 
                                 <div style="font-size:9px; color:#333;">
-                                    <t t-esc="dict(l._fields['service_type'].selection).get(l.service_type)"/>
+                                    <t t-esc="l.service_type_id.name"/>
                                     <t t-if="l.premium_id">
                                         <span> | </span>
                                              <t t-esc="l.premium_id.name"/> 
@@ -743,7 +741,7 @@
                                     </div>
 
                                 <div style="font-size:9px; color:#333;">
-                                    <t t-esc="dict(l._fields['service_type'].selection).get(l.service_type)"/>
+                                    <t t-esc="l.service_type_id.name"/>
                                     <t t-if="l.premium_id">
                                         <span> | </span>
                                              <t t-esc="l.premium_id.name"/> 
@@ -1027,7 +1025,7 @@
                                     </div>
 
                                 <div style="font-size:9px; color:#333;">
-                                    <t t-esc="dict(l._fields['service_type'].selection).get(l.service_type)"/>
+                                    <t t-esc="l.service_type_id.name"/>
                                     <t t-if="l.premium_id">
                                         <span> | </span>
                                              <t t-esc="l.premium_id.name"/> 
@@ -1319,7 +1317,7 @@
                                     </div>
 
                                 <div style="font-size:9px; color:#333;">
-                                    <t t-esc="dict(l._fields['service_type'].selection).get(l.service_type)"/>
+                                    <t t-esc="l.service_type_id.name"/>
                                     <t t-if="l.premium_id">
                                         <span> | </span>
                                              <t t-esc="l.premium_id.name"/> 

@@ -6,12 +6,7 @@ class LaundryPricing(models.Model):
 
     product_id = fields.Many2one('laundry.product', required=True)
     name = fields.Char(string="Name",compute="_update_name")
-    service_type = fields.Selection([
-        ('iron', 'Steam Iron'),
-        ('wash', 'Wash & Fold'),
-        ('wash_iron', 'Wash & Iron'),
-        ('dry_clean', 'Dry Cleaning')
-    ], required=True)
+    service_type_id = fields.Many2one('laundry.service.type',string="Service Type",required=True)
 
     pricing_type = fields.Selection([
         ('per_item', 'Per Item'),
@@ -20,7 +15,7 @@ class LaundryPricing(models.Model):
 
     price = fields.Float(required=True)
 
-    @api.depends('product_id', 'price', 'service_type')
+    @api.depends('product_id', 'price', 'service_type_id')
     def _update_name(self):
         for line in self:
             if line.product_id and line.price:

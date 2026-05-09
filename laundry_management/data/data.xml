@@ -1,0 +1,27 @@
+<odoo>
+	<data noupdate="1">
+		<record id="service_wash" model="laundry.service.type">
+		    <field name="name">Wash &amp; Fold</field>
+		    <field name="code">wash</field>
+		    <field name="operation_type">wash</field>
+		</record>
+
+		<record id="service_iron" model="laundry.service.type">
+		    <field name="name">Steam Iron</field>
+		    <field name="code">iron</field>
+		    <field name="operation_type">iron</field>
+		</record>
+
+		<record id="service_wash_iron" model="laundry.service.type">
+		    <field name="name">Wash &amp; Iron</field>
+		    <field name="code">wash_iron</field>
+		    <field name="operation_type">wash_iron</field>
+		</record>
+
+		<record id="service_dry_cleaning" model="laundry.service.type">
+		    <field name="name">Dry Cleaning</field>
+		    <field name="code">dry_clean</field>
+		    <field name="operation_type">dry_clean</field>
+		</record>
+	</data>
+</odoo>

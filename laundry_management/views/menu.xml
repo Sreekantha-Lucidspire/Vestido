@@ -35,13 +35,9 @@
     <menuitem id="laundry_configuration" name="Configuration" parent="menu_laundry_root">
       <menuitem id="menu_laundry_pricing" name="Pricing" action="action_laundry_pricing"/>
       <menuitem id="menu_laundry_premium" name="Premium Pricing" action="action_laundry_premium"/>
+      <menuitem id="menu_laundry_service_type" name="Service Types" action="action_laundry_service_type"/>
+      <menuitem id="menu_laundry_tags" name="Tags" action="action_laundry_tag" groups="base.group_no_one"/>
     </menuitem>
 
-    <menuitem id="menu_laundry_tags"
-          name="Tags"
-          parent="menu_laundry_root"
-          action="action_laundry_tag" groups="base.group_no_one" />
-
-    
 
 </odoo>

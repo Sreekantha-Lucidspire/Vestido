@@ -19,6 +19,13 @@ class LaundryOrder(models.Model):
         default=lambda self: self.env.company,
         required=True
     )
+    user_id = fields.Many2one(
+        'res.users',
+        string="Responsible",
+        default=lambda self: self.env.user,
+        tracking=True
+    )
+    active = fields.Boolean(default=True)
     discount = fields.Monetary(string="Discount")
     grand_total = fields.Monetary(
         string="Grand Total",
@@ -96,16 +103,19 @@ class LaundryOrder(models.Model):
             rec.currency_id = rec.company_id.currency_id
 
 
-    @api.depends('order_line_ids.service_type')
+    @api.depends('order_line_ids.service_type_id')
     def _compute_service_flags(self):
         for rec in self:
             has_wash = False
             has_iron = False
 
             for line in rec.order_line_ids:
-                if line.service_type in ['wash', 'wash_iron']:
+                op = line.service_type_id.operation_type
+
+                if op in ['wash', 'wash_iron', 'dry_clean']:
                     has_wash = True
-                if line.service_type in ['iron', 'wash_iron']:
+
+                if op in ['iron', 'wash_iron']:
                     has_iron = True
 
             rec.has_wash = has_wash
@@ -255,12 +265,12 @@ class LaundryOrder(models.Model):
         for order in orders:
             for line in order.order_line_ids:
 
-                key = (line.product_id.id, line.service_type)
+                key = (line.product_id.id, line.service_type_id.id)
 
                 if key not in result:
                     result[key] = {
                         'product_id': line.product_id.id,
-                        'service_type': line.service_type,
+                        'service_type_id': line.service_type_id.id,
                         'pending': 0,
                         'progress': 0,
                         'done': 0,
@@ -280,36 +290,47 @@ class LaundryOrder(models.Model):
         return list(result.values())
 
 
-    def _get_or_create_product(self, laundry_product, service_type):
+    def _get_or_create_product(self,laundry_product,service_type_id):
 
         Product = self.env['product.product']
 
-        # 🔹 Try existing
+        # 🔹 Unique product code
+        default_code = (
+            f"LAUNDRY_"
+            f"{laundry_product.id}_"
+            f"{service_type_id.id}"
+        )
+
+        # 🔹 Try existing product
         product = Product.search([
-            ('name', '=', laundry_product.name),
-            ('type', '=', 'service')
+            ('default_code', '=', default_code)
         ], limit=1)
 
         if product:
             return product
 
-        # 🔹 Validate account
-        if not laundry_product.account_id:
+        # 🔹 Validate income account
+        account = (service_type_id.income_account_id)
+
+        if not account:
             raise ValidationError(
-                f"Please configure income account for {laundry_product.name}"
+                f"Please configure income account "
+                f"for service '{service_type_id.name}'"
             )
+
+        # 🔹 Product Name
+        product_name = (f"{laundry_product.name}")
 
         # 🔹 Create product
         product = Product.create({
-            'name': laundry_product.name,
+            'name': product_name,
             'type': 'service',
-            'default_code': f"LAUNDRY_{laundry_product.id}",
+            'default_code': default_code,
             'list_price': 0.0,
-            'property_account_income_id': laundry_product.account_id.id,
+            'property_account_income_id': account.id,
         })
 
         return product
-
 
     def action_create_invoice(self):
         for rec in self:
@@ -333,22 +354,21 @@ class LaundryOrder(models.Model):
                 # 🔹 Get or create product dynamically
                 product = self._get_or_create_product(
                     line.product_id,
-                    line.service_type
+                    line.service_type_id
                 )
 
                 # 🔹 Quantity logic
                 qty = line.qty if line.pricing_type == 'per_item' else line.weight
 
                 # 🔹 Auto naming with service type
-                service_label = dict(line._fields['service_type'].selection).get(line.service_type)
 
                 invoice_lines.append((0, 0, {
                     'product_id': product.id,
-                    'name': f"{line.product_id.name} ({service_label})",
+                    'name': f"{line.product_id.name}",
                     'quantity': qty,
                     'price_unit': line.unit_price * line.premium_multiplier,
-                    'account_id': line.product_id.account_id.id,
-                    'service_type': line.service_type,
+                    'account_id': line.service_type_id.income_account_id.id,
+                    'service_type_id': line.service_type_id.id,
                 }))
 
             # 🔹 Create Invoice
@@ -374,12 +394,8 @@ class LaundryOrderLine(models.Model):
 
     product_id = fields.Many2one('laundry.product', required=True)
 
-    service_type = fields.Selection([
-        ('iron', 'Steam Iron'),
-        ('wash', 'Wash & Fold'),
-        ('wash_iron', 'Wash & Iron'),
-        ('dry_clean', 'Dry Cleaning'),
-    ], required=True)
+    service_type_id = fields.Many2one('laundry.service.type',required=True)
+    pricing_id = fields.Many2one('laundry.pricing',readonly=True)
 
     pricing_type = fields.Selection([
         ('per_item', 'Per Item'),
@@ -397,7 +413,7 @@ class LaundryOrderLine(models.Model):
 
     unit_price = fields.Monetary(string="Unit Price",currency_field='currency_id')
     premium_id = fields.Many2one('laundry.premium',string="Premium Type",default=lambda self: self.env['laundry.premium'].search([('sequence', '=', 0)], limit=1))
-    premium_multiplier = fields.Float(related='premium_id.multiplier',store=True)
+    premium_multiplier = fields.Float(related='premium_id.multiplier')
 
     tax_ids = fields.Many2many(
         'account.tax',
@@ -409,49 +425,74 @@ class LaundryOrderLine(models.Model):
     price_tax = fields.Monetary(compute='_compute_tax', store=True,currency_field='currency_id')
     price_total = fields.Monetary(compute='_compute_tax', store=True,currency_field='currency_id')
 
-    @api.depends('qty', 'weight', 'unit_price', 'tax_ids', 'order_id.tax_type')
+    @api.depends('qty','weight','unit_price','tax_ids','order_id.tax_type','pricing_type','premium_id','premium_id.multiplier')
     def _compute_tax(self):
+
         for line in self:
 
-            qty = line.qty if line.pricing_type == 'per_item' else line.weight
+            # 🔹 Quantity logic
+            qty = (
+                line.qty
+                if line.pricing_type == 'per_item'
+                else line.weight
+            )
 
+            # 🔹 Base price
+            price = line.unit_price
+
+            # 🔹 Apply premium multiplier
+            if line.premium_id:
+                price *= line.premium_id.multiplier
+
+            # 🔹 No taxes
             if not line.tax_ids:
-                line.subtotal = qty * line.unit_price
+
+                line.subtotal = qty * price
                 line.price_tax = 0.0
                 line.price_total = line.subtotal
+
                 continue
 
-            # 🔥 KEY PART
+            # 🔹 Tax calculation
             taxes = line.tax_ids.with_context(
-                force_price_include=(line.order_id.tax_type == 'inclusive')
+                force_price_include=(
+                    line.order_id.tax_type == 'inclusive'
+                )
             ).compute_all(
-                line.unit_price,
+                price,
                 currency=line.order_id.currency_id,
                 quantity=qty,
                 product=None,
                 partner=line.order_id.partner_id
             )
 
+            # 🔹 Final values
             line.subtotal = taxes['total_excluded']
-            line.price_tax = taxes['total_included'] - taxes['total_excluded']
+
+            line.price_tax = (
+                taxes['total_included']
+                - taxes['total_excluded']
+            )
+
             line.price_total = taxes['total_included']
-    @api.onchange('product_id','service_type')
+
+    @api.onchange('product_id','service_type_id')
     def fetch_pricing_type(self):
         for line in self:
-            if line.product_id and line.service_type:
+            if line.product_id and line.service_type_id:
                 pricing = self.env['laundry.pricing'].search([
                 ('product_id', '=', line.product_id.id),
-                ('service_type', '=', line.service_type)], limit=1)
+                ('service_type_id', '=', line.service_type_id)], limit=1)
                 if pricing:
                     line.pricing_type = pricing.pricing_type
 
     # 🔹 Auto price fetch
-    @api.onchange('product_id', 'service_type', 'pricing_type', 'premium_id')
+    @api.onchange('product_id', 'service_type_id', 'pricing_type', 'premium_id')
     def _onchange_price(self):
         for rec in self:
             pricing = self.env['laundry.pricing'].search([
                 ('product_id', '=', rec.product_id.id),
-                ('service_type', '=', rec.service_type),
+                ('service_type_id', '=', rec.service_type_id),
                 ('pricing_type', '=', rec.pricing_type)
             ], limit=1)
 
@@ -481,12 +522,7 @@ class LaundryDashboard(models.TransientModel):
     _description = 'Laundry Dashboard'
 
     product_id = fields.Many2one('laundry.product', string="Product")
-    service_type = fields.Selection([
-        ('iron', 'Steam Iron'),
-        ('wash', 'Wash & Fold'),
-        ('wash_iron', 'Wash & Iron'),
-        ('dry_clean', 'Dry Cleaning'),
-    ])
+    service_type_id = fields.Many2one('laundry.service.type',string="Service Type")
     pending = fields.Integer()
     progress = fields.Integer()
     done = fields.Integer()
@@ -506,4 +542,3 @@ class LaundryDashboard(models.TransientModel):
             'view_mode': 'kanban,list',
             'target': 'current',
         }
-

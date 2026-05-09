@@ -10,9 +10,8 @@ class LaundryProduct(models.Model):
         ('household', 'Household')
     ], default='wearable')
     active = fields.Boolean(default=True)
-
-    account_id = fields.Many2one(
-	    'account.account',
-	    string="Income Account",
-	    domain="[('account_type','=','income')]"
-	)
+    company_id = fields.Many2one(
+        'res.company',
+        default=lambda self: self.env.company,
+        required=True
+    )

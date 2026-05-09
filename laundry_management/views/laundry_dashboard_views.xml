@@ -27,7 +27,7 @@
         <field name="arch" type="xml">
             <list create="0" delete="0">
                 <field name="product_id"/>
-                <field name="service_type"/>
+                <field name="service_type_id"/>
                 <field name="pending"/>
                 <field name="progress"/>
                 <field name="done"/>
@@ -46,7 +46,7 @@
 
             <kanban create="0" edit="0">
                 <field name="product_id"/>
-                <field name="service_type"/>
+                <field name="service_type_id"/>
                 <field name="pending"/>
                 <field name="progress"/>
                 <field name="done"/>
@@ -62,7 +62,7 @@
 
                             <!-- SERVICE -->
                             <div class="text-center text-muted small mb-2">
-                                <field name="service_type"/>
+                                <field name="service_type_id"/>
                             </div>
 
                             <!-- STATS -->

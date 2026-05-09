@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <list>
                 <field name="product_id"/>
-                <field name="service_type"/>
+                <field name="service_type_id"/>
                 <field name="pricing_type"/>
                 <field name="price"/>
             </list>
@@ -23,7 +23,7 @@
                 <sheet>
                     <group>
                         <field name="product_id"/>
-                        <field name="service_type"/>
+                        <field name="service_type_id"/>
                         <field name="pricing_type"/>
                         <field name="price"/>
                     </group>
