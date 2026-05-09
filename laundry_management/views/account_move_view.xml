@@ -1,0 +1,20 @@
+<odoo>
+    <record id="view_move_form_inherit_pickup_discount" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.pickup.discount</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Add inside invoice header section -->
+            <xpath expr="//div[@name='journal_div']" position="after">
+
+                <group string="Extra Information">
+                    <field name="pickup_delivery"/>
+                    <field name="invoice_discount"/>
+                </group>
+
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

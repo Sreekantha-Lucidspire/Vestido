@@ -1,0 +1,269 @@
+<odoo>
+
+    <!-- list -->
+    <record id="view_laundry_order_list" model="ir.ui.view">
+        <field name="name">laundry.order.list</field>
+        <field name="model">laundry.order</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="order_date"/>
+                <field name="delivery_date"/>
+                <field name="total_weight"/>
+                <field name="amount_total"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- FORM -->
+    <record id="view_laundry_order_form" model="ir.ui.view">
+        <field name="name">laundry.order.form</field>
+        <field name="model">laundry.order</field>
+        <field name="arch" type="xml">
+            <form string="Laundry Order">
+
+                <!-- HEADER -->
+                <header>
+
+                    <button name="action_received"
+                            string="Receive"
+                            type="object"
+                            invisible="state != 'draft'"
+                            class="btn-primary"/>
+
+                    <button name="action_washing"
+                            string="Start Washing"
+                            type="object"
+                            invisible="state != 'received' or not has_wash"/>
+
+                    <button name="action_ironing"
+                            string="Start Ironing"
+                            type="object"
+                            invisible="(has_wash and state != 'washing') or (not has_wash and state != 'received') or not has_iron"/>
+
+                    <button name="action_ready"
+                            string="Ready to Deliver"
+                            type="object"
+                            invisible="(has_wash and has_iron and state != 'ironing') or (has_wash and not has_iron and state != 'washing') or (has_iron and not has_wash and state != 'ironing')"/>
+
+                    <button name="action_delivered"
+                            string="Deliver"
+                            type="object"
+                            invisible="state != 'ready'"
+                            class="btn-success"/>
+
+                    <button name="action_generate_tags"
+                            string="Generate Tags"
+                            type="object"
+                            class="btn-secondary" invisible="tag_ids"/>
+
+                    
+                    <button name="action_print_tags" string="Print Tags" type="object" class="btn-primary" invisible="not tag_ids"/>
+                    <button name="action_print_receipt_80mm" string="Print Receipt" type="object" class="btn-primary" invisible="state == 'draft'"/>
+                    <button name="action_regenerate_tags"
+                            string="Re-Generate Tags"
+                            type="object"
+                            class="btn-secondary" invisible="not tag_ids or state in ('ready','delivered')"/>
+                    <button name="%(laundry_management.action_laundry_quotation)d"
+                            string="Proforma Invoice Ver-1"
+                            type="action"
+                            class="btn-info"/>
+
+                    <button name="action_print_invoice_bill" 
+                            string="Tax Invoice Ver-1" 
+                            type="object" 
+                            class="btn-primary" 
+                            invisible="state not in ('ready', 'delivered')"/>
+                    <button name="%(laundry_management.action_laundry_quotation)d"
+                            string="Proforma Invoice Ver-2"
+                            type="action"
+                            class="btn-info"/>
+
+                    <button name="action_print_invoice_bill" 
+                            string="Tax Invoice Ver-2" 
+                            type="object" 
+                            class="btn-primary" 
+                            invisible="state not in ('ready', 'delivered')"/>
+
+
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,received,ready,delivered" options="{'clickable': '1'}"/>
+
+                </header>
+
+                <sheet>
+
+                    <!-- SMART BUTTON -->
+                    <div class="oe_button_box" name="button_box">
+
+                        <button name="%(account.action_move_out_invoice_type)d"
+                                type="action"
+                                class="oe_stat_button"
+                                icon="fa-file-text-o"
+                                invisible="not invoice_id">
+                            <field name="invoice_id" widget="statinfo" string="Invoice"/>
+                        </button>
+
+                        <button name="action_view_tags"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-tags" invisible="not tag_ids">
+                            <field name="tag_count" widget="statinfo" string="Tags"/>
+                        </button>
+
+                    </div>
+
+                    <!-- TOP SECTION -->
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="partner_id"
+                               widget="res_partner_many2one"
+                               context="{'res_partner_search_mode': 'customer', 'show_address': 1, 'show_vat': True}"
+                               placeholder="Type to find a customer..." readonly="state not in ['draft']" options="{'no_open': True, 'no_edit':True, 'no_create': True}"/>
+                            
+                               
+                        </group>
+
+
+                        <group>
+                            <field name="order_date"/>
+                            <field name="delivery_date"/>
+                            <field name="has_wash" invisible="1"/>
+                            <field name="has_iron" invisible="1"/>
+                            <field name="tax_type"/>
+                            <field name="tag_type"/>
+                            <field name="company_id" invisible="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <div class="mb8">
+                                <div class="d-flex gap-3">
+                                    
+                                    <div class="d-flex flex-column flex-grow-1">
+                                    
+                                    
+                                        <div class="d-flex align-items-baseline w-md-50">
+                                            <i class="fa fa-fw me-1 fa-envelope text-primary" title="Email"/>
+                                            <field name="email" class="w-100" widget="email" placeholder="Email"/>
+                                        </div>
+                                        <div class="d-flex align-items-baseline w-md-50">
+                                            <i class="fa fa-fw me-1 fa-phone text-primary" title="Phone"/>
+                                            <field name="phone" class="w-100" widget="phone" placeholder="Phone"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </group>
+                    </group>
+                    
+
+                    <!-- NOTEBOOK -->
+                    <notebook>
+
+                        <!-- ORDER LINES -->
+                        <page string="Items">
+                            <field name="order_line_ids">
+                                <list editable="bottom">
+                                    <field name="premium_id"/>
+                                    <field name="product_id"/>
+                                    <field name="service_type"/>
+                                    <field name="pricing_type"/>
+                                    <field name="qty" sum="Total Qty"/>
+                                    <field name="currency_id" optional="hide"/>
+                                    <field name="premium_multiplier" optional="hide"/>
+                                    <field name="weight" sum="Total Weight"  optional="hide"/>
+                                    <field name="unit_price" widget="monetary"/>
+                                    <field name="tax_ids" widget="many2many_tags"/>
+                                    <field name="subtotal" sum="Total Amount" widget="monetary" optional="show"/>
+                                    <field name="price_tax" widget="monetary" optional="show"/>
+                                    <field name="price_total" widget="monetary"/>
+                                    
+                                </list>
+                            </field>
+                        </page>
+
+
+                    </notebook>
+                    <group>
+                          <field name="remarks" placeholder="Enter any remarks here..."/>
+                    </group>
+
+                    <group class="oe_subtotal_footer oe_right">
+                        <field name="total_weight" readonly="1" invisible="1"/>
+
+                        <field name="currency_id" invisible="1"/>
+
+                      
+                            <field name="amount_untaxed" widget="monetary"/>
+                            <field name="amount_tax" widget="monetary"/>
+                            <field name="amount_total" widget="monetary"/>
+                            <field name="discount" widget="monetary"
+                               options="{'currency_field': 'currency_id'}"/>
+
+                            <field name="grand_total"
+                               string="Grand Total"
+                               widget="monetary"
+                               options="{'currency_field': 'currency_id'}"
+                               readonly="1"/>
+
+                            
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_laundry_order_kanban" model="ir.ui.view">
+        <field name="name">laundry.order.kanban</field>
+        <field name="model">laundry.order</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state">
+                
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="amount_total"/>
+                <field name="state"/>
+
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card p-2">
+
+                            <div class="fw-bold">
+                                <field name="name"/>
+                            </div>
+
+                            <div>
+                                <field name="partner_id"/>
+                            </div>
+
+                            <div>
+                                <strong>₹ </strong>
+                                <field name="amount_total"/>
+                            </div>
+
+                            <div>
+                                <span class="badge bg-primary">
+                                    <field name="state"/>
+                                </span>
+                            </div>
+
+                        </div>
+                    </t>
+                </templates>
+
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ACTION -->
+    <record id="action_laundry_order" model="ir.actions.act_window">
+        <field name="name">Laundry Orders</field>
+        <field name="res_model">laundry.order</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+
+</odoo>

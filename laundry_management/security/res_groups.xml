@@ -1,0 +1,13 @@
+<odoo>
+
+    <!-- Manager -->
+    <record id="group_laundry_manager" model="res.groups">
+        <field name="name">Laundry Manager</field>
+    </record>
+
+    <!-- Staff -->
+    <record id="group_laundry_staff" model="res.groups">
+        <field name="name">Laundry Staff</field>
+    </record>
+
+</odoo>

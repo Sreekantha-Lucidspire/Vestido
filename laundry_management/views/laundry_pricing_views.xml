@@ -1,0 +1,42 @@
+<odoo>
+
+    <!-- list -->
+    <record id="view_laundry_pricing_list" model="ir.ui.view">
+        <field name="name">laundry.pricing.list</field>
+        <field name="model">laundry.pricing</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="product_id"/>
+                <field name="service_type"/>
+                <field name="pricing_type"/>
+                <field name="price"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- FORM -->
+    <record id="view_laundry_pricing_form" model="ir.ui.view">
+        <field name="name">laundry.pricing.form</field>
+        <field name="model">laundry.pricing</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="product_id"/>
+                        <field name="service_type"/>
+                        <field name="pricing_type"/>
+                        <field name="price"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ACTION -->
+    <record id="action_laundry_pricing" model="ir.actions.act_window">
+        <field name="name">Pricing</field>
+        <field name="res_model">laundry.pricing</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
