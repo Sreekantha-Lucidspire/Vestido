@@ -35,9 +35,8 @@ class LaundryOrder(models.Model):
     document_ids = fields.One2many(
         'laundry.order.document',
         'order_id',
-        string="Documents"
+        string="Images"
     )
-
 
     order_line_ids = fields.One2many(
         'laundry.order.line', 'order_id')
@@ -549,7 +548,7 @@ class LaundryDashboard(models.TransientModel):
         }
 class LaundryOrderDocument(models.Model):
     _name = 'laundry.order.document'
-    _description = 'Laundry Order Documents'
+    _description = 'Laundry Order Image'
 
     order_id = fields.Many2one(
         'laundry.order',
@@ -557,7 +556,7 @@ class LaundryOrderDocument(models.Model):
         ondelete='cascade'
     )
 
-    name = fields.Char(string="Document Name")
+    name = fields.Char(string="Image Name")
 
     file = fields.Binary(
         string="Upload File",
