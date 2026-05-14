@@ -23,3 +23,5 @@ access_laundry_service_type_staff,laundry.service_type.staff,model_laundry_servi
 
 access_laundry_dashboard_manager,laundry.dashboard.manager,model_laundry_dashboard,laundry_management.group_laundry_manager,1,1,1,1
 access_laundry_dashboard_staff,laundry.dashboard.staff,model_laundry_dashboard,laundry_management.group_laundry_staff,1,1,1,1
+
+access_laundry_order_document_user,laundry.order.document,model_laundry_order_document,base.group_user,1,1,1,1

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_invoice_document_inherit_laundry"
+              inherit_id="account.report_invoice_document">
+
+        <!-- Thermal Printer Style -->
+        <xpath expr="//div[@class='page mb-4']" position="attributes">
+            <attribute name="style">
+                width:80mm !important;
+                font-size:11px;
+                font-family:Arial,sans-serif;
+            </attribute>
+        </xpath>
+
+        <!-- Add Custom Dates -->
+        <xpath expr="//div[@id='informations']" position="inside">
+
+            <div class="col" t-if="'order_date' in o._fields and o.order_date">
+                <strong>Received Date</strong>
+                <div>
+                    <span t-field="o.order_date"
+                          t-options="{'format': 'dd-MM-yyyy'}"/>
+                </div>
+            </div>
+
+            <div class="col" t-if="'delivery_date' in o._fields and o.delivery_date">
+                <strong>Delivery Date</strong>
+                <div>
+                    <span t-field="o.delivery_date"
+                          t-options="{'format': 'dd-MM-yyyy'}"/>
+                </div>
+            </div>
+
+        </xpath>
+
+
+        <!-- Bank Details + QR -->
+        <xpath expr="//div[@id='payment_term']" position="after">
+            <div style="margin-top:15px; font-size:10px;">
+
+
+               <div style="font-weight:bold; margin-bottom:6px;">
+                    Payment Details
+               </div>
+             <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="line-height:1.5;">
+
+                <div><b>Bank:</b> HDFC Bank</div>
+                <div><b>Account No:</b> 50200119008704</div>
+                <div><b>IFSC:</b> HDFC0004033</div>
+                <div><b>Recipient:</b> VESTIDO FABWASH STUDIO</div>
+               </div>
+                <!-- QR Code -->
+               <div style="text-align:center;"> 
+                <t t-set="upi_attachment"
+                   t-value="o.env['ir.attachment'].sudo().search([('name','=','upi_qr.png')], limit=1)"/>
+
+                <t t-if="upi_attachment">
+
+                    <img t-att-src="image_data_uri(upi_attachment.datas)"
+                         style="width:100px;height:100px;"/>
+
+                </t>
+
+                <t t-else="">
+
+                    <div style="color:red; font-size:9px;">
+                        QR Image Missing (Upload upi_qr.png)
+                    </div>
+                </t>
+               </div>
+             </div>
+            </div>
+
+        </xpath>
+
+    </template>
+
+</odoo>

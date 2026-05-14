@@ -58,10 +58,12 @@
                             string="Generate Tags"
                             type="object"
                             class="btn-secondary" invisible="tag_ids"/>
-
-                    <button name="action_create_invoice" string="Create Invoice" type="object" invisible="state != 'ready' or invoice_id" class="btn-primary"/>
-
-                    
+                    <button name="action_create_invoice"
+                            string="Create Invoice"
+                            type="object"
+                            class="btn-primary"
+                            invisible="invoice_id or id == False"/>
+                            
                     <button name="action_print_tags" string="Print Tags" type="object" class="btn-primary" invisible="not tag_ids"/>
                     <button name="action_print_receipt_80mm" string="Print Receipt" type="object" class="btn-primary" invisible="state == 'draft'"/>
                     <button name="action_regenerate_tags"
@@ -192,6 +194,21 @@
                     <group>
                           <field name="remarks" placeholder="Enter any remarks here..."/>
                     </group>
+                <group string="Documents">
+                 <field name="document_ids">
+                     <list editable="bottom">
+                         <field name="name"/>
+
+            <!-- Upload + Preview + Manual Download -->
+                        <field name="file"
+                               filename="filename"
+                               widget="image"
+                               options="{'size': [120, 120]}"/>
+
+                        <field name="filename" invisible="1"/>
+                     </list>
+                 </field>
+                </group>
 
                     <group class="oe_subtotal_footer oe_right">
                         <field name="total_weight" readonly="1" invisible="1"/>

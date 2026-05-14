@@ -22,6 +22,7 @@
 	    'views/laundry_order_views.xml',
 	    'views/menu.xml',
 	    'views/account_move_view.xml',
+	    'report/account_invoice_report_inherit.xml',
 	],
     'installable': True,
     'application': True,

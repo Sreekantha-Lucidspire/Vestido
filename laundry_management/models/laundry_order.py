@@ -32,6 +32,12 @@ class LaundryOrder(models.Model):
         compute="_compute_grand_total",
         store=True
     )
+    document_ids = fields.One2many(
+        'laundry.order.document',
+        'order_id',
+        string="Documents"
+    )
+
 
     order_line_ids = fields.One2many(
         'laundry.order.line', 'order_id')
@@ -71,7 +77,6 @@ class LaundryOrder(models.Model):
         compute='_compute_currency_id',
         store=True
     )
-
 
 
     @api.onchange('tax_type')
@@ -542,3 +547,21 @@ class LaundryDashboard(models.TransientModel):
             'view_mode': 'kanban,list',
             'target': 'current',
         }
+class LaundryOrderDocument(models.Model):
+    _name = 'laundry.order.document'
+    _description = 'Laundry Order Documents'
+
+    order_id = fields.Many2one(
+        'laundry.order',
+        string="Order",
+        ondelete='cascade'
+    )
+
+    name = fields.Char(string="Document Name")
+
+    file = fields.Binary(
+        string="Upload File",
+        attachment=True
+    )
+
+    filename = fields.Char(string="Filename")
