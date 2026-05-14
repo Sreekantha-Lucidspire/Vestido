@@ -224,7 +224,6 @@
                                      <t t-esc="o.company_id.street2 or ''"/><br/>
                                      <t t-esc="o.company_id.city or ''"/>
                                      <t t-if="o.company_id.zip"> - <t t-esc="o.company_id.zip"/></t><br/>
-                                     <t t-esc="o.company_id.country_id.name or ''"/>
                                  </div>
                                  <div style="font-size:10px;">
                                      Ph: <t t-esc="o.company_id.phone or '-'"/>
@@ -389,7 +388,6 @@
                                      <t t-esc="o.company_id.street2 or ''"/><br/>
                                      <t t-esc="o.company_id.city or ''"/>
                                      <t t-if="o.company_id.zip"> - <t t-esc="o.company_id.zip"/></t><br/>
-                                     <t t-esc="o.company_id.country_id.name or ''"/>
                                  </div>
                                  <div style="font-size:10px;">
                                      Ph: <t t-esc="o.company_id.phone or '-'"/>
@@ -483,6 +481,7 @@
                         </tbody>
                     </table>
                     <hr style="border:1px dashed #000; margin-top:8px;"/>
+                    
 <td style="width:40%; vertical-align:top;">
     <table style="width:100%; font-size:11px; margin-top:10px;">
         <tr>
@@ -673,7 +672,6 @@
                                      <t t-esc="o.company_id.street2 or ''"/><br/>
                                      <t t-esc="o.company_id.city or ''"/>
                                      <t t-if="o.company_id.zip"> - <t t-esc="o.company_id.zip"/></t><br/>
-                                     <t t-esc="o.company_id.country_id.name or ''"/>
                                  </div>
                                  <div style="font-size:10px;">
                                      Ph: <t t-esc="o.company_id.phone or '-'"/>
@@ -957,7 +955,6 @@
                                      <t t-esc="o.company_id.street2 or ''"/><br/>
                                      <t t-esc="o.company_id.city or ''"/>
                                      <t t-if="o.company_id.zip"> - <t t-esc="o.company_id.zip"/></t><br/>
-                                     <t t-esc="o.company_id.country_id.name or ''"/>
                                  </div>
                                  <div style="font-size:10px;">
                                      Ph: <t t-esc="o.company_id.phone or '-'"/>
@@ -1249,7 +1246,6 @@
                                      <t t-esc="o.company_id.street2 or ''"/><br/>
                                      <t t-esc="o.company_id.city or ''"/>
                                      <t t-if="o.company_id.zip"> - <t t-esc="o.company_id.zip"/></t><br/>
-                                     <t t-esc="o.company_id.country_id.name or ''"/>
                                  </div>
                                  <div style="font-size:10px;">
                                      Ph: <t t-esc="o.company_id.phone or '-'"/>
