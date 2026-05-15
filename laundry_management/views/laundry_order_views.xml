@@ -160,19 +160,19 @@
                         <page string="Items">
                             <field name="order_line_ids">
                                 <list editable="bottom">
-                                    <field name="premium_id"/>
-                                    <field name="product_id"/>
+                                    <field name="premium_id" sum="Total"/>
+                                    <field name="product_id" />
                                     <field name="service_type_id"/>
                                     <field name="pricing_type"/>
                                     <field name="qty" sum="Total Qty"/>
                                     <field name="currency_id" optional="hide"/>
                                     <field name="premium_multiplier" optional="hide"/>
-                                    <field name="weight" sum="Total Weight"  optional="hide"/>
+                                    <field name="weight" sum="Total Weight"  optional="show"/>
                                     <field name="unit_price" widget="monetary"/>
                                     <field name="tax_ids" widget="many2many_tags"/>
                                     <field name="subtotal" widget="monetary" optional="show"/>
                                     <field name="price_tax" widget="monetary" optional="show"/>
-                                    <field name="price_total" widget="monetary"/>
+                                    <field name="price_total" widget="monetary" sum="Grand Total"/>
                                     
                                 </list>
                             </field>
@@ -187,8 +187,8 @@
                         <field name="currency_id" invisible="1"/>
 
                       
-                            <field name="amount_untaxed" widget="monetary"/>
-                            <field name="amount_tax" widget="monetary"/>
+                            <field name="amount_untaxed" invisible="1"/>
+                            <field name="amount_tax" invisible="1"/>
                             <field name="amount_total" widget="monetary"/>
                             <field name="discount" widget="monetary"
                                options="{'currency_field': 'currency_id'}"/>

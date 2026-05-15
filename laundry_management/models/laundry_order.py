@@ -67,9 +67,9 @@ class LaundryOrder(models.Model):
         ('inclusive', 'Tax Inclusive')
     ], default='exclusive', required=True)
 
-    amount_untaxed = fields.Float(compute='_compute_amounts', store=True)
-    amount_tax = fields.Float(compute='_compute_amounts', store=True)
-    amount_total = fields.Float(compute='_compute_amounts', store=True)
+    amount_untaxed = fields.Float( string="Untaxed Amount",compute='_compute_amounts', store=True)
+    amount_tax = fields.Float( string="Tax Amount",compute='_compute_amounts', store=True)
+    amount_total = fields.Float( string="Total",compute='_compute_amounts', store=True)
 
     currency_id = fields.Many2one(
         'res.currency',
@@ -422,12 +422,18 @@ class LaundryOrderLine(models.Model):
     tax_ids = fields.Many2many(
         'account.tax',
         string="Taxes",
-        domain="[('type_tax_use', '=', 'sale')]"
+        domain="[('type_tax_use', '=', 'sale')]",
+        # This lambda searches for the 18% tax record automatically
+        default=lambda self: self.env['account.tax'].search([
+            ('amount', '=', 18.0), 
+            ('type_tax_use', '=', 'sale'),
+            ('company_id', '=', self.env.company.id)
+        ], limit=1)
     )
 
     subtotal = fields.Monetary(compute='_compute_tax', store=True,currency_field='currency_id')
     price_tax = fields.Monetary(compute='_compute_tax', store=True,currency_field='currency_id')
-    price_total = fields.Monetary(compute='_compute_tax', store=True,currency_field='currency_id')
+    price_total = fields.Monetary( string="Total Price",compute='_compute_tax', store=True,currency_field='currency_id')
 
     @api.depends('qty','weight','unit_price','tax_ids','order_id.tax_type','pricing_type','premium_id','premium_id.multiplier')
     def _compute_tax(self):
