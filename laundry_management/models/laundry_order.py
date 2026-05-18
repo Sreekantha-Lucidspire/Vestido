@@ -363,6 +363,7 @@ class LaundryOrder(models.Model):
                     'quantity': qty,
                     'price_unit': line.unit_price * line.premium_multiplier,
                     'account_id': line.service_type_id.income_account_id.id,
+                    'tax_ids': [(6, 0, line.tax_ids.ids)],
                     'service_type_id': line.service_type_id.id,
                 }))
 
