@@ -6,12 +6,16 @@
         <field name="arch" type="xml">
 
             <!-- Add inside invoice header section -->
-            <xpath expr="//div[@name='journal_div']" position="after">
-
-                <group string="Extra Information">
-                    <field name="pickup_delivery"/>
-                    <field name="invoice_discount"/>
-                </group>
+            <xpath expr="//field[@name='ref']" position="after">
+                <field name="laundry_order_id" options="{'no_open': True, 'no_edit':True, 'no_create': True}"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page name="extra_information" string="Extra Information">
+                    <group string="Extra Information">
+                        <field name="pickup_delivery"/>
+                        <field name="invoice_discount"/>
+                    </group>
+                </page>
 
             </xpath>
 

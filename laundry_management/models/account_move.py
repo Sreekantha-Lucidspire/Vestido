@@ -5,6 +5,7 @@ class AccountMove(models.Model):
 
     pickup_delivery = fields.Char(string="Pickup & Delivery")
     invoice_discount = fields.Float(string="Discount")
+    laundry_order_id = fields.Many2one('laundry.order','Laundry Ref',tracking=True)
 
     @api.depends('invoice_line_ids.price_subtotal', 'invoice_discount')
     def _compute_amount(self):

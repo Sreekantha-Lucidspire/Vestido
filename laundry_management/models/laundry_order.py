@@ -374,9 +374,29 @@ class LaundryOrder(models.Model):
                 'journal_id': journal.id,
                 'invoice_line_ids': invoice_lines,
                 'invoice_origin': rec.name,
+                'laundry_order_id' : rec.id
             })
 
             rec.invoice_id = invoice.id
+
+    def action_view_invoice(self):
+
+        self.ensure_one()
+
+        if not self.invoice_id:
+            return
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Invoice',
+            'res_model': 'account.move',
+            'view_mode': 'form',
+
+            # 🔥 IMPORTANT
+            'res_id': self.invoice_id.id,
+
+            'target': 'current',
+        }
 
 
 # -----------------------------

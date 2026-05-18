@@ -91,8 +91,8 @@
                     <!-- SMART BUTTON -->
                     <div class="oe_button_box" name="button_box">
 
-                        <button name="%(account.action_move_out_invoice_type)d"
-                                type="action"
+                        <button name="action_view_invoice"
+                                type="object"
                                 class="oe_stat_button"
                                 icon="fa-file-text-o"
                                 invisible="not invoice_id">
