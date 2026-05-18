@@ -126,7 +126,6 @@
                             <field name="delivery_date"/>
                             <field name="has_wash" invisible="1"/>
                             <field name="has_iron" invisible="1"/>
-                            <field name="tax_type"/>
                             <field name="tag_type"/>
                             <field name="company_id" invisible="1"/>
                             <field name="currency_id" invisible="1"/>

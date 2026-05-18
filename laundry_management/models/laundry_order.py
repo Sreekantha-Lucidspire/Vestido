@@ -62,10 +62,6 @@ class LaundryOrder(models.Model):
 
     has_wash = fields.Boolean(compute='_compute_service_flags')
     has_iron = fields.Boolean(compute='_compute_service_flags')
-    tax_type = fields.Selection([
-        ('exclusive', 'Tax Exclusive'),
-        ('inclusive', 'Tax Inclusive')
-    ], default='exclusive', required=True)
 
     amount_untaxed = fields.Float( string="Untaxed Amount",compute='_compute_amounts', store=True)
     amount_tax = fields.Float( string="Tax Amount",compute='_compute_amounts', store=True)
@@ -77,11 +73,6 @@ class LaundryOrder(models.Model):
         store=True
     )
 
-
-    @api.onchange('tax_type')
-    def _onchange_tax_type(self):
-        for order in self:
-            order.order_line_ids._compute_tax()
 
     @api.depends('order_line_ids.subtotal', 'order_line_ids.price_tax','discount')
     def _compute_amounts(self):
@@ -435,7 +426,7 @@ class LaundryOrderLine(models.Model):
     price_tax = fields.Monetary(compute='_compute_tax', store=True,currency_field='currency_id')
     price_total = fields.Monetary( string="Total Price",compute='_compute_tax', store=True,currency_field='currency_id')
 
-    @api.depends('qty','weight','unit_price','tax_ids','order_id.tax_type','pricing_type','premium_id','premium_id.multiplier')
+    @api.depends('qty','weight','unit_price','tax_ids','pricing_type','premium_id','premium_id.multiplier')
     def _compute_tax(self):
 
         for line in self:
@@ -464,11 +455,7 @@ class LaundryOrderLine(models.Model):
                 continue
 
             # 🔹 Tax calculation
-            taxes = line.tax_ids.with_context(
-                force_price_include=(
-                    line.order_id.tax_type == 'inclusive'
-                )
-            ).compute_all(
+            taxes = line.tax_ids.compute_all(
                 price,
                 currency=line.order_id.currency_id,
                 quantity=qty,
