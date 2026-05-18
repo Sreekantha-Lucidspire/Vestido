@@ -14,3 +14,4 @@ class AccountMove(models.Model):
         for move in self:
             move.amount_untaxed = max(move.amount_untaxed - move.invoice_discount, 0)
             move.amount_total = move.amount_untaxed + move.amount_tax
+

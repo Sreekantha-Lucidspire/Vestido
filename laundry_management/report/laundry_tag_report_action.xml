@@ -69,17 +69,17 @@
         <field name="binding_model_id" ref="model_laundry_order"/>
         <field name="binding_type">report</field>
     </record>
-<record id="action_laundry_quotation" model="ir.actions.report">
-    <field name="name">Proforma Invoice</field> 
-    
-    <field name="model">laundry.order</field>
-    <field name="report_type">qweb-pdf</field>
-    <field name="report_name">laundry_management.report_laundry_quotation</field>
-    <field name="report_file">laundry_management.report_laundry_quotation</field>
-    <field name="paperformat_id" ref="laundry_management.paperformat_laundry_receipt_80mm"/>
+    <record id="action_laundry_quotation" model="ir.actions.report">
+        <field name="name">Proforma Invoice</field> 
+        
+        <field name="model">laundry.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">laundry_management.report_laundry_quotation</field>
+        <field name="report_file">laundry_management.report_laundry_quotation</field>
+        <field name="paperformat_id" ref="laundry_management.paperformat_laundry_receipt_80mm"/>
 
-    <field name="print_report_name">'Proforma Invoice - %s' % (object.name)</field>
-</record>
+        <field name="print_report_name">'Proforma Invoice - %s' % (object.name)</field>
+    </record>
     <record id="action_laundry_invoice_bill" model="ir.actions.report">
         <field name="name">Invoice</field>
         <field name="model">laundry.order</field>
@@ -94,29 +94,27 @@
         <field name="binding_model_id" ref="model_laundry_order"/>
         <field name="binding_type">report</field>
     </record>
-<record id="action_laundry_quotation" model="ir.actions.report">
-    <field name="name">Proforma Invoice - Ver2</field> 
-    
-    <field name="model">laundry.order</field>
-    <field name="report_type">qweb-pdf</field>
-    <field name="report_name">laundry_management.report_laundry_quotation</field>
-    <field name="report_file">laundry_management.report_laundry_quotation</field>
-    <field name="paperformat_id" ref="laundry_management.paperformat_laundry_receipt_80mm"/>
-
-    <field name="print_report_name">'Proforma Invoice - %s' % (object.name)</field>
-</record>
-    <record id="action_laundry_invoice_bill" model="ir.actions.report">
-        <field name="name">Invoice - Ver2</field>
+    <record id="action_laundry_quotation" model="ir.actions.report">
+        <field name="name">Proforma Invoice - Ver2</field> 
+        
         <field name="model">laundry.order</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">laundry_management.report_laundry_invoice_bill</field>
-        <field name="report_file">laundry_management.report_laundry_invoice_bill</field>
-
+        <field name="report_name">laundry_management.report_laundry_quotation</field>
+        <field name="report_file">laundry_management.report_laundry_quotation</field>
         <field name="paperformat_id" ref="laundry_management.paperformat_laundry_receipt_80mm"/>
 
+        <field name="print_report_name">'Proforma Invoice - %s' % (object.name)</field>
+    </record>
+
+    <record id="account.account_invoices" model="ir.actions.report">
+        <field name="name">Invoice</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">laundry_management.report_invoice_laundry_bill</field>
+        <field name="report_file">laundry_management.report_invoice_laundry_bill</field>
+        <field name="paperformat_id" ref="laundry_management.paperformat_laundry_receipt_80mm"/>
         <field name="print_report_name">'Invoice - %s' % (object.name)</field>
-        
-        <field name="binding_model_id" ref="model_laundry_order"/>
+        <field name="binding_model_id" ref="model_account_move"/>
         <field name="binding_type">report</field>
     </record>
   
