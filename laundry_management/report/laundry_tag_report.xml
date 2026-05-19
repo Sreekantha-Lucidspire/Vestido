@@ -487,12 +487,14 @@
         <tr>
             <td style="width:60%; vertical-align:top;">
                 <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">GST SUMMARY</div>
+                <t t-set="taxable_amount" t-value="sum(o.order_line_ids.mapped('subtotal'))"/>
+                <t t-set="gst_amount" t-value="sum(o.order_line_ids.mapped('price_tax'))"/>
+                <t t-set="final_total" t-value="taxable_amount + gst_amount - o.discount"/>
+                  <div>
+                      CGST + SGST (18%):
+                      <t t-esc="'%.1f' % gst_amount"/>
+                  </div>                
                 
-                <t t-set="final_total" t-value="manual_sum_total - round(o.discount, 0)"/>
-                <t t-set="base_amount" t-value="round(final_total / 1.18)"/>
-                <t t-set="gst_amount" t-value="round(final_total - base_amount)"/>
-                <div>Subtotal (Taxable Value): <t t-esc="'%.1f' % base_amount"/></div>
-                <div>CGST + SGST (18%): <t t-esc="'%.1f' % gst_amount"/></div>
             </td>
 
             <td style="width:40%; text-align:right; vertical-align:top;">
@@ -769,17 +771,19 @@
     <table style="width:100%; font-size:11px; margin-top:10px;">
         <tr>
             <td style="width:60%; vertical-align:top;">
-                <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">GST SUMMARY</div>
-                
-                <t t-set="final_total" t-value="manual_sum_total - round(o.discount, 0)"/>
-                <t t-set="base_amount" t-value="round(final_total / 1.18)"/>
-                <t t-set="gst_amount" t-value="round(final_total - base_amount)"/>
-                <div>Subtotal (Taxable Value): <t t-esc="'%.1f' % base_amount"/></div>
-                <div>CGST + SGST (18%): <t t-esc="'%.1f' % gst_amount"/></div>
+                <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">GST SUMMARY: </div>
+                <t t-set="taxable_amount" t-value="sum(o.order_line_ids.mapped('subtotal'))"/>
+                <t t-set="gst_amount" t-value="sum(o.order_line_ids.mapped('price_tax'))"/>
+                <t t-set="final_total" t-value="taxable_amount + gst_amount - o.discount"/>
+                  <div>
+                      CGST + SGST (18%)
+                      <t t-esc="'%.1f' % gst_amount"/>
+                  </div>
             </td>
 
             <td style="width:40%; text-align:right; vertical-align:top;">
-                <div><b>Total: <t t-esc="'%.1f' % manual_sum_total"/></b></div>
+                    <div><b>Total: <t t-esc="'%.1f' % manual_sum_total"/></b></div>
+
                 <div><b>Discount: <t t-esc="'%.1f' % round(o.discount, 0)"/></b></div>   
                 <div style="font-size:12px; font-weight:bold; margin-top:5px;">
                     GRAND TOTAL: <t t-esc="'%.1f' % final_total"/>

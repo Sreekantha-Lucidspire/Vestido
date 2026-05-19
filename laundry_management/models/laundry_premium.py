@@ -10,3 +10,4 @@ class LaundryPremium(models.Model):
     sequence = fields.Integer(string="Sequence")
 
     active = fields.Boolean(default=True)
+    

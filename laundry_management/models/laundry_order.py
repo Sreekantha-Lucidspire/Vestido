@@ -356,15 +356,19 @@ class LaundryOrder(models.Model):
                 qty = line.qty if line.pricing_type == 'per_item' else line.weight
 
                 # 🔹 Auto naming with service type
-
                 invoice_lines.append((0, 0, {
-                    'product_id': product.id,
-                    'name': f"{line.product_id.name}",
-                    'quantity': qty,
-                    'price_unit': line.unit_price * line.premium_multiplier,
-                    'account_id': line.service_type_id.income_account_id.id,
-                    'tax_ids': [(6, 0, line.tax_ids.ids)],
-                    'service_type_id': line.service_type_id.id,
+                     'product_id': product.id,
+                     'name': f"{line.product_id.name}",
+                     'quantity': qty,
+                     'price_unit': line.unit_price,
+                     'account_id': line.service_type_id.income_account_id.id,
+                     'tax_ids': [(6, 0, line.tax_ids.ids)],
+
+                     # CUSTOM VALUES
+                     'service_type_id': line.service_type_id.id,
+                     'pricing_type': line.pricing_type,
+                     'weight': line.weight,
+                     'premium_id': line.premium_id.id,
                 }))
 
             # 🔹 Create Invoice

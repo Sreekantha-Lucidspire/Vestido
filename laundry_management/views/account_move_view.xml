@@ -18,7 +18,37 @@
                 </page>
 
             </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='name']" position="replace">
 
+                   <field name="premium_id" string="Premium Type"/>
+
+                   <field name="name" string="Items"/>
+
+                   <field name="service_type_id" string="Service Type"/>
+
+                   <field name="pricing_type" string="Pricing Type"/>
+
+                   <field name="quantity" string="Qty"/>
+
+                   <field name="weight" string="Weight"/>
+
+                   <field name="tax_ids" widget="many2many_tags" string="Taxes"/>
+
+                   <field name="price_tax" string="Tax Price" optional="hide"/>
+
+            </xpath>
+
+                   <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='weight']"
+                          position="after">
+                           
+
+                   <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='price_unit']"
+                          position="move"/>
+
+                   </xpath>
+                   <xpath expr="//field[@name='invoice_line_ids']/list" position="inside">
+                        <field name="price_total" string="Total Price"/>
+                   </xpath>
         </field>
     </record>
 </odoo>
