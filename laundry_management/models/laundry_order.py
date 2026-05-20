@@ -451,7 +451,13 @@ class LaundryOrderLine(models.Model):
     price_tax = fields.Monetary(compute='_compute_tax', store=True,currency_field='currency_id')
     price_total = fields.Monetary( string="Total Price",compute='_compute_tax', store=True,currency_field='currency_id')
 
-    @api.depends('qty','weight','unit_price','tax_ids','pricing_type','premium_id','premium_id.multiplier')
+    @api.onchange('premium_id')
+    def update_unit_price(self):
+        for line in self:
+            if line.premium_id:
+                line.unit_price *= line.premium_id.multiplier
+
+    @api.depends('qty','weight','unit_price','tax_ids','pricing_type')
     def _compute_tax(self):
 
         for line in self:
@@ -467,8 +473,8 @@ class LaundryOrderLine(models.Model):
             price = line.unit_price
 
             # 🔹 Apply premium multiplier
-            if line.premium_id:
-                price *= line.premium_id.multiplier
+            # if line.premium_id:
+            #     price *= line.premium_id.multiplier
 
             # 🔹 No taxes
             if not line.tax_ids:
@@ -521,7 +527,7 @@ class LaundryOrderLine(models.Model):
             rec.unit_price = pricing.price if pricing else 0.0
 
     # 🔹 subtotal calc
-    @api.depends('qty', 'weight', 'unit_price', 'pricing_type', 'premium_id', 'premium_id.multiplier')
+    @api.depends('qty', 'weight', 'unit_price', 'pricing_type')
     def _compute_subtotal(self):
         for rec in self:
 
@@ -532,8 +538,8 @@ class LaundryOrderLine(models.Model):
                 subtotal = rec.weight * rec.unit_price
 
             # 🔹 Step 2: Apply premium
-            if rec.premium_id:
-                subtotal *= rec.premium_id.multiplier
+            # if rec.premium_id:
+            #     subtotal *= rec.premium_id.multiplier
 
             # 🔹 Step 3: Assign
             rec.subtotal = subtotal
