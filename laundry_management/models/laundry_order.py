@@ -492,7 +492,7 @@ class LaundryOrderLine(models.Model):
     price_tax = fields.Monetary(compute='_compute_tax', store=True,currency_field='currency_id')
     price_total = fields.Monetary( string="Total Price",compute='_compute_tax', store=True,currency_field='currency_id')
 
-    @api.onchange('premium_id')
+    @api.onchange('premium_id','pricing_type')
     def update_unit_price(self):
         for line in self:
             if line.premium_id:
