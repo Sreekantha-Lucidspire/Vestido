@@ -201,7 +201,7 @@
 
                             <td style="width:70%; text-align:left; vertical-align:top; padding-left:10mm; padding-bottom:0;">
                                 <div style="margin-top:5px;">
-                                    <div style="font-size:14px; font-weight:bold; line-height:1.2; padding-bottom:8px;">
+                                    <div style="font-size:13px; font-weight:bold; line-height:1.2; padding-bottom:8px;">
                                         <t t-esc="o.company_id.name"/>
                                     </div>          
                                     <div style="font-size:10px; line-height:1.4;">
@@ -222,7 +222,7 @@
                     </table>
 
                     <div style="width:100%; text-align:center; margin-top:-10px; margin-bottom:4px; padding:0;">
-                        <strong style="font-size:14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <strong style="font-size:12px; text-transform: uppercase; letter-spacing: 0.5px;">
                             ORDER RECEIPT
                         </strong>
                     </div>
@@ -348,7 +348,7 @@
 
                             <td style="width:70%; text-align:left; vertical-align:top; padding-left:10mm; padding-bottom:0;">
                                 <div style="margin-top:5px;">
-                                    <div style="font-size:14px; font-weight:bold; line-height:1.2; padding-bottom:8px;">
+                                    <div style="font-size:13px; font-weight:bold; line-height:1.2; padding-bottom:8px;">
                                         <t t-esc="o.company_id.name"/>
                                     </div>          
                                     <div style="font-size:9px; line-height:1.4;">
@@ -369,7 +369,7 @@
                     </table>
 
                     <div style="width:100%; text-align:center; margin-top:-10px; margin-bottom:4px; padding:0;">
-                        <strong style="font-size:14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <strong style="font-size:12px; text-transform: uppercase; letter-spacing: 0.5px;">
                             PROFORMA INVOICE
                         </strong>
                     </div>
@@ -582,7 +582,7 @@
 
                             <td style="width:70%; text-align:left; vertical-align:top; padding-left:10mm; padding-bottom:0;">
                                 <div style="margin-top:5px;">
-                                    <div style="font-size:14px; font-weight:bold; line-height:1.2; padding-bottom:8px;">
+                                    <div style="font-size:13px; font-weight:bold; line-height:1.2; padding-bottom:8px;">
                                         <t t-esc="o.company_id.name"/>
                                     </div>          
                                     <div style="font-size:9px; line-height:1.4;">
@@ -603,7 +603,7 @@
                     </table>
 
                     <div style="width:100%; text-align:center; margin-top:-10px; margin-bottom:4px; padding:0;">
-                        <strong style="font-size:14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <strong style="font-size:12px; text-transform: uppercase; letter-spacing: 0.5px;">
                             TAX INVOICE
                         </strong>
                     </div>
