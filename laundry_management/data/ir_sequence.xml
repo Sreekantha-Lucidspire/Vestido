@@ -2,7 +2,6 @@
     <record id="seq_laundry_order" model="ir.sequence">
         <field name="name">Laundry Order</field>
         <field name="code">laundry.order</field>
-        <field name="prefix">LO/</field>
         <field name="padding">5</field>
     </record>
 

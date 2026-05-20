@@ -169,11 +169,52 @@ class LaundryOrder(models.Model):
 
 
     # 🔹 Auto sequence
+    # @api.model_create_multi
+    # def create(self, vals_list):
+    #     for vals in vals_list:
+    #         if vals.get('name', 'New') == 'New':
+    #             vals['name'] = self.env['ir.sequence'].next_by_code('laundry.order') or 'New'
+    #     return super().create(vals_list)
     @api.model_create_multi
     def create(self, vals_list):
+
         for vals in vals_list:
+
             if vals.get('name', 'New') == 'New':
-                vals['name'] = self.env['ir.sequence'].next_by_code('laundry.order') or 'New'
+
+                today = fields.Date.today()
+
+                # 🔹 Indian Fiscal Year
+                year = today.year % 100
+
+                if today.month >= 4:
+                    fy_start = year
+                    fy_end = year + 1
+                else:
+                    fy_start = year - 1
+                    fy_end = year
+
+                fiscal_year = (
+                    f"{fy_start:02d}-"
+                    f"{fy_end:02d}"
+                )
+
+                # 🔹 Month
+                month_code = f"{today.month:02d}"
+
+                # 🔹 Sequence Number
+                seq = self.env['ir.sequence'].next_by_code(
+                    'laundry.order'
+                ) or '00001'
+
+                # 🔹 Final Sequence
+                vals['name'] = (
+                    f"VFS/"
+                    f"{fiscal_year}/"
+                    f"{month_code}/"
+                    f"{seq}"
+                )
+
         return super().create(vals_list)
 
     # 🔹 Compute total
