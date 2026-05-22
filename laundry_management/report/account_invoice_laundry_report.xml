@@ -27,38 +27,38 @@
 
                     <table style="width:100%; margin-bottom: 0px; border-collapse: collapse;">
                         <tr>
-                              <td style="width:30%; text-align:left; vertical-align:top; padding-top:0; padding-bottom:0;">
+                            <td style="width:30%; text-align:left; vertical-align:top; padding-top:0; padding-bottom:0;">
                                 <t t-if="o.company_id.logo">
                                     <img t-att-src="image_data_uri(o.company_id.logo)"
                                          style="height:120px; width:auto; display: block; margin:0;"/>
                                 </t>
-                              </td>
+                            </td>
 
-                               <td style="width:70%; text-align:left; vertical-align:top; padding-left:10mm; padding-bottom:0;">
-                                 <div style="margin-top:5px;">
-                                      <div style="font-size:13px; font-weight:bold; line-height:1.2; margin-bottom: 6px;">
-                                          <t t-esc="o.company_id.name"/>
-                                      </div>          
-                                      <div style="font-size:9px; line-height:1.4;">
-                                           <t t-esc="o.company_id.street or ''"/><br/>
-                                           <t t-esc="o.company_id.street2 or ''"/><br/>
-                                           <t t-esc="o.company_id.city or ''"/>
-                                           <t t-if="o.company_id.zip"> - <t t-esc="o.company_id.zip"/></t><br/>
-                                      </div>
-                                      <div style="font-size:10px;">
-                                           Ph: <t t-esc="o.company_id.phone or '-'"/>
-                                      </div>
-                                      <div style="font-size:10px;">
-                                           GSTIN: <t t-esc="o.company_id.vat or '-'"/>
-                                      </div>
-                                 </div>
-                               </td>
+                            <td style="width:70%; text-align:left; vertical-align:top; padding-left:10mm; padding-bottom:0;">
+                                <div style="margin-top:5px;">
+                                    <div style="font-size:13px; font-weight:bold; line-height:1.2; margin-bottom: 6px;">
+                                        <t t-esc="o.company_id.name"/>
+                                    </div>          
+                                    <div style="font-size:9px; line-height:1.4;">
+                                        <t t-esc="o.company_id.street or ''"/><br/>
+                                        <t t-esc="o.company_id.street2 or ''"/><br/>
+                                        <t t-esc="o.company_id.city or ''"/>
+                                        <t t-if="o.company_id.zip"> - <t t-esc="o.company_id.zip"/></t><br/>
+                                    </div>
+                                    <div style="font-size:10px;">
+                                        Ph: <t t-esc="o.company_id.phone or '-'"/>
+                                    </div>
+                                    <div style="font-size:10px;">
+                                        GSTIN: <t t-esc="o.company_id.vat or '-'"/>
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
                     </table>
                     
                     <div style="width:100%; text-align:center; margin-top: -15px; margin-bottom: 2px;">
                          <strong style="font-size:12px; text-transform: uppercase; letter-spacing: 0.5px;">
-                                 TAX INVOICE
+                                  TAX INVOICE
                          </strong>
                     </div>
 
@@ -131,12 +131,12 @@
                                     <t t-esc="l.weight or 0.0"/>
                                 </td>
                                 <td style="padding:3px; text-align:right;">
-                                     <t t-esc="l.unit_price or 0.0"/>
+                                     <t t-esc="'%.2f' % (l.unit_price or 0.0)"/>
                                 </td>
                                 <td style="padding:3px; text-align:right;">
-                                    <t t-set="line_rounded" t-value="int(l.subtotal + 0.5) if l.subtotal else 0"/>
+                                    <t t-set="line_rounded" t-value="l.subtotal if l.subtotal else 0.0"/>
                                     <t t-set="manual_sum_total" t-value="manual_sum_total + line_rounded"/>
-                                    <t t-esc="'%.1f' % line_rounded"/>
+                                    <t t-esc="'%.2f' % line_rounded"/>
                                 </td>
                             </tr>
                         </tbody>
@@ -146,20 +146,20 @@
 
                     <table style="width:100%; font-size:11px; margin-top:10px;">
                         <tr>
+                            <t t-set="calculated_gst" t-value="manual_sum_total * 0.18"/>
+                            <t t-set="calculated_discount" t-value="o.laundry_order_id.discount or 0.0"/>
+                            <t t-set="final_total" t-value="manual_sum_total + calculated_gst - calculated_discount"/>
+
                             <td style="width:60%; vertical-align:top;">
                                 <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">GST SUMMARY</div>
-                                <t t-set="taxable_amount" t-value="sum(o.laundry_order_id.order_line_ids.mapped('subtotal'))"/>
-                                <t t-set="gst_amount" t-value="sum(o.laundry_order_id.order_line_ids.mapped('price_tax'))"/>
-                                <t t-set="final_total" t-value="taxable_amount + gst_amount - o.laundry_order_id.discount"/>
-                                
-                                <div>CGST + SGST (18%): <t t-esc="'%.1f' % gst_amount"/></div>
+                                <div>CGST + SGST (18%): <t t-esc="'%.2f' % calculated_gst"/></div>
                             </td>
 
                             <td style="width:40%; text-align:right; vertical-align:top;">
-                                <div><b>Total: <t t-esc="'%.1f' % manual_sum_total"/></b></div>
-                                <div><b>Discount: <t t-esc="'%.1f' % round(o.laundry_order_id.discount, 0)"/></b></div>   
+                                <div><b>Total: <t t-esc="'%.2f' % manual_sum_total"/></b></div>
+                                <div><b>Discount: <t t-esc="'%.2f' % calculated_discount"/></b></div>   
                                 <div style="font-size:12px; font-weight:bold; margin-top:5px;">
-                                    GRAND TOTAL: <t t-esc="'%.1f' % final_total"/>
+                                    GRAND TOTAL: <t t-esc="'%.2f' % final_total"/>
                                 </div>
                             </td>
                         </tr>
