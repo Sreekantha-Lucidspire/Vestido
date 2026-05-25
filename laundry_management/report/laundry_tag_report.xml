@@ -227,7 +227,7 @@
                         </strong>
                     </div>
 
-                    <hr style="border:1px dashed #000; margin-top:0px; margin-bottom:5px;"/>
+                    <hr style="border:1px solid #000; margin-top:0px; margin-bottom:5px;"/>
 
                     <table style="width:100%; font-size:11px; margin-top:5px;">
                         <tr>
@@ -247,7 +247,7 @@
                         </tr>
                     </table>
 
-                    <hr style="border:1px dashed #000; margin-top:8px;"/>
+                    <hr style="border:1px solid #000; margin-top:8px;"/>
 
                     <table style="width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed;">
                         <thead>
@@ -292,7 +292,7 @@
                         </tbody>
                     </table>
 
-                    <hr style="border:1px dashed #000; margin-top:8px;"/>
+                    <hr style="border:1px solid #000; margin-top:8px;"/>
 
                 </div>
 
@@ -306,7 +306,7 @@
                             -
                         </t>
                     </div>
-                    <hr style="border:1px dashed #000; margin-top:8px;"/>
+                    <hr style="border:1px solid #000; margin-top:8px;"/>
                 </div>          
 
             </t>
@@ -371,7 +371,7 @@
                     </strong>
                 </div>
 
-                <hr style="border:1px dashed #000; margin-top:0px; margin-bottom:5px;"/>
+                <hr style="border:1px solid #000; margin-top:0px; margin-bottom:5px;"/>
 
                 <table style="width:100%; font-size:11px; margin-top:5px;">
                     <tr>
@@ -391,7 +391,7 @@
                     </tr>
                 </table>
 
-                <hr style="border:1px dashed #000; margin-top:8px;"/>
+                <hr style="border:1px solid #000; margin-top:8px;"/>
 
                 <table style="width:100%; border-collapse:collapse; font-size:11px;">
                     <thead>
@@ -440,50 +440,128 @@
                                 <t t-esc="'%.2f' % (l.weight or 0.0)"/>
                             </td>
                             <td style="padding:3px; text-align:right;">
-                                 <t t-esc="'%.2f' % (l.unit_price or 0.0)"/>
+                                <t t-set="qty_val" t-value="l.qty if l.pricing_type == 'per_item' else l.weight"/>
+                                <t t-set="unit_price_with_tax" t-value="(l.price_total / qty_val) if qty_val else 0.0"/>
+                                <!-- Rounded Unit Price to whole figure -->
+                                <t t-esc="'%.2f' % round(unit_price_with_tax, 0)"/>
                             </td>
                             <td style="padding:3px; text-align:right;">
-                                <t t-set="line_rounded" t-value="round(l.subtotal, 2) if l.subtotal else 0.0"/>
-                                <t t-set="manual_sum_total" t-value="manual_sum_total + line_rounded"/>
-                                <t t-esc="'%.2f' % line_rounded"/>
+                               <t t-set="line_total" t-value="round(l.price_total, 2) if l.price_total else 0.0"/>
+                               <t t-set="manual_sum_total" t-value="manual_sum_total + line_total"/>
+                               <!-- Rounded Line Amount to whole figure -->
+                               <t t-esc="'%.2f' % round(line_total, 0)"/>
                             </td>
                         </tr>
                     </tbody>
                 </table>
 
-                <hr style="border:1px dashed #000; margin-top:8px;"/>
-                                                            
-                <table style="width:100%; font-size:11px; margin-top:10px;">
-                    <tr>
-                        <t t-set="calculated_gst" t-value="manual_sum_total * 0.18"/>
-                        <t t-set="calculated_discount" t-value="o.discount or 0.0"/>
-                        <t t-set="raw_final_total" t-value="manual_sum_total + calculated_gst - calculated_discount"/>
-                        <t t-set="final_total" t-value="round(raw_final_total, 2)"/>
+                <hr style="border:1px solid #000; margin-top:8px;"/>
 
-                        <td style="width:60%; vertical-align:top;">
-                            <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">GST SUMMARY</div>
-                            <div>
-                                CGST + SGST (18%):
-                                <t t-esc="'%.2f' % calculated_gst"/>
-                            </div>                
-                        </td>
+<table style="width:100%; font-size:11px; margin-top:10px;">
+    <tr>
 
-                        <td style="width:40%; text-align:right; vertical-align:top;">
-                            <div><b>Total: <t t-esc="'%.2f' % manual_sum_total"/></b></div>
-                            <div><b>Discount: <t t-esc="'%.2f' % round(calculated_discount, 2)"/></b></div>   
-                            <div style="font-size:12px; font-weight:bold; margin-top:5px;">
-                                GRAND TOTAL: <t t-esc="'%.2f' % final_total"/>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
+        <!-- Process completely rounded total and discount figures -->
+        <t t-set="rounded_manual_sum" t-value="round(manual_sum_total, 0)"/>
+        <t t-set="calculated_discount" t-value="o.discount or 0.0"/>
+        <t t-set="rounded_discount" t-value="round(calculated_discount, 0)"/>
+
+        <!-- Compute finalized whole grand total -->
+        <t t-set="final_total" t-value="round(rounded_manual_sum - rounded_discount, 0)"/>
+
+        <!-- Backward calculating GST -->
+        <t t-set="taxable_amount" t-value="final_total / 1.18"/>
+        <t t-set="calculated_gst" t-value="final_total - taxable_amount"/>
+
+        <!-- LEFT SIDE -->
+        <td style="width:60%; vertical-align:top;">
+
+            <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">
+                GST Summary
+            </div>
+
+            <div>
+                CGST + SGST (18%):
+                <t t-esc="'%.2f' % round(calculated_gst, 0)"/>
+            </div>
+
+        </td>
+
+        <!-- RIGHT SIDE -->
+        <td style="width:40%; vertical-align:top;">
+
+            <table style="width:100%; border-collapse:collapse; font-size:11px;">
+
+                <!-- TOTAL -->
+                <tr>
+
+                    <td style="text-align:right; padding:1px 0;">
+                        <b>Total</b>
+                    </td>
+
+                    <td style="width:10px; text-align:center; padding:0 2px;">
+                        :
+                    </td>
+
+                    <td style="text-align:right; padding:0;">
+                        <b>
+                            <t t-esc="'%.2f' % rounded_manual_sum"/>
+                        </b>
+                    </td>
+
+                </tr>
+
+                <!-- DISCOUNT -->
+                <tr>
+
+                    <td style="text-align:right; padding:1px 0;">
+                        <b>Discount</b>
+                    </td>
+
+                    <td style="width:10px; text-align:center; padding:0 2px;">
+                        :
+                    </td>
+
+                    <td style="text-align:right; padding:0;">
+                        <b>
+                            <t t-esc="'%.2f' % rounded_discount"/>
+                        </b>
+                    </td>
+
+                </tr>
+
+                <!-- GRAND TOTAL -->
+                <tr>
+
+                    <td style="text-align:right; padding-top:3px;">
+                        <b>Grand Total</b>
+                    </td>
+
+                    <td style="width:10px; text-align:center; padding-top:3px;">
+                        :
+                    </td>
+
+                    <td style="text-align:right; padding-top:3px;">
+                        <b>
+                            <t t-esc="'%.2f' % final_total"/>
+                        </b>
+                    </td>
+
+                </tr>
+
+            </table>
+
+        </td>
+
+    </tr>
+</table>
+                                                                 
 
                 <div style="margin-top:8px; font-size:9px; line-height:1.4; word-wrap:break-word; white-space:normal;">
                     <b>Amount Payable in Words:</b>
                     <t t-esc="o.currency_id.amount_to_text(final_total).replace('And Zero Paise', '').replace(' and Zero Paise', '')"/> Only
                 </div>
                                      
-                <hr style="border:1px dashed #000; margin-top:8px;"/>
+                <hr style="border:1px solid #000; margin-top:8px;"/>
 
                 <table style="width:100%; margin-top:10px; font-size:10px; border-collapse:collapse;">
                     <tr>
@@ -520,7 +598,7 @@
                     </tr>
                 </table>
 
-                <hr style="border:1px dashed #000; margin-top:8px;"/>
+                <hr style="border:1px solid #000; margin-top:8px;"/>
 
             </div>
 
@@ -536,7 +614,7 @@
                 </div>
             </div>
 
-            <hr style="border:1px dashed #000; margin-top:8px;"/>
+            <hr style="border:1px solid #000; margin-top:8px;"/>
 
             <div style="margin-top:4px; text-align:center; font-style:normal; font-weight:normal; font-size:10px;">
                 Thank you for your patronage!
@@ -563,9 +641,9 @@
                 font-family: Arial, sans-serif !important;
             }
         </style>
-
         <t t-foreach="docs" t-as="o">
             <div style="width: 100%; font-size: 11px; line-height: 1.4; position:relative;">
+
                 <table style="width:100%; margin-bottom:0px; border-collapse: collapse;">
                     <tr>
                         <td style="width:30%; text-align:left; vertical-align:top; padding-top:0; padding-bottom:0;">
@@ -599,11 +677,11 @@
 
                 <div style="width:100%; text-align:center; margin-top:-10px; margin-bottom:4px; padding:0;">
                     <strong style="font-size:12px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        TAX INVOICE
+                        PROFORMA INVOICE
                     </strong>
                 </div>
 
-                <hr style="border:1px dashed #000; margin-top:0px; margin-bottom:5px;"/>
+                <hr style="border:1px solid #000; margin-top:0px; margin-bottom:5px;"/>
 
                 <table style="width:100%; font-size:11px; margin-top:5px;">
                     <tr>
@@ -623,7 +701,7 @@
                     </tr>
                 </table>
 
-                <hr style="border:1px dashed #000; margin-top:8px;"/>
+                <hr style="border:1px solid #000; margin-top:8px;"/>
 
                 <table style="width:100%; border-collapse:collapse; font-size:11px;">
                     <thead>
@@ -669,56 +747,130 @@
                                 <t t-esc="l.qty"/>
                             </td>
                             <td style="padding:5px; text-align:right;">
-                                <t t-esc="l.weight or 0.0"/>
+                                <t t-esc="'%.2f' % (l.weight or 0.0)"/>
                             </td>
                             <td style="padding:3px; text-align:right;">
-                                 <!-- Updated to 2 decimal places -->
-                                 <t t-esc="'%.2f' % (l.unit_price or 0.0)"/>
+                                <t t-set="qty_val" t-value="l.qty if l.pricing_type == 'per_item' else l.weight"/>
+                                <t t-set="unit_price_with_tax" t-value="(l.price_total / qty_val) if qty_val else 0.0"/>
+                                <!-- Rounded Unit Price to whole figure -->
+                                <t t-esc="'%.2f' % round(unit_price_with_tax, 0)"/>
                             </td>
                             <td style="padding:3px; text-align:right;">
-                                <t t-set="line_rounded" t-value="l.subtotal if l.subtotal else 0.0"/>
-                                <t t-set="manual_sum_total" t-value="manual_sum_total + line_rounded"/>
-                                <!-- Updated to 2 decimal places -->
-                                <t t-esc="'%.2f' % line_rounded"/>
+                               <t t-set="line_total" t-value="round(l.price_total, 2) if l.price_total else 0.0"/>
+                               <t t-set="manual_sum_total" t-value="manual_sum_total + line_total"/>
+                               <!-- Rounded Line Amount to whole figure -->
+                               <t t-esc="'%.2f' % round(line_total, 0)"/>
                             </td>
                         </tr>
                     </tbody>
                 </table>
 
-                <hr style="border:1px dashed #000; margin-top:8px;"/>
-                                                                    
-                <table style="width:100%; font-size:11px; margin-top:10px;">
-                    <tr>
-                        <t t-set="calculated_gst" t-value="manual_sum_total * 0.18"/>
-                        <t t-set="calculated_discount" t-value="o.discount or 0.0"/>
-                        <t t-set="final_total" t-value="manual_sum_total + calculated_gst - calculated_discount"/>
+                <hr style="border:1px solid #000; margin-top:8px;"/>
 
-                        <td style="width:60%; vertical-align:top;">
-                            <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">GST SUMMARY:</div>
-                            <div>
-                                CGST + SGST (18%):
-                                <!-- Updated to 2 decimal places -->
-                                <t t-esc="'%.2f' % calculated_gst"/>
-                            </div>                
-                        </td>
+<table style="width:100%; font-size:11px; margin-top:10px;">
+    <tr>
 
-                        <td style="width:40%; text-align:right; vertical-align:top;">
-                            <!-- Updated totals below to 2 decimal places -->
-                            <div><b>Total: <t t-esc="'%.2f' % manual_sum_total"/></b></div>
-                            <div><b>Discount: <t t-esc="'%.2f' % calculated_discount"/></b></div>   
-                            <div style="font-size:12px; font-weight:bold; margin-top:5px;">
-                                GRAND TOTAL: <t t-esc="'%.2f' % final_total"/>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
+        <!-- Process completely rounded total and discount figures -->
+        <t t-set="rounded_manual_sum" t-value="round(manual_sum_total, 0)"/>
+        <t t-set="calculated_discount" t-value="o.discount or 0.0"/>
+        <t t-set="rounded_discount" t-value="round(calculated_discount, 0)"/>
+
+        <!-- Compute finalized whole grand total -->
+        <t t-set="final_total" t-value="round(rounded_manual_sum - rounded_discount, 0)"/>
+
+        <!-- Backward calculating GST -->
+        <t t-set="taxable_amount" t-value="final_total / 1.18"/>
+        <t t-set="calculated_gst" t-value="final_total - taxable_amount"/>
+
+        <!-- LEFT SIDE -->
+        <td style="width:60%; vertical-align:top;">
+
+            <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">
+                GST Summary
+            </div>
+
+            <div>
+                CGST + SGST (18%):
+                <t t-esc="'%.2f' % round(calculated_gst, 0)"/>
+            </div>
+
+        </td>
+
+        <!-- RIGHT SIDE -->
+        <td style="width:40%; vertical-align:top;">
+
+            <table style="width:100%; border-collapse:collapse; font-size:11px;">
+
+                <!-- TOTAL -->
+                <tr>
+
+                    <td style="text-align:right; padding:1px 0;">
+                        <b>Total</b>
+                    </td>
+
+                    <td style="width:10px; text-align:center; padding:0 2px;">
+                        :
+                    </td>
+
+                    <td style="text-align:right; padding:0;">
+                        <b>
+                            <t t-esc="'%.2f' % rounded_manual_sum"/>
+                        </b>
+                    </td>
+
+                </tr>
+
+                <!-- DISCOUNT -->
+                <tr>
+
+                    <td style="text-align:right; padding:1px 0;">
+                        <b>Discount</b>
+                    </td>
+
+                    <td style="width:10px; text-align:center; padding:0 2px;">
+                        :
+                    </td>
+
+                    <td style="text-align:right; padding:0;">
+                        <b>
+                            <t t-esc="'%.2f' % rounded_discount"/>
+                        </b>
+                    </td>
+
+                </tr>
+
+                <!-- GRAND TOTAL -->
+                <tr>
+
+                    <td style="text-align:right; padding-top:3px;">
+                        <b>Grand Total</b>
+                    </td>
+
+                    <td style="width:10px; text-align:center; padding-top:3px;">
+                        :
+                    </td>
+
+                    <td style="text-align:right; padding-top:3px;">
+                        <b>
+                            <t t-esc="'%.2f' % final_total"/>
+                        </b>
+                    </td>
+
+                </tr>
+
+            </table>
+
+        </td>
+
+    </tr>
+</table>                                                               
 
                 <div style="margin-top:8px; font-size:9px; line-height:1.4; word-wrap:break-word; white-space:normal;">
                     <b>Amount Payable in Words:</b>
                     <t t-esc="o.currency_id.amount_to_text(final_total).replace('And Zero Paise', '').replace(' and Zero Paise', '')"/> Only
                 </div>
                                      
-                <hr style="border:1px dashed #000; margin-top:8px;"/>
+                <hr style="border:1px solid #000; margin-top:8px;"/>
 
                 <table style="width:100%; margin-top:10px; font-size:10px; border-collapse:collapse;">
                     <tr>
@@ -755,7 +907,7 @@
                     </tr>
                 </table>
 
-                <hr style="border:1px dashed #000; margin-top:8px;"/>
+                <hr style="border:1px solid #000; margin-top:8px;"/>
 
             </div>
 
@@ -771,7 +923,7 @@
                 </div>
             </div>
 
-            <hr style="border:1px dashed #000; margin-top:8px;"/>
+            <hr style="border:1px solid #000; margin-top:8px;"/>
 
             <div style="margin-top:4px; text-align:center; font-style:normal; font-weight:normal; font-size:10px;">
                 Thank you for your patronage!
@@ -779,5 +931,5 @@
 
         </t>
     </t>
-</template>
+</template>     
 </odoo>

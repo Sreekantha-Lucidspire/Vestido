@@ -65,7 +65,7 @@
                             invisible="invoice_id or id == False"/>
                             
                     <button name="action_print_tags" string="Print Tags" type="object" class="btn-primary" invisible="not tag_ids"/>
-                    <button name="action_print_receipt_80mm" string="Print Receipt" type="object" class="btn-primary" invisible="state == 'draft'"/>
+                    <button name="action_print_receipt_80mm" string="Order Receipt" type="object" class="btn-primary" invisible="state == 'draft'"/>
                     <button name="action_regenerate_tags"
                             string="Re-Generate Tags"
                             type="object"
