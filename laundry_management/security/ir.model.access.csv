@@ -6,6 +6,9 @@ access_laundry_order_staff,laundry.order.staff,model_laundry_order,laundry_manag
 access_laundry_order_line_manager,laundry.order.line.manager,model_laundry_order_line,laundry_management.group_laundry_manager,1,1,1,1
 access_laundry_order_line_staff,laundry.order.line.staff,model_laundry_order_line,laundry_management.group_laundry_staff,1,1,1,0
 
+access_laundry_order_extra_line_manager,laundry.order.extra.line.manager,model_laundry_order_extra_line,laundry_management.group_laundry_manager,1,1,1,1
+access_laundry_order_extra_line_staff,laundry.order.extra.line.staff,model_laundry_order_extra_line,laundry_management.group_laundry_staff,1,1,1,0
+
 access_laundry_product_manager,laundry.product.manager,model_laundry_product,laundry_management.group_laundry_manager,1,1,1,1
 access_laundry_product_staff,laundry.product.staff,model_laundry_product,laundry_management.group_laundry_staff,1,0,0,0
 

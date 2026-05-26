@@ -38,8 +38,8 @@ class LaundryOrder(models.Model):
         string="Images"
     )
 
-    order_line_ids = fields.One2many(
-        'laundry.order.line', 'order_id')
+    order_line_ids = fields.One2many('laundry.order.line', 'order_id')
+    extra_line_ids = fields.One2many('laundry.order.extra.line','order_id',string="Extra Charges")
 
     total_weight = fields.Float(compute='_compute_total_weight', store=True)
     amount_total = fields.Float(compute='_compute_total', store=True)
@@ -74,12 +74,35 @@ class LaundryOrder(models.Model):
     )
 
 
-    @api.depends('order_line_ids.subtotal', 'order_line_ids.price_tax','discount')
+    # @api.depends('order_line_ids.subtotal', 'order_line_ids.price_tax','discount')
+    # def _compute_amounts(self):
+    #     for order in self:
+    #         order.amount_untaxed = sum(order.order_line_ids.mapped('subtotal'))
+    #         order.amount_tax = sum(order.order_line_ids.mapped('price_tax'))
+    #         order.amount_total = order.amount_untaxed + order.amount_tax
+
+    @api.depends('order_line_ids.subtotal','order_line_ids.price_tax','extra_line_ids.subtotal')
     def _compute_amounts(self):
+
         for order in self:
-            order.amount_untaxed = sum(order.order_line_ids.mapped('subtotal'))
-            order.amount_tax = sum(order.order_line_ids.mapped('price_tax'))
-            order.amount_total = order.amount_untaxed + order.amount_tax
+
+            order.amount_untaxed = sum(
+                order.order_line_ids.mapped('subtotal')
+            )
+
+            order.amount_tax = sum(
+                order.order_line_ids.mapped('price_tax')
+            )
+
+            extra_total = sum(
+                order.extra_line_ids.mapped('subtotal')
+            )
+
+            order.amount_total = (
+                order.amount_untaxed
+                + order.amount_tax
+                + extra_total
+            )
             
     def action_print_invoice_bill(self):
         """ Method to print the 80mm Invoice Bill report """
@@ -326,16 +349,17 @@ class LaundryOrder(models.Model):
         return list(result.values())
 
 
-    def _get_or_create_product(self,laundry_product,service_type_id):
+    def _get_or_create_product(self,laundry_product,service_type_id=None):
 
         Product = self.env['product.product']
 
         # 🔹 Unique product code
         default_code = (
             f"LAUNDRY_"
-            f"{laundry_product.id}_"
-            f"{service_type_id.id}"
+            f"{laundry_product.id}"
         )
+        if service_type_id:
+            default_code += f"_{service_type_id.id}"
 
         # 🔹 Try existing product
         product = Product.search([
@@ -346,7 +370,12 @@ class LaundryOrder(models.Model):
             return product
 
         # 🔹 Validate income account
-        account = (service_type_id.income_account_id)
+        if laundry_product.product_type == 'discount':
+            account = laundry_product.expense_account_id
+        elif laundry_product.product_type == 'charge':
+            account = laundry_product.income_account_id
+        else:
+            account = (service_type_id.income_account_id)
 
         if not account:
             raise ValidationError(
@@ -410,6 +439,23 @@ class LaundryOrder(models.Model):
                      'pricing_type': line.pricing_type,
                      'weight': line.weight,
                      'premium_id': line.premium_id.id,
+                }))
+
+                # 🔹 Extra Lines
+            for extra in rec.extra_line_ids:
+                product = self._get_or_create_product(
+                    extra.product_id
+                )
+
+                invoice_lines.append((0, 0, {
+                    'product_id': product.id,
+                    'name': extra.name,
+                    'quantity': extra.quantity,
+                    'price_unit': extra.price_unit,
+                    'tax_ids': [
+                        (6, 0, extra.tax_ids.ids)
+                    ],
+
                 }))
 
             # 🔹 Create Invoice
@@ -629,3 +675,106 @@ class LaundryOrderDocument(models.Model):
     )
 
     filename = fields.Char(string="Filename")
+
+class LaundryOrderExtraLine(models.Model):
+    _name = 'laundry.order.extra.line'
+    _description = 'Laundry Extra Charges'
+
+    order_id = fields.Many2one(
+        'laundry.order',
+        ondelete='cascade'
+    )
+
+    currency_id = fields.Many2one(
+        'res.currency',
+        related='order_id.currency_id'
+    )
+
+    product_id = fields.Many2one(
+        'laundry.product',
+        required=True,
+        domain="[('product_type','in',['charge','discount'])]"
+    )
+
+    name = fields.Char()
+
+    quantity = fields.Float(default=1)
+
+    price_unit = fields.Monetary(
+        currency_field='currency_id'
+    )
+
+    tax_ids = fields.Many2many(
+        'account.tax',
+        string="Taxes"
+    )
+
+    subtotal = fields.Monetary(
+        compute='_compute_total',
+        store=True,
+        currency_field='currency_id'
+    )
+
+    # ---------------------------------------------------
+    # AUTO FILL
+    # ---------------------------------------------------
+
+    @api.onchange('product_id')
+    def _onchange_product_id(self):
+
+        for rec in self:
+
+            if not rec.product_id:
+                continue
+
+            rec.name = rec.product_id.name
+
+            # 🔹 Auto negative for discount
+            if (
+                rec.product_id.product_type
+                == 'discount'
+            ):
+
+                rec.price_unit = -abs(
+                    rec.price_unit or 0
+                )
+
+    # ---------------------------------------------------
+    # PREVENT POSITIVE DISCOUNT
+    # ---------------------------------------------------
+
+    @api.onchange('price_unit')
+    def _onchange_price_unit(self):
+
+        for rec in self:
+
+            if (
+                rec.product_id
+                and
+                rec.product_id.product_type
+                == 'discount'
+            ):
+
+                rec.price_unit = -abs(rec.price_unit)
+
+    # ---------------------------------------------------
+    # TOTAL
+    # ---------------------------------------------------
+
+    @api.depends(
+        'quantity',
+        'price_unit',
+        'tax_ids'
+    )
+    def _compute_total(self):
+
+        for rec in self:
+
+            taxes = rec.tax_ids.compute_all(
+                rec.price_unit,
+                currency=rec.currency_id,
+                quantity=rec.quantity,
+                partner=rec.order_id.partner_id
+            )
+
+            rec.subtotal = taxes['total_included']
