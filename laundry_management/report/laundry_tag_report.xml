@@ -25,7 +25,7 @@
                 <div style="
                     width: 250px;
                     height: 150px;
-                    border: 1px solid #000;
+                    border: 0.3px solid #000;
                     padding: 10px;
                     margin: 5px;
                     display: inline-block;
@@ -58,12 +58,8 @@
                                   'height': 60,
                                   'humanreadable': 1
                               }"/>
-                    </div>
-
-            
-
+                    </div>            
                 </div>
-
             </t>
         </t>
 
@@ -100,7 +96,7 @@
                     height:100%;
                     padding:2mm;
                     font-size:32px;
-                    border:1px solid #000;
+                    border:0.1px solid #ccc;
                     box-sizing:border-box;
                     overflow:hidden;
                 ">
@@ -227,7 +223,7 @@
                         </strong>
                     </div>
 
-                    <hr style="border:1px solid #000; margin-top:0px; margin-bottom:5px;"/>
+                    <hr style="border:0.1px solid #ccc; margin-top:0px; margin-bottom:5px;"/>
 
                     <table style="width:100%; font-size:11px; margin-top:5px;">
                         <tr>
@@ -247,7 +243,7 @@
                         </tr>
                     </table>
 
-                    <hr style="border:1px solid #000; margin-top:8px;"/>
+                    <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
 
                     <table style="width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed;">
                         <thead>
@@ -292,7 +288,7 @@
                         </tbody>
                     </table>
 
-                    <hr style="border:1px solid #000; margin-top:8px;"/>
+                    <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
 
                 </div>
 
@@ -306,7 +302,7 @@
                             -
                         </t>
                     </div>
-                    <hr style="border:1px solid #000; margin-top:8px;"/>
+                    <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
                 </div>          
 
             </t>
@@ -371,7 +367,7 @@
                     </strong>
                 </div>
 
-                <hr style="border:1px solid #000; margin-top:0px; margin-bottom:5px;"/>
+                <hr style="border:0.1px solid #ccc; margin-top:0px; margin-bottom:5px;"/>
 
                 <table style="width:100%; font-size:11px; margin-top:5px;">
                     <tr>
@@ -391,7 +387,7 @@
                     </tr>
                 </table>
 
-                <hr style="border:1px solid #000; margin-top:8px;"/>
+                <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
 
                 <table style="width:100%; border-collapse:collapse; font-size:11px;">
                     <thead>
@@ -455,18 +451,21 @@
                     </tbody>
                 </table>
 
-                <hr style="border:1px solid #000; margin-top:8px;"/>
-
+                <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
+<t t-set="discount_total" t-value="sum(o.extra_line_ids.filtered(lambda l:l.product_id.product_type == 'discount').mapped('subtotal'))"/>
+<t t-set="other_charges_total" t-value="sum(o.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'charge').mapped('subtotal'))"/>
 <table style="width:100%; font-size:11px; margin-top:10px;">
     <tr>
 
         <!-- Process completely rounded total and discount figures -->
         <t t-set="rounded_manual_sum" t-value="round(manual_sum_total, 0)"/>
-        <t t-set="calculated_discount" t-value="o.discount or 0.0"/>
+        <t t-set="calculated_discount" t-value="abs(discount_total)"/>
         <t t-set="rounded_discount" t-value="round(calculated_discount, 0)"/>
 
         <!-- Compute finalized whole grand total -->
-        <t t-set="final_total" t-value="round(rounded_manual_sum - rounded_discount, 0)"/>
+        <t t-set="rounded_other_charges" t-value="round(other_charges_total, 0)"/>
+
+        <t t-set="final_total" t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount, 0)"/>
 
         <!-- Backward calculating GST -->
         <t t-set="taxable_amount" t-value="final_total / 1.18"/>
@@ -509,7 +508,20 @@
                     </td>
 
                 </tr>
-
+                <!-- OTHER CHARGES -->
+                <tr>
+                    <td style="text-align:right; padding:1px 0;">
+                        <b>Other Charges</b>
+                    </td>
+                    <td style="width:10px; text-align:center; padding:0 2px;">
+                        :
+                    </td>
+                    <td style="text-align:right; padding:0;">
+                        <b>
+                    <t t-esc="'%.2f' % round(other_charges_total, 0)"/>
+                        </b>
+                    </td>
+                </tr>
                 <!-- DISCOUNT -->
                 <tr>
 
@@ -561,7 +573,7 @@
                     <t t-esc="o.currency_id.amount_to_text(final_total).replace('And Zero Paise', '').replace(' and Zero Paise', '')"/> Only
                 </div>
                                      
-                <hr style="border:1px solid #000; margin-top:8px;"/>
+                <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
 
                 <table style="width:100%; margin-top:10px; font-size:10px; border-collapse:collapse;">
                     <tr>
@@ -598,7 +610,7 @@
                     </tr>
                 </table>
 
-                <hr style="border:1px solid #000; margin-top:8px;"/>
+                <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
 
             </div>
 
@@ -614,7 +626,7 @@
                 </div>
             </div>
 
-            <hr style="border:1px solid #000; margin-top:8px;"/>
+            <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
 
             <div style="margin-top:4px; text-align:center; font-style:normal; font-weight:normal; font-size:10px;">
                 Thank you for your patronage!
@@ -681,7 +693,7 @@
                     </strong>
                 </div>
 
-                <hr style="border:1px solid #000; margin-top:0px; margin-bottom:5px;"/>
+                <hr style="border:0.1px solid #ccc; margin-top:0px; margin-bottom:5px;"/>
 
                 <table style="width:100%; font-size:11px; margin-top:5px;">
                     <tr>
@@ -701,7 +713,7 @@
                     </tr>
                 </table>
 
-                <hr style="border:1px solid #000; margin-top:8px;"/>
+                <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
 
                 <table style="width:100%; border-collapse:collapse; font-size:11px;">
                     <thead>
@@ -765,18 +777,20 @@
                     </tbody>
                 </table>
 
-                <hr style="border:1px solid #000; margin-top:8px;"/>
-
+                <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
+<t t-set="discount_total" t-value="sum(o.extra_line_ids.filtered(lambda l:l.product_id.product_type == 'discount').mapped('subtotal'))"/>
+<t t-set="other_charges_total" t-value="sum(o.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'charge').mapped('subtotal'))"/>
 <table style="width:100%; font-size:11px; margin-top:10px;">
     <tr>
 
         <!-- Process completely rounded total and discount figures -->
         <t t-set="rounded_manual_sum" t-value="round(manual_sum_total, 0)"/>
-        <t t-set="calculated_discount" t-value="o.discount or 0.0"/>
-        <t t-set="rounded_discount" t-value="round(calculated_discount, 0)"/>
+        <t t-set="rounded_discount" t-value="round(discount_total, 0)"/>
 
         <!-- Compute finalized whole grand total -->
-        <t t-set="final_total" t-value="round(rounded_manual_sum - rounded_discount, 0)"/>
+        <t t-set="rounded_other_charges" t-value="round(other_charges_total, 0)"/>
+        <t t-set="final_total"
+           t-value="round(rounded_manual_sum + rounded_other_charges + rounded_discount, 0)"/>
 
         <!-- Backward calculating GST -->
         <t t-set="taxable_amount" t-value="final_total / 1.18"/>
@@ -819,6 +833,38 @@
                     </td>
 
                 </tr>
+                <!-- OTHER CHARGES -->
+        <t t-foreach="o.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'other')" t-as="extra">
+            <tr>
+
+                <td style="text-align:right; padding:1px 0;">
+                    <b>
+                        <t t-esc="extra.name or extra.product_id.name"/>
+                    </b>
+                </td>
+                <td style="width:10px; text-align:center; padding:0 2px;">
+                    :
+                </td>
+                <td style="text-align:right; padding:0;">
+                    <b>
+                        <t t-esc="'%.2f' % round(extra.subtotal or 0.0, 0)"/>
+                    </b> 
+                </td>
+            </tr>
+        </t>
+                <tr>
+                    <td style="text-align:right; padding:1px 0;">
+                        <b>Other Charges</b>
+                    </td>
+                    <td style="width:10px; text-align:center; padding:0 2px;">
+                        :
+                    </td>
+                    <td style="text-align:right; padding:0;">
+                        <b>
+                    <t t-esc="'%.2f' % round(other_charges_total, 0)"/>
+                        </b>
+                    </td>
+                </tr>                
 
                 <!-- DISCOUNT -->
                 <tr>
@@ -833,7 +879,7 @@
 
                     <td style="text-align:right; padding:0;">
                         <b>
-                            <t t-esc="'%.2f' % rounded_discount"/>
+                            <t t-esc="'%.2f' % abs(rounded_discount)"/>
                         </b>
                     </td>
 
@@ -870,7 +916,7 @@
                     <t t-esc="o.currency_id.amount_to_text(final_total).replace('And Zero Paise', '').replace(' and Zero Paise', '')"/> Only
                 </div>
                                      
-                <hr style="border:1px solid #000; margin-top:8px;"/>
+                <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
 
                 <table style="width:100%; margin-top:10px; font-size:10px; border-collapse:collapse;">
                     <tr>
@@ -907,7 +953,7 @@
                     </tr>
                 </table>
 
-                <hr style="border:1px solid #000; margin-top:8px;"/>
+                <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
 
             </div>
 
@@ -923,7 +969,7 @@
                 </div>
             </div>
 
-            <hr style="border:1px solid #000; margin-top:8px;"/>
+            <hr style="border:0.1px solid #ccc; margin-top:8px;"/>
 
             <div style="margin-top:4px; text-align:center; font-style:normal; font-weight:normal; font-size:10px;">
                 Thank you for your patronage!

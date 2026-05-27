@@ -29,8 +29,8 @@
                             <field name="company_id" invisible="1"/>
                         </group>
                         <group invisible="product_type == 'service'">
-                            <field name="income_account_id" invisible="product_type != 'charge'" required="product_type == 'charge'"/>
-                            <field name="expense_account_id" invisible="product_type != 'discount'" required="product_type == 'discount'"/>
+                              <field name="income_account_id" invisible="product_type not in ['charge', 'other']" required="product_type in ['charge', 'other']"/>
+                              <field name="expense_account_id" invisible="product_type != 'discount'" required="product_type == 'discount'"/>
                         </group>
                     </group>
                 </sheet>

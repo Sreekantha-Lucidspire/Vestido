@@ -19,6 +19,7 @@ class LaundryProduct(models.Model):
     product_type = fields.Selection([
         ('service', 'Service'),
         ('charge', 'Charge'),
+        ('other', 'Other Charges'),
         ('discount', 'Discount'),
     ], default='service')
 

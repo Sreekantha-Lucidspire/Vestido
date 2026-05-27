@@ -123,7 +123,7 @@
 
                     </div>
 
-                    <hr style="border:1px solid #000;
+                    <hr style="border:0.1px solid #ccc;
                                margin-top:0px;
                                margin-bottom:5px;"/>
 
@@ -193,7 +193,7 @@
 
                     </table>
 
-                    <hr style="border:1px solid #000;
+                    <hr style="border:0.1px solid #ccc;
                                margin-top:8px;"/>
 
                     <!-- ITEM TABLE -->
@@ -383,8 +383,15 @@
 
                     </table>
 
-                    <hr style="border:1px solid #000;
+                    <hr style="border:0.1px solid #ccc;
                                margin-top:8px;"/>
+
+                    <!-- EXTRA CALCULATIONS -->
+                    <t t-set="discount_total"
+                       t-value="sum(o.laundry_order_id.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'discount').mapped('subtotal'))"/>
+
+                    <t t-set="other_charges_total"
+                       t-value="sum(o.laundry_order_id.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'charge').mapped('subtotal'))"/>
 
                     <!-- TOTALS -->
                     <table style="width:100%;
@@ -399,14 +406,18 @@
 
                             <!-- DISCOUNT -->
                             <t t-set="calculated_discount"
-                               t-value="o.laundry_order_id.discount or 0.0"/>
+                               t-value="abs(discount_total)"/>
 
                             <t t-set="rounded_discount"
                                t-value="round(calculated_discount, 0)"/>
 
+                            <!-- OTHER CHARGES -->
+                            <t t-set="rounded_other_charges"
+                               t-value="round(other_charges_total, 0)"/>
+
                             <!-- GRAND TOTAL -->
                             <t t-set="final_total"
-                               t-value="round(rounded_manual_sum - rounded_discount, 0)"/>
+                               t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount, 0)"/>
 
                             <!-- GST -->
                             <t t-set="taxable_amount"
@@ -468,6 +479,35 @@
 
                                             <b>
                                                 <t t-esc="'%.2f' % rounded_manual_sum"/>
+                                            </b>
+
+                                        </td>
+
+                                    </tr>
+
+                                    <!-- OTHER CHARGES -->
+                                    <tr>
+
+                                        <td style="text-align:right;
+                                                   padding:1px 0;">
+
+                                            <b>Other Charges</b>
+
+                                        </td>
+
+                                        <td style="width:10px;
+                                                   text-align:center;
+                                                   padding:0 2px;">
+
+                                            :
+
+                                        </td>
+
+                                        <td style="text-align:right;
+                                                   padding:0;">
+
+                                            <b>
+                                                <t t-esc="'%.2f' % rounded_other_charges"/>
                                             </b>
 
                                         </td>
@@ -555,7 +595,7 @@
 
                     </div>
 
-                    <hr style="border:1px solid #000;
+                    <hr style="border:0.1px solid #ccc;
                                margin-top:8px;"/>
 
                     <!-- PAYMENT DETAILS -->
@@ -634,7 +674,7 @@
 
                     </table>
 
-                    <hr style="border:1px solid #000;
+                    <hr style="border:0.1px solid #ccc;
                                margin-top:8px;"/>
 
                 </div>
@@ -664,7 +704,7 @@
 
                 </div>
 
-                <hr style="border:1px solid #000;
+                <hr style="border:0.1px solid #ccc;
                            margin-top:8px;"/>
 
                 <!-- FOOTER -->

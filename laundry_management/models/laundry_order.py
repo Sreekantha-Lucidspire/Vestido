@@ -26,7 +26,6 @@ class LaundryOrder(models.Model):
         tracking=True
     )
     active = fields.Boolean(default=True)
-    discount = fields.Monetary(string="Discount")
     grand_total = fields.Monetary(
         string="Grand Total",
         compute="_compute_grand_total",
@@ -110,10 +109,10 @@ class LaundryOrder(models.Model):
         return self.env.ref('laundry_management.action_laundry_invoice_bill').report_action(self)
         
 
-    @api.depends('amount_total', 'discount')
+    @api.depends('amount_total')
     def _compute_grand_total(self):
         for rec in self:
-            rec.grand_total = rec.amount_total - rec.discount
+            rec.grand_total = rec.amount_total 
 
     @api.depends('company_id')
     def _compute_currency_id(self):
