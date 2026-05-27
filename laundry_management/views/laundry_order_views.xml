@@ -175,8 +175,9 @@
                                     
                                 </list>
                             </field>
-                        </page>
-                        <page string="Extra Charges">
+                            <div class="o_form_label">
+                                 Extra Charges
+                            </div>
                             <field name="extra_line_ids">
                                 <list editable="bottom">
                                     <field name="product_id"/>
