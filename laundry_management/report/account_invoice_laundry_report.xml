@@ -29,7 +29,6 @@
                             line-height:1.4;
                             position:relative;">
 
-                    <!-- HEADER -->
                     <table style="width:100%;
                                   margin-bottom:0px;
                                   border-collapse:collapse;">
@@ -106,7 +105,6 @@
 
                     </table>
 
-                    <!-- TITLE -->
                     <div style="width:100%;
                                 text-align:center;
                                 margin-top:-10px;
@@ -125,9 +123,8 @@
 
                     <hr style="border:0.1px solid #000;
                                margin-top:0px;
-                               margin-bottom:5px;"/>
+                               margin-bottom:5px;/"/>
 
-                    <!-- CUSTOMER DETAILS -->
                     <table style="width:100%;
                                   font-size:11px;
                                   margin-top:5px;">
@@ -196,7 +193,6 @@
                     <hr style="border:0.1px solid #000;
                                margin-top:8px;"/>
 
-                    <!-- ITEM TABLE -->
                     <table style="width:100%;
                                   border-collapse:collapse;
                                   font-size:11px;">
@@ -301,7 +297,6 @@
 
                                 <t t-set="i" t-value="i + 1"/>
 
-                                <!-- SNO -->
                                 <td style="padding:3px;
                                            text-align:left;">
 
@@ -309,7 +304,6 @@
 
                                 </td>
 
-                                <!-- ITEM -->
                                 <td style="padding:3px;">
 
                                     <div>
@@ -333,7 +327,6 @@
 
                                 </td>
 
-                                <!-- QTY -->
                                 <td style="padding:5px;
                                            text-align:right;">
 
@@ -341,7 +334,6 @@
 
                                 </td>
 
-                                <!-- WEIGHT -->
                                 <td style="padding:5px;
                                            text-align:right;">
 
@@ -349,7 +341,6 @@
 
                                 </td>
 
-                                <!-- UNIT PRICE -->
                                 <td style="padding:3px;
                                            text-align:right;">
 
@@ -363,7 +354,6 @@
 
                                 </td>
 
-                                <!-- LINE TOTAL -->
                                 <td style="padding:3px;
                                            text-align:right;">
 
@@ -386,48 +376,40 @@
                     <hr style="border:0.1px solid #000;
                                margin-top:8px;"/>
 
-                    <!-- EXTRA CALCULATIONS -->
                     <t t-set="discount_total"
                        t-value="sum(o.laundry_order_id.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'discount').mapped('subtotal'))"/>
 
                     <t t-set="other_charges_total"
                        t-value="sum(o.laundry_order_id.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'charge').mapped('subtotal'))"/>
 
-                    <!-- TOTALS -->
                     <table style="width:100%;
                                   font-size:11px;
                                   margin-top:10px;">
 
                         <tr>
 
-                            <!-- TOTAL -->
                             <t t-set="rounded_manual_sum"
                                t-value="round(manual_sum_total, 0)"/>
 
-                            <!-- DISCOUNT -->
                             <t t-set="calculated_discount"
                                t-value="abs(discount_total)"/>
 
                             <t t-set="rounded_discount"
                                t-value="round(calculated_discount, 0)"/>
 
-                            <!-- OTHER CHARGES -->
                             <t t-set="rounded_other_charges"
                                t-value="round(other_charges_total, 0)"/>
 
-                            <!-- GRAND TOTAL -->
                             <t t-set="final_total"
                                t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount, 0)"/>
 
-                            <!-- GST -->
                             <t t-set="taxable_amount"
                                t-value="final_total / 1.18"/>
 
                             <t t-set="calculated_gst"
                                t-value="final_total - taxable_amount"/>
 
-                            <!-- LEFT -->
-                            <td style="width:60%;
+                            <td style="width:55%;
                                        vertical-align:top;">
 
                                 <div style="font-weight:bold;
@@ -448,19 +430,18 @@
 
                             </td>
 
-                            <!-- RIGHT -->
-                            <td style="width:40%;
+                            <td style="width:45%;
                                        vertical-align:top;">
 
                                 <table style="width:100%;
                                               border-collapse:collapse;
                                               font-size:11px;">
 
-                                    <!-- TOTAL -->
                                     <tr>
 
                                         <td style="text-align:right;
-                                                   padding:1px 0;">
+                                                   padding:1px 0;
+                                                   white-space:nowrap;">
 
                                             <b>Total</b>
 
@@ -485,11 +466,11 @@
 
                                     </tr>
 
-                                    <!-- OTHER CHARGES -->
                                     <tr>
 
                                         <td style="text-align:right;
-                                                   padding:1px 0;">
+                                                   padding:1px 0;
+                                                   white-space:nowrap;">
 
                                             <b>Other Charges</b>
 
@@ -514,11 +495,11 @@
 
                                     </tr>
 
-                                    <!-- DISCOUNT -->
                                     <tr>
 
                                         <td style="text-align:right;
-                                                   padding:1px 0;">
+                                                   padding:1px 0;
+                                                   white-space:nowrap;">
 
                                             <b>Discount</b>
 
@@ -543,11 +524,11 @@
 
                                     </tr>
 
-                                    <!-- GRAND TOTAL -->
                                     <tr>
 
                                         <td style="text-align:right;
-                                                   padding-top:3px;">
+                                                   padding-top:3px;
+                                                   white-space:nowrap;">
 
                                             <b>Grand Total</b>
 
@@ -580,7 +561,6 @@
 
                     </table>
 
-                    <!-- AMOUNT IN WORDS -->
                     <div style="margin-top:8px;
                                 font-size:9px;
                                 line-height:1.4;
@@ -598,7 +578,6 @@
                     <hr style="border:0.1px solid #000;
                                margin-top:8px;"/>
 
-                    <!-- PAYMENT DETAILS -->
                     <table style="width:100%;
                                   margin-top:10px;
                                   font-size:10px;
@@ -637,7 +616,6 @@
 
                             </td>
 
-                            <!-- QR -->
                             <td style="width:35%;
                                        vertical-align:top;
                                        text-align:center;">
@@ -679,7 +657,6 @@
 
                 </div>
 
-                <!-- REMARKS -->
                 <div style="margin-top:8px;
                             font-size:9px;
                             line-height:1.4;
@@ -707,7 +684,6 @@
                 <hr style="border:0.1px solid #000;
                            margin-top:8px;"/>
 
-                <!-- FOOTER -->
                 <div style="margin-top:4px;
                             text-align:center;
                             font-style:normal;

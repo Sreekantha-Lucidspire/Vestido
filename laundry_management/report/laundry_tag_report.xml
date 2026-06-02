@@ -68,7 +68,7 @@
 <!-- </odoo>
 
 <odoo> -->
-    <template id="report_laundry_tag_30mm">
+<template id="report_laundry_tag_30mm">
 
         <t t-call="web.html_container">
 
@@ -101,16 +101,11 @@
                     overflow:hidden;
                 ">
 
-                    <!-- Order -->
-                    <!-- <div style="font-weight:bold; font-size:32px;">
-                        <t t-esc="tag.order_id.name"/>
-                    </div> -->
                     <div style="font-weight:bold; font-size:32px;">
                         <t t-esc="tag.name"/> -
                         <t t-esc="tag.order_line_id.service_type_id.name"/>
                     </div>
 
-                    <!-- Customer -->
                     <div style="
                         white-space:nowrap;
                         overflow:hidden;
@@ -119,7 +114,6 @@
                         <t t-esc="tag.order_id.name"/> - <t t-esc="tag.partner_id.name"/>
                     </div>
 
-                    <!-- Item -->
                     <t t-if="tag.order_line_id">
                         <div style="
                             white-space:nowrap;
@@ -130,7 +124,6 @@
                         </div>
                     </t>
 
-                    <!-- Barcode -->
                     <div style="text-align:center; margin-top:2px;">
                         <span t-field="tag.barcode"
                               t-options="{
@@ -144,7 +137,6 @@
 
                 </div>
 
-                <!-- PAGE BREAK ONLY BETWEEN TAGS -->
                 <t t-if="i != len(docs) - 1">
                     <div style="page-break-after: always;"></div>
                 </t>
@@ -154,6 +146,7 @@
         </t>
 
     </template>
+
     <template id="report_laundry_receipt_80mm">
 
         <t t-call="web.html_container">
@@ -308,674 +301,637 @@
             </t>
         </t>
     </template>
-<template id="report_laundry_quotation">
-    <t t-call="web.html_container">
-        <style>
-            @page {
-                size: 80mm auto;
-                margin: 0 !important;
-            }
 
-            html, body {
-                margin: 0 !important;
-                padding: 0 !important;
-                font-family: Arial, sans-serif !important;
-            }
+    <template id="report_laundry_quotation">
+        <t t-call="web.html_container">
+            <style>
+                @page {
+                    size: 80mm auto;
+                    margin: 0 !important;
+                }
 
-            * {
-                font-family: Arial, sans-serif !important;
-            }
-        </style>
+                html, body {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    font-family: Arial, sans-serif !important;
+                }
 
-        <t t-foreach="docs" t-as="o">
-            <div style="width: 100%; font-size: 11px; line-height: 1.4; position:relative;">
+                * {
+                    font-family: Arial, sans-serif !important;
+                }
+            </style>
 
-                <table style="width:100%; margin-bottom:0px; border-collapse: collapse;">
-                    <tr>
-                        <td style="width:30%; text-align:left; vertical-align:top; padding-top:0; padding-bottom:0;">
-                            <t t-if="o.company_id.logo">
-                                <img t-att-src="image_data_uri(o.company_id.logo)"
-                                     style="height:120px; width:auto; display: block;"/>
-                            </t>
-                        </td>
+            <t t-foreach="docs" t-as="o">
+                <div style="width: 100%; font-size: 11px; line-height: 1.4; position:relative;">
 
-                        <td style="width:70%; text-align:left; vertical-align:top; padding-left:10mm; padding-bottom:0;">
-                            <div style="margin-top:5px;">
-                                <div style="font-size:13px; font-weight:bold; line-height:1.2; padding-bottom:8px;">
-                                    <t t-esc="o.company_id.name"/>
-                                </div>          
-                                <div style="font-size:9px; line-height:1.4;">
-                                    <t t-esc="o.company_id.street or ''"/><br/>
-                                    <t t-esc="o.company_id.street2 or ''"/><br/>
-                                    <t t-esc="o.company_id.city or ''"/>
-                                    <t t-if="o.company_id.zip"> - <t t-esc="o.company_id.zip"/></t><br/>
-                                </div>
-                                <div style="font-size:10px;">
-                                    Ph: <t t-esc="o.company_id.phone or '-'"/>
-                                </div>
-                                <div style="font-size:10px;">
-                                    GSTIN: <t t-esc="o.company_id.vat or '-'"/>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-
-                <div style="width:100%; text-align:center; margin-top:-10px; margin-bottom:4px; padding:0;">
-                    <strong style="font-size:12px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        PROFORMA INVOICE
-                    </strong>
-                </div>
-
-                <hr style="border:0.1px solid #000; margin-top:0px; margin-bottom:5px;"/>
-
-                <table style="width:100%; font-size:11px; margin-top:5px;">
-                    <tr>
-                        <td style="width:50%; vertical-align:top; font-size:9px; line-height:1.4;">
-                            <b>Customer Name:</b> <t t-esc="o.partner_id.name"/><br/>
-                            <b>Address:</b> <t t-esc="o.partner_id.street or ''"/><t t-esc="o.partner_id.street2 or ''"/><br/>
-                            <t t-esc="o.partner_id.city or ''"/>
-                            <t t-if="o.partner_id.zip"> - <t t-esc="o.partner_id.zip"/></t><br/>
-                            <b>Contact No:</b> <t t-esc="o.partner_id.phone or '-'"/>
-                        </td>
-
-                        <td style="width:50%; text-align:left; vertical-align:top; font-size:9px; line-height:1.4; padding-left:16px;">
-                            <b>Order No:</b> <t t-esc="o.name"/><br/>
-                            <b>Received Date:</b> <span t-field="o.order_date" t-options="{'format': 'dd-MM-yyyy'}"/><br/>
-                            <b>Delivery Date:</b> <span t-field="o.delivery_date" t-options="{'format': 'dd-MM-yyyy'}"/>
-                        </td>
-                    </tr>
-                </table>
-
-                <hr style="border:0.1px solid #000; margin-top:8px;"/>
-
-                <table style="width:100%; border-collapse:collapse; font-size:11px;">
-                    <thead>
+                    <table style="width:100%; margin-bottom:0px; border-collapse: collapse;">
                         <tr>
-                           <th style="text-align:left; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">S.No.</th>
-                           <th style="text-align:left; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">Items &amp; Services</th>
-                           <th style="text-align:right; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">Qty</th>
-                           <th style="text-align:right; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">
-                               Wt
-                               <div style="font-size:9px; color:#333;">(Kg)</div>
-                           </th>
-                           <th style="text-align:right; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">
-                               Unit Price
-                               <div style="font-size:9px; color:#333;">(Rs.)</div>
-                           </th>
-                           <th style="text-align:right; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">
-                               Amt
-                              <div style="font-size:9px; color:#333;">(Rs.)</div>
-                           </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <t t-set="i" t-value="0"/>
-                        <t t-set="manual_sum_total" t-value="0"/>
-                        <tr t-foreach="o.order_line_ids" t-as="l" style="border-bottom:0.5px solid #eee;">
-                            <t t-set="i" t-value="i + 1"/>
-                            <td style="padding:3px; text-align:left;">
-                                <t t-esc="i"/>
+                            <td style="width:30%; text-align:left; vertical-align:top; padding-top:0; padding-bottom:0;">
+                                <t t-if="o.company_id.logo">
+                                    <img t-att-src="image_data_uri(o.company_id.logo)"
+                                         style="height:120px; width:auto; display: block;"/>
+                                </t>
                             </td>
-                            <td style="padding:3px;">
-                                <div>
-                                    <t t-esc="l.product_id.name"/>
+
+                            <td style="width:70%; text-align:left; vertical-align:top; padding-left:10mm; padding-bottom:0;">
+                                <div style="margin-top:5px;">
+                                    <div style="font-size:13px; font-weight:bold; line-height:1.2; padding-bottom:8px;">
+                                        <t t-esc="o.company_id.name"/>
+                                    </div>          
+                                    <div style="font-size:9px; line-height:1.4;">
+                                        <t t-esc="o.company_id.street or ''"/><br/>
+                                        <t t-esc="o.company_id.street2 or ''"/><br/>
+                                        <t t-esc="o.company_id.city or ''"/>
+                                        <t t-if="o.company_id.zip"> - <t t-esc="o.company_id.zip"/></t><br/>
+                                    </div>
+                                    <div style="font-size:10px;">
+                                        Ph: <t t-esc="o.company_id.phone or '-'"/>
+                                    </div>
+                                    <div style="font-size:10px;">
+                                        GSTIN: <t t-esc="o.company_id.vat or '-'"/>
+                                    </div>
                                 </div>
-                                <div style="font-size:9px; color:#333;">
-                                    <t t-esc="l.service_type_id.name"/>
-                                    <t t-if="l.premium_id">
-                                        <span> | </span>
-                                        <t t-esc="l.premium_id.name"/> 
-                                    </t>
-                                </div>
-                            </td>
-                            <td style="padding:5px; text-align:right;">
-                                <t t-esc="l.qty"/>
-                            </td>
-                            <td style="padding:5px; text-align:right;">
-                                <t t-esc="'%.2f' % (l.weight or 0.0)"/>
-                            </td>
-                            <td style="padding:3px; text-align:right;">
-                                <t t-set="qty_val" t-value="l.qty if l.pricing_type == 'per_item' else l.weight"/>
-                                <t t-set="unit_price_with_tax" t-value="(l.price_total / qty_val) if qty_val else 0.0"/>
-                                <!-- Rounded Unit Price to whole figure -->
-                                <t t-esc="'%.2f' % round(unit_price_with_tax, 0)"/>
-                            </td>
-                            <td style="padding:3px; text-align:right;">
-                               <t t-set="line_total" t-value="round(l.price_total, 2) if l.price_total else 0.0"/>
-                               <t t-set="manual_sum_total" t-value="manual_sum_total + line_total"/>
-                               <!-- Rounded Line Amount to whole figure -->
-                               <t t-esc="'%.2f' % round(line_total, 0)"/>
                             </td>
                         </tr>
-                    </tbody>
-                </table>
+                    </table>
 
-                <hr style="border:0.1px solid #000; margin-top:8px;"/>
-<t t-set="discount_total" t-value="sum(o.extra_line_ids.filtered(lambda l:l.product_id.product_type == 'discount').mapped('subtotal'))"/>
-<t t-set="other_charges_total" t-value="sum(o.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'charge').mapped('subtotal'))"/>
-<table style="width:100%; font-size:11px; margin-top:10px;">
-    <tr>
+                    <div style="width:100%; text-align:center; margin-top:-10px; margin-bottom:4px; padding:0;">
+                        <strong style="font-size:12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            PROFORMA INVOICE
+                        </strong>
+                    </div>
 
-        <!-- Process completely rounded total and discount figures -->
-        <t t-set="rounded_manual_sum" t-value="round(manual_sum_total, 0)"/>
-        <t t-set="calculated_discount" t-value="abs(discount_total)"/>
-        <t t-set="rounded_discount" t-value="round(calculated_discount, 0)"/>
+                    <hr style="border:0.1px solid #000; margin-top:0px; margin-bottom:5px;"/>
 
-        <!-- Compute finalized whole grand total -->
-        <t t-set="rounded_other_charges" t-value="round(other_charges_total, 0)"/>
-
-        <t t-set="final_total" t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount, 0)"/>
-
-        <!-- Backward calculating GST -->
-        <t t-set="taxable_amount" t-value="final_total / 1.18"/>
-        <t t-set="calculated_gst" t-value="final_total - taxable_amount"/>
-
-        <!-- LEFT SIDE -->
-        <td style="width:60%; vertical-align:top;">
-
-            <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">
-                GST Summary
-            </div>
-
-            <div>
-                CGST + SGST (18%):
-                <t t-esc="'%.2f' % round(calculated_gst, 0)"/>
-            </div>
-
-        </td>
-
-        <!-- RIGHT SIDE -->
-        <td style="width:40%; vertical-align:top;">
-
-            <table style="width:100%; border-collapse:collapse; font-size:11px;">
-
-                <!-- TOTAL -->
-                <tr>
-
-                    <td style="text-align:right; padding:1px 0;">
-                        <b>Total</b>
-                    </td>
-
-                    <td style="width:10px; text-align:center; padding:0 2px;">
-                        :
-                    </td>
-
-                    <td style="text-align:right; padding:0;">
-                        <b>
-                            <t t-esc="'%.2f' % rounded_manual_sum"/>
-                        </b>
-                    </td>
-
-                </tr>
-                <!-- OTHER CHARGES -->
-                <tr>
-                    <td style="text-align:right; padding:1px 0;">
-                        <b>Other Charges</b>
-                    </td>
-                    <td style="width:10px; text-align:center; padding:0 2px;">
-                        :
-                    </td>
-                    <td style="text-align:right; padding:0;">
-                        <b>
-                    <t t-esc="'%.2f' % round(other_charges_total, 0)"/>
-                        </b>
-                    </td>
-                </tr>
-                <!-- DISCOUNT -->
-                <tr>
-
-                    <td style="text-align:right; padding:1px 0;">
-                        <b>Discount</b>
-                    </td>
-
-                    <td style="width:10px; text-align:center; padding:0 2px;">
-                        :
-                    </td>
-
-                    <td style="text-align:right; padding:0;">
-                        <b>
-                            <t t-esc="'%.2f' % rounded_discount"/>
-                        </b>
-                    </td>
-
-                </tr>
-
-                <!-- GRAND TOTAL -->
-                <tr>
-
-                    <td style="text-align:right; padding-top:3px;">
-                        <b>Grand Total</b>
-                    </td>
-
-                    <td style="width:10px; text-align:center; padding-top:3px;">
-                        :
-                    </td>
-
-                    <td style="text-align:right; padding-top:3px;">
-                        <b>
-                            <t t-esc="'%.2f' % final_total"/>
-                        </b>
-                    </td>
-
-                </tr>
-
-            </table>
-
-        </td>
-
-    </tr>
-</table>
-                                                                 
-
-                <div style="margin-top:8px; font-size:9px; line-height:1.4; word-wrap:break-word; white-space:normal;">
-                    <b>Amount Payable in Words:</b>
-                    <t t-esc="o.currency_id.amount_to_text(final_total).replace('And Zero Paise', '').replace(' and Zero Paise', '')"/> Only
-                </div>
-                                     
-                <hr style="border:0.1px solid #000; margin-top:8px;"/>
-
-                <table style="width:100%; margin-top:10px; font-size:10px; border-collapse:collapse;">
-                    <tr>
-                        <td style="width:65%; vertical-align:top; padding-right:8px; line-height:1.6;">
-                            <div style="font-weight:bold; margin-bottom:4px; font-size:11px;">
-                                Payment Details
-                            </div>
-                            <div>
-                                <b>Bank:</b> HDFC Bank
-                            </div>
-                            <div>
-                                <b>Account No:</b> 50200119008704
-                            </div>
-                            <div>
-                                <b>IFSC:</b> HDFC0004033
-                            </div>
-                            <div>
-                                <b>Recipient:</b> VESTIDO FABWASH STUDIO
-                            </div>
-                        </td>
-
-                        <td style="width:35%; vertical-align:top; text-align:center;">
-                            <t t-set="upi_attachment" t-value="o.env['ir.attachment'].sudo().search([('name', '=', 'upi_qr.png')], limit=1)"/>
-                            <t t-if="upi_attachment">
-                                <img t-att-src="image_data_uri(upi_attachment.datas)" 
-                                     style="width:100px;height:100px;"/>
-                            </t>
-                            <t t-else="">
-                                <div style="font-size:8px; color:red; border:1px solid red; padding:5px;">
-                                    QR Attachment Missing<br/>(Upload 'upi_qr.png')
-                                </div>
-                            </t>
-                        </td>
-                    </tr>
-                </table>
-
-                <hr style="border:0.1px solid #000; margin-top:8px;"/>
-
-            </div>
-
-            <div style="margin-top:8px; font-size:9px; line-height:1.4; padding:4px;">
-                <b>Remarks:</b>
-                <div style="word-wrap:break-word; white-space:normal;">
-                    <t t-if="o.remarks">
-                        <t t-esc="o.remarks"/>
-                    </t>
-                    <t t-else="">
-                        -
-                    </t>
-                </div>
-            </div>
-
-            <hr style="border:0.1px solid #000; margin-top:8px;"/>
-
-            <div style="margin-top:4px; text-align:center; font-style:normal; font-weight:normal; font-size:10px;">
-                Thank you for your patronage!
-            </div>
-
-        </t>
-    </t>
-</template>
-<template id="report_laundry_invoice_bill">
-    <t t-call="web.html_container">
-        <style>
-            @page {
-                size: 80mm auto;
-                margin: 0 !important;
-            }
-
-            html, body {
-                margin: 0 !important;
-                padding: 0 !important;
-                font-family: Arial, sans-serif !important;
-            }
-
-            * {
-                font-family: Arial, sans-serif !important;
-            }
-        </style>
-        <t t-foreach="docs" t-as="o">
-            <div style="width: 100%; font-size: 11px; line-height: 1.4; position:relative;">
-
-                <table style="width:100%; margin-bottom:0px; border-collapse: collapse;">
-                    <tr>
-                        <td style="width:30%; text-align:left; vertical-align:top; padding-top:0; padding-bottom:0;">
-                            <t t-if="o.company_id.logo">
-                                <img t-att-src="image_data_uri(o.company_id.logo)"
-                                     style="height:120px; width:auto; display: block;"/>
-                            </t>
-                        </td>
-
-                        <td style="width:70%; text-align:left; vertical-align:top; padding-left:10mm; padding-bottom:0;">
-                            <div style="margin-top:5px;">
-                                <div style="font-size:13px; font-weight:bold; line-height:1.2; padding-bottom:8px;">
-                                    <t t-esc="o.company_id.name"/>
-                                </div>          
-                                <div style="font-size:9px; line-height:1.4;">
-                                    <t t-esc="o.company_id.street or ''"/><br/>
-                                    <t t-esc="o.company_id.street2 or ''"/><br/>
-                                    <t t-esc="o.company_id.city or ''"/>
-                                    <t t-if="o.company_id.zip"> - <t t-esc="o.company_id.zip"/></t><br/>
-                                </div>
-                                <div style="font-size:10px;">
-                                    Ph: <t t-esc="o.company_id.phone or '-'"/>
-                                </div>
-                                <div style="font-size:10px;">
-                                    GSTIN: <t t-esc="o.company_id.vat or '-'"/>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-
-                <div style="width:100%; text-align:center; margin-top:-10px; margin-bottom:4px; padding:0;">
-                    <strong style="font-size:12px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        PROFORMA INVOICE
-                    </strong>
-                </div>
-
-                <hr style="border:0.1px solid #000; margin-top:0px; margin-bottom:5px;"/>
-
-                <table style="width:100%; font-size:11px; margin-top:5px;">
-                    <tr>
-                        <td style="width:50%; vertical-align:top; font-size:9px; line-height:1.4;">
-                            <b>Customer Name:</b> <t t-esc="o.partner_id.name"/><br/>
-                            <b>Address:</b> <t t-esc="o.partner_id.street or ''"/><t t-esc="o.partner_id.street2 or ''"/><br/>
-                            <t t-esc="o.partner_id.city or ''"/>
-                            <t t-if="o.partner_id.zip"> - <t t-esc="o.partner_id.zip"/></t><br/>
-                            <b>Contact No:</b> <t t-esc="o.partner_id.phone or '-'"/>
-                        </td>
-
-                        <td style="width:50%; text-align:left; vertical-align:top; font-size:9px; line-height:1.4; padding-left:16px;">
-                            <b>Order No:</b> <t t-esc="o.name"/><br/>
-                            <b>Received Date:</b> <span t-field="o.order_date" t-options="{'format': 'dd-MM-yyyy'}"/><br/>
-                            <b>Delivery Date:</b> <span t-field="o.delivery_date" t-options="{'format': 'dd-MM-yyyy'}"/>
-                        </td>
-                    </tr>
-                </table>
-
-                <hr style="border:0.1px solid #000; margin-top:8px;"/>
-
-                <table style="width:100%; border-collapse:collapse; font-size:11px;">
-                    <thead>
+                    <table style="width:100%; font-size:11px; margin-top:5px;">
                         <tr>
-                           <th style="text-align:left; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">S.No.</th>
-                           <th style="text-align:left; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">Items &amp; Services</th>
-                           <th style="text-align:right; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">Qty</th>
-                           <th style="text-align:right; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">
-                               Wt
-                               <div style="font-size:9px; color:#333;">(Kg)</div>
-                           </th>
-                           <th style="text-align:right; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">
-                               Unit Price
-                               <div style="font-size:9px; color:#333;">(Rs.)</div>
-                           </th>
-                           <th style="text-align:right; font-weight:bold; padding:3px; vertical-align:top !important; line-height: 1.2;">
-                               Amt
-                              <div style="font-size:9px; color:#333;">(Rs.)</div>
-                           </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <t t-set="i" t-value="0"/>
-                        <t t-set="manual_sum_total" t-value="0"/>
-                        <tr t-foreach="o.order_line_ids" t-as="l" style="border-bottom:0.5px solid #eee;">
-                            <t t-set="i" t-value="i + 1"/>
-                            <td style="padding:3px; text-align:left;">
-                                <t t-esc="i"/>
+                            <td style="width:50%; vertical-align:top; font-size:9px; line-height:1.4;">
+                                <b>Customer Name:</b> <t t-esc="o.partner_id.name"/><br/>
+                                <b>Address:</b> <t t-esc="o.partner_id.street or ''"/><t t-esc="o.partner_id.street2 or ''"/><br/>
+                                <t t-esc="o.partner_id.city or ''"/>
+                                <t t-if="o.partner_id.zip"> - <t t-esc="o.partner_id.zip"/></t><br/>
+                                <b>Contact No:</b> <t t-esc="o.partner_id.phone or '-'"/>
                             </td>
-                            <td style="padding:3px;">
+
+                            <td style="width:50%; text-align:left; vertical-align:top; font-size:9px; line-height:1.4; padding-left:16px;">
+                                <b>Order No:</b> <t t-esc="o.name"/><br/>
+                                <b>Received Date:</b> <span t-field="o.order_date" t-options="{'format': 'dd-MM-yyyy'}"/><br/>
+                                <b>Delivery Date:</b> <span t-field="o.delivery_date" t-options="{'format': 'dd-MM-yyyy'}"/>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <hr style="border:0.1px solid #000; margin-top:8px;"/>
+
+                    <table style="width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed;">
+                        <thead>
+                            <tr>
+                               <th style="text-align:left; font-weight:bold; width:10%; padding:3px; vertical-align:top !important; line-height: 1.2;">S.No.</th>
+                               <th style="text-align:left; font-weight:bold; width:38%; padding:3px; vertical-align:top !important; line-height: 1.2;">Items &amp; Services</th>
+                               <th style="text-align:right; font-weight:bold; width:10%; padding:3px; vertical-align:top !important; line-height: 1.2;">Qty</th>
+                               <th style="text-align:right; font-weight:bold; width:12%; padding:3px; vertical-align:top !important; line-height: 1.2;">
+                                   Wt
+                                   <div style="font-size:9px; color:#333;">(Kg)</div>
+                               </th>
+                               <th style="text-align:right; font-weight:bold; width:15%; padding:3px; vertical-align:top !important; line-height: 1.2;">
+                                   Unit Price
+                                   <div style="font-size:9px; color:#333;">(Rs.)</div>
+                               </th>
+                               <th style="text-align:right; font-weight:bold; width:15%; padding:3px; vertical-align:top !important; line-height: 1.2;">
+                                   Amt
+                                  <div style="font-size:9px; color:#333;">(Rs.)</div>
+                               </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="i" t-value="0"/>
+                            <t t-set="manual_sum_total" t-value="0"/>
+                            <tr t-foreach="o.order_line_ids" t-as="l" style="border-bottom:0.5px solid #eee;">
+                                <t t-set="i" t-value="i + 1"/>
+                                <td style="padding:3px; text-align:left;">
+                                    <t t-esc="i"/>
+                                </td>
+                                <td style="padding:3px; word-wrap:break-word;">
+                                    <div>
+                                        <t t-esc="l.product_id.name"/>
+                                    </div>
+                                    <div style="font-size:9px; color:#333;">
+                                        <t t-esc="l.service_type_id.name"/>
+                                        <t t-if="l.premium_id">
+                                            <span> | </span>
+                                            <t t-esc="l.premium_id.name"/> 
+                                        </t>
+                                    </div>
+                                </td>
+                                <td style="padding:5px; text-align:right;">
+                                    <t t-esc="l.qty"/>
+                                </td>
+                                <td style="padding:5px; text-align:right;">
+                                    <t t-esc="'%.2f' % (l.weight or 0.0)"/>
+                                </td>
+                                <td style="padding:3px; text-align:right;">
+                                    <t t-set="qty_val" t-value="l.qty if l.pricing_type == 'per_item' else l.weight"/>
+                                    <t t-set="unit_price_with_tax" t-value="(l.price_total / qty_val) if qty_val else 0.0"/>
+                                    <t t-esc="'%.2f' % round(unit_price_with_tax, 0)"/>
+                                </td>
+                                <td style="padding:3px; text-align:right;">
+                                   <t t-set="line_total" t-value="round(l.price_total, 2) if l.price_total else 0.0"/>
+                                   <t t-set="manual_sum_total" t-value="manual_sum_total + line_total"/>
+                                   <t t-esc="'%.2f' % round(line_total, 0)"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <hr style="border:0.1px solid #000; margin-top:8px;"/>
+                    <t t-set="discount_total" t-value="sum(o.extra_line_ids.filtered(lambda l:l.product_id.product_type == 'discount').mapped('subtotal'))"/>
+                    <t t-set="other_charges_total" t-value="sum(o.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'charge').mapped('subtotal'))"/>
+                    <table style="width:100%; font-size:11px; margin-top:10px;">
+                        <tr>
+
+                            <t t-set="rounded_manual_sum" t-value="round(manual_sum_total, 0)"/>
+                            <t t-set="calculated_discount" t-value="abs(discount_total)"/>
+                            <t t-set="rounded_discount" t-value="round(calculated_discount, 0)"/>
+
+                            <t t-set="rounded_other_charges" t-value="round(other_charges_total, 0)"/>
+
+                            <t t-set="final_total" t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount, 0)"/>
+
+                            <t t-set="taxable_amount" t-value="final_total / 1.18"/>
+                            <t t-set="calculated_gst" t-value="final_total - taxable_amount"/>
+
+                            <td style="width:60%; vertical-align:top;">
+
+                                <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">
+                                    GST Summary
+                                </div>
+
                                 <div>
-                                    <t t-esc="l.product_id.name"/>
+                                    CGST + SGST (18%):
+                                    <t t-esc="'%.2f' % round(calculated_gst, 0)"/>
                                 </div>
-                                <div style="font-size:9px; color:#333;">
-                                    <t t-esc="l.service_type_id.name"/>
-                                    <t t-if="l.premium_id">
-                                        <span> | </span>
-                                        <t t-esc="l.premium_id.name"/> 
-                                    </t>
+
+                            </td>
+
+                            <td style="width:40%; vertical-align:top;">
+
+                                <table style="width:100%; border-collapse:collapse; font-size:11px;">
+
+                                    <tr>
+
+                                        <td style="text-align:right; padding:1px 0;">
+                                            <b>Total</b>
+                                        </td>
+
+                                        <td style="width:10px; text-align:center; padding:0 2px;">
+                                            :
+                                        </td>
+
+                                        <td style="text-align:right; padding:0;">
+                                            <b>
+                                                <t t-esc="'%.2f' % rounded_manual_sum"/>
+                                            </b>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:right; padding:1px 0;">
+                                            <b>Other Charges</b>
+                                        </td>
+                                        <td style="width:10px; text-align:center; padding:0 2px;">
+                                            :
+                                        </td>
+                                        <td style="text-align:right; padding:0;">
+                                            <b>
+                                        <t t-esc="'%.2f' % round(other_charges_total, 0)"/>
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <tr>
+
+                                        <td style="text-align:right; padding:1px 0;">
+                                            <b>Discount</b>
+                                        </td>
+
+                                        <td style="width:10px; text-align:center; padding:0 2px;">
+                                            :
+                                        </td>
+
+                                        <td style="text-align:right; padding:0;">
+                                            <b>
+                                                <t t-esc="'%.2f' % rounded_discount"/>
+                                            </b>
+                                        </td>
+
+                                    </tr>
+
+                                    <tr>
+
+                                        <td style="text-align:right; padding-top:3px;">
+                                            <b>Grand Total</b>
+                                        </td>
+
+                                        <td style="width:10px; text-align:center; padding-top:3px;">
+                                            :
+                                        </td>
+
+                                        <td style="text-align:right; padding-top:3px;">
+                                            <b>
+                                                <t t-esc="'%.2f' % final_total"/>
+                                            </b>
+                                        </td>
+
+                                    </tr>
+
+                                </table>
+
+                            </td>
+
+                        </tr>
+                    </table>
+                                                                                                        
+
+                    <div style="margin-top:8px; font-size:9px; line-height:1.4; word-wrap:break-word; white-space:normal;">
+                        <b>Amount Payable in Words:</b>
+                        <t t-esc="o.currency_id.amount_to_text(final_total).replace('And Zero Paise', '').replace(' and Zero Paise', '')"/> Only
+                    </div>
+                                         
+                    <hr style="border:0.1px solid #000; margin-top:8px;"/>
+
+                    <table style="width:100%; margin-top:10px; font-size:10px; border-collapse:collapse;">
+                        <tr>
+                            <td style="width:65%; vertical-align:top; padding-right:8px; line-height:1.6;">
+                                <div style="font-weight:bold; margin-bottom:4px; font-size:11px;">
+                                    Payment Details
+                                </div>
+                                <div>
+                                    <b>Bank:</b> HDFC Bank
+                                </div>
+                                <div>
+                                    <b>Account No:</b> 50200119008704
+                                </div>
+                                <div>
+                                    <b>IFSC:</b> HDFC0004033
+                                </div>
+                                <div>
+                                    <b>Recipient:</b> VESTIDO FABWASH STUDIO
                                 </div>
                             </td>
-                            <td style="padding:5px; text-align:right;">
-                                <t t-esc="l.qty"/>
-                            </td>
-                            <td style="padding:5px; text-align:right;">
-                                <t t-esc="'%.2f' % (l.weight or 0.0)"/>
-                            </td>
-                            <td style="padding:3px; text-align:right;">
-                                <t t-set="qty_val" t-value="l.qty if l.pricing_type == 'per_item' else l.weight"/>
-                                <t t-set="unit_price_with_tax" t-value="(l.price_total / qty_val) if qty_val else 0.0"/>
-                                <!-- Rounded Unit Price to whole figure -->
-                                <t t-esc="'%.2f' % round(unit_price_with_tax, 0)"/>
-                            </td>
-                            <td style="padding:3px; text-align:right;">
-                               <t t-set="line_total" t-value="round(l.price_total, 2) if l.price_total else 0.0"/>
-                               <t t-set="manual_sum_total" t-value="manual_sum_total + line_total"/>
-                               <!-- Rounded Line Amount to whole figure -->
-                               <t t-esc="'%.2f' % round(line_total, 0)"/>
+
+                            <td style="width:35%; vertical-align:top; text-align:center;">
+                                <t t-set="upi_attachment" t-value="o.env['ir.attachment'].sudo().search([('name', '=', 'upi_qr.png')], limit=1)"/>
+                                <t t-if="upi_attachment">
+                                    <img t-att-src="image_data_uri(upi_attachment.datas)" 
+                                         style="width:100px;height:100px;"/>
+                                </t>
+                                <t t-else="">
+                                    <div style="font-size:8px; color:red; border:1px solid red; padding:5px;">
+                                        QR Attachment Missing<br/>(Upload 'upi_qr.png')
+                                    </div>
+                                </t>
                             </td>
                         </tr>
-                    </tbody>
-                </table>
+                    </table>
 
-                <hr style="border:0.1px solid #000; margin-top:8px;"/>
-<t t-set="discount_total" t-value="sum(o.extra_line_ids.filtered(lambda l:l.product_id.product_type == 'discount').mapped('subtotal'))"/>
-<t t-set="other_charges_total" t-value="sum(o.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'charge').mapped('subtotal'))"/>
-<table style="width:100%; font-size:11px; margin-top:10px;">
-    <tr>
+                    <hr style="border:0.1px solid #000; margin-top:8px;"/>
 
-        <!-- Process completely rounded total and discount figures -->
-        <t t-set="rounded_manual_sum" t-value="round(manual_sum_total, 0)"/>
-        <t t-set="rounded_discount" t-value="round(discount_total, 0)"/>
-
-        <!-- Compute finalized whole grand total -->
-        <t t-set="rounded_other_charges" t-value="round(other_charges_total, 0)"/>
-        <t t-set="final_total"
-           t-value="round(rounded_manual_sum + rounded_other_charges + rounded_discount, 0)"/>
-
-        <!-- Backward calculating GST -->
-        <t t-set="taxable_amount" t-value="final_total / 1.18"/>
-        <t t-set="calculated_gst" t-value="final_total - taxable_amount"/>
-
-        <!-- LEFT SIDE -->
-        <td style="width:60%; vertical-align:top;">
-
-            <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">
-                GST Summary
-            </div>
-
-            <div>
-                CGST + SGST (18%):
-                <t t-esc="'%.2f' % round(calculated_gst, 0)"/>
-            </div>
-
-        </td>
-
-        <!-- RIGHT SIDE -->
-        <td style="width:40%; vertical-align:top;">
-
-            <table style="width:100%; border-collapse:collapse; font-size:11px;">
-
-                <!-- TOTAL -->
-                <tr>
-
-                    <td style="text-align:right; padding:1px 0;">
-                        <b>Total</b>
-                    </td>
-
-                    <td style="width:10px; text-align:center; padding:0 2px;">
-                        :
-                    </td>
-
-                    <td style="text-align:right; padding:0;">
-                        <b>
-                            <t t-esc="'%.2f' % rounded_manual_sum"/>
-                        </b>
-                    </td>
-
-                </tr>
-                <!-- OTHER CHARGES -->
-        <t t-foreach="o.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'other')" t-as="extra">
-            <tr>
-
-                <td style="text-align:right; padding:1px 0;">
-                    <b>
-                        <t t-esc="extra.name or extra.product_id.name"/>
-                    </b>
-                </td>
-                <td style="width:10px; text-align:center; padding:0 2px;">
-                    :
-                </td>
-                <td style="text-align:right; padding:0;">
-                    <b>
-                        <t t-esc="'%.2f' % round(extra.subtotal or 0.0, 0)"/>
-                    </b> 
-                </td>
-            </tr>
-        </t>
-                <tr>
-                    <td style="text-align:right; padding:1px 0;">
-                        <b>Other Charges</b>
-                    </td>
-                    <td style="width:10px; text-align:center; padding:0 2px;">
-                        :
-                    </td>
-                    <td style="text-align:right; padding:0;">
-                        <b>
-                    <t t-esc="'%.2f' % round(other_charges_total, 0)"/>
-                        </b>
-                    </td>
-                </tr>                
-
-                <!-- DISCOUNT -->
-                <tr>
-
-                    <td style="text-align:right; padding:1px 0;">
-                        <b>Discount</b>
-                    </td>
-
-                    <td style="width:10px; text-align:center; padding:0 2px;">
-                        :
-                    </td>
-
-                    <td style="text-align:right; padding:0;">
-                        <b>
-                            <t t-esc="'%.2f' % abs(rounded_discount)"/>
-                        </b>
-                    </td>
-
-                </tr>
-
-                <!-- GRAND TOTAL -->
-                <tr>
-
-                    <td style="text-align:right; padding-top:3px;">
-                        <b>Grand Total</b>
-                    </td>
-
-                    <td style="width:10px; text-align:center; padding-top:3px;">
-                        :
-                    </td>
-
-                    <td style="text-align:right; padding-top:3px;">
-                        <b>
-                            <t t-esc="'%.2f' % final_total"/>
-                        </b>
-                    </td>
-
-                </tr>
-
-            </table>
-
-        </td>
-
-    </tr>
-</table>                                                               
-
-                <div style="margin-top:8px; font-size:9px; line-height:1.4; word-wrap:break-word; white-space:normal;">
-                    <b>Amount Payable in Words:</b>
-                    <t t-esc="o.currency_id.amount_to_text(final_total).replace('And Zero Paise', '').replace(' and Zero Paise', '')"/> Only
                 </div>
-                                     
+
+                <div style="margin-top:8px; font-size:9px; line-height:1.4; padding:4px;">
+                    <b>Remarks:</b>
+                    <div style="word-wrap:break-word; white-space:normal;">
+                        <t t-if="o.remarks">
+                            <t t-esc="o.remarks"/>
+                        </t>
+                        <t t-else="">
+                            -
+                        </t>
+                    </div>
+                </div>
+
                 <hr style="border:0.1px solid #000; margin-top:8px;"/>
 
-                <table style="width:100%; margin-top:10px; font-size:10px; border-collapse:collapse;">
-                    <tr>
-                        <td style="width:65%; vertical-align:top; padding-right:8px; line-height:1.6;">
-                            <div style="font-weight:bold; margin-bottom:4px; font-size:11px;">
-                                Payment Details
-                            </div>
-                            <div>
-                                <b>Bank:</b> HDFC Bank
-                            </div>
-                            <div>
-                                <b>Account No:</b> 50200119008704
-                            </div>
-                            <div>
-                                <b>IFSC:</b> HDFC0004033
-                            </div>
-                            <div>
-                                <b>Recipient:</b> VESTIDO FABWASH STUDIO
-                            </div>
-                        </td>
+                <div style="margin-top:4px; text-align:center; font-style:normal; font-weight:normal; font-size:10px;">
+                    Thank you for your patronage!
+                </div>
 
-                        <td style="width:35%; vertical-align:top; text-align:center;">
-                            <t t-set="upi_attachment" t-value="o.env['ir.attachment'].sudo().search([('name', '=', 'upi_qr.png')], limit=1)"/>
-                            <t t-if="upi_attachment">
-                                <img t-att-src="image_data_uri(upi_attachment.datas)" 
-                                     style="width:100px;height:100px;"/>
-                            </t>
-                            <t t-else="">
-                                <div style="font-size:8px; color:red; border:1px solid red; padding:5px;">
-                                    QR Attachment Missing<br/>(Upload 'upi_qr.png')
+            </t>
+        </t>
+    </template>
+        <template id="report_laundry_invoice_bill">
+        <t t-call="web.html_container">
+            <style>
+                @page {
+                    size: 80mm auto;
+                    margin: 0 !important;
+                }
+
+                html, body {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    font-family: Arial, sans-serif !important;
+                }
+
+                * {
+                    font-family: Arial, sans-serif !important;
+                }
+            </style>
+
+            <t t-foreach="docs" t-as="o">
+                <div style="width: 100%; font-size: 11px; line-height: 1.4; position:relative;">
+
+                    <table style="width:100%; margin-bottom:0px; border-collapse: collapse;">
+                        <tr>
+                            <td style="width:30%; text-align:left; vertical-align:top; padding-top:0; padding-bottom:0;">
+                                <t t-if="o.company_id.logo">
+                                    <img t-att-src="image_data_uri(o.company_id.logo)"
+                                         style="height:120px; width:auto; display: block;"/>
+                                </t>
+                            </td>
+
+                            <td style="width:70%; text-align:left; vertical-align:top; padding-left:10mm; padding-bottom:0;">
+                                <div style="margin-top:5px;">
+                                    <div style="font-size:13px; font-weight:bold; line-height:1.2; padding-bottom:8px;">
+                                        <t t-esc="o.company_id.name"/>
+                                    </div>          
+                                    <div style="font-size:9px; line-height:1.4;">
+                                        <t t-esc="o.company_id.street or ''"/><br/>
+                                        <t t-esc="o.company_id.street2 or ''"/><br/>
+                                        <t t-esc="o.company_id.city or ''"/>
+                                        <t t-if="o.company_id.zip"> - <t t-esc="o.company_id.zip"/></t><br/>
+                                    </div>
+                                    <div style="font-size:10px;">
+                                        Ph: <t t-esc="o.company_id.phone or '-'"/>
+                                    </div>
+                                    <div style="font-size:10px;">
+                                        GSTIN: <t t-esc="o.company_id.vat or '-'"/>
+                                    </div>
                                 </div>
-                            </t>
-                        </td>
-                    </tr>
-                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div style="width:100%; text-align:center; margin-top:-10px; margin-bottom:4px; padding:0;">
+                        <strong style="font-size:12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            TAX INVOICE
+                        </strong>
+                    </div>
+
+                    <hr style="border:0.1px solid #000; margin-top:0px; margin-bottom:5px;"/>
+
+                    <table style="width:100%; font-size:11px; margin-top:5px;">
+                        <tr>
+                            <td style="width:50%; vertical-align:top; font-size:9px; line-height:1.4;">
+                                <b>Customer Name:</b> <t t-esc="o.partner_id.name"/><br/>
+                                <b>Address:</b> <t t-esc="o.partner_id.street or ''"/><t t-esc="o.partner_id.street2 or ''"/><br/>
+                                <t t-esc="o.partner_id.city or ''"/>
+                                <t t-if="o.partner_id.zip"> - <t t-esc="o.partner_id.zip"/></t><br/>
+                                <b>Contact No:</b> <t t-esc="o.partner_id.phone or '-'"/>
+                            </td>
+
+                            <td style="width:50%; text-align:left; vertical-align:top; font-size:9px; line-height:1.4; padding-left:16px;">
+                                <b>Order No:</b> <t t-esc="o.name"/><br/>
+                                <b>Received Date:</b> <span t-field="o.order_date" t-options="{'format': 'dd-MM-yyyy'}"/><br/>
+                                <b>Delivery Date:</b> <span t-field="o.delivery_date" t-options="{'format': 'dd-MM-yyyy'}"/>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <hr style="border:0.1px solid #000; margin-top:8px;"/>
+
+                    <table style="width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed;">
+                        <thead>
+                            <tr>
+                               <th style="text-align:left; font-weight:bold; width:10%; padding:3px; vertical-align:top !important; line-height: 1.2;">S.No.</th>
+                               <th style="text-align:left; font-weight:bold; width:38%; padding:3px; vertical-align:top !important; line-height: 1.2;">Items &amp; Services</th>
+                               <th style="text-align:right; font-weight:bold; width:10%; padding:3px; vertical-align:top !important; line-height: 1.2;">Qty</th>
+                               <th style="text-align:right; font-weight:bold; width:12%; padding:3px; vertical-align:top !important; line-height: 1.2;">
+                                   Wt
+                                   <div style="font-size:9px; color:#333;">(Kg)</div>
+                               </th>
+                               <th style="text-align:right; font-weight:bold; width:15%; padding:3px; vertical-align:top !important; line-height: 1.2;">
+                                   Unit Price
+                                   <div style="font-size:9px; color:#333;">(Rs.)</div>
+                               </th>
+                               <th style="text-align:right; font-weight:bold; width:15%; padding:3px; vertical-align:top !important; line-height: 1.2;">
+                                   Amt
+                                  <div style="font-size:9px; color:#333;">(Rs.)</div>
+                               </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="i" t-value="0"/>
+                            <t t-set="manual_sum_total" t-value="0"/>
+                            <tr t-foreach="o.order_line_ids" t-as="l" style="border-bottom:0.5px solid #eee;">
+                                <t t-set="i" t-value="i + 1"/>
+                                <td style="padding:3px; text-align:left;">
+                                    <t t-esc="i"/>
+                                </td>
+                                <td style="padding:3px; word-wrap:break-word;">
+                                    <div>
+                                        <t t-esc="l.product_id.name"/>
+                                    </div>
+                                    <div style="font-size:9px; color:#333;">
+                                        <t t-esc="l.service_type_id.name"/>
+                                        <t t-if="l.premium_id">
+                                            <span> | </span>
+                                            <t t-esc="l.premium_id.name"/> 
+                                        </t>
+                                    </div>
+                                </td>
+                                <td style="padding:5px; text-align:right;">
+                                    <t t-esc="l.qty"/>
+                                </td>
+                                <td style="padding:5px; text-align:right;">
+                                    <t t-esc="'%.2f' % (l.weight or 0.0)"/>
+                                </td>
+                                <td style="padding:3px; text-align:right;">
+                                    <t t-set="qty_val" t-value="l.qty if l.pricing_type == 'per_item' else l.weight"/>
+                                    <t t-set="unit_price_with_tax" t-value="(l.price_total / qty_val) if qty_val else 0.0"/>
+                                    <t t-esc="'%.2f' % round(unit_price_with_tax, 0)"/>
+                                </td>
+                                <td style="padding:3px; text-align:right;">
+                                   <t t-set="line_total" t-value="round(l.price_total, 2) if l.price_total else 0.0"/>
+                                   <t t-set="manual_sum_total" t-value="manual_sum_total + line_total"/>
+                                   <t t-esc="'%.2f' % round(line_total, 0)"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <hr style="border:0.1px solid #000; margin-top:8px;"/>
+                    <t t-set="discount_total" t-value="sum(o.extra_line_ids.filtered(lambda l:l.product_id.product_type == 'discount').mapped('subtotal'))"/>
+                    <t t-set="other_charges_total" t-value="sum(o.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'charge').mapped('subtotal'))"/>
+                    <table style="width:100%; font-size:11px; margin-top:10px;">
+                        <tr>
+
+                            <t t-set="rounded_manual_sum" t-value="round(manual_sum_total, 0)"/>
+                            <t t-set="calculated_discount" t-value="abs(discount_total)"/>
+                            <t t-set="rounded_discount" t-value="round(calculated_discount, 0)"/>
+
+                            <t t-set="rounded_other_charges" t-value="round(other_charges_total, 0)"/>
+
+                            <t t-set="final_total" t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount, 0)"/>
+
+                            <t t-set="taxable_amount" t-value="final_total / 1.18"/>
+                            <t t-set="calculated_gst" t-value="final_total - taxable_amount"/>
+
+                            <td style="width:60%; vertical-align:top;">
+
+                                <div style="font-weight:bold; font-size:12px; margin-bottom:5px;">
+                                    GST Summary
+                                </div>
+
+                                <div>
+                                    CGST + SGST (18%):
+                                    <t t-esc="'%.2f' % round(calculated_gst, 0)"/>
+                                </div>
+
+                            </td>
+
+                            <td style="width:40%; vertical-align:top;">
+
+                                <table style="width:100%; border-collapse:collapse; font-size:11px;">
+
+                                    <tr>
+
+                                        <td style="text-align:right; padding:1px 0;">
+                                            <b>Total</b>
+                                        </td>
+
+                                        <td style="width:10px; text-align:center; padding:0 2px;">
+                                            :
+                                        </td>
+
+                                        <td style="text-align:right; padding:0;">
+                                            <b>
+                                                <t t-esc="'%.2f' % rounded_manual_sum"/>
+                                            </b>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:right; padding:1px 0;">
+                                            <b>Other Charges</b>
+                                        </td>
+                                        <td style="width:10px; text-align:center; padding:0 2px;">
+                                            :
+                                        </td>
+                                        <td style="text-align:right; padding:0;">
+                                            <b>
+                                        <t t-esc="'%.2f' % round(other_charges_total, 0)"/>
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <tr>
+
+                                        <td style="text-align:right; padding:1px 0;">
+                                            <b>Discount</b>
+                                        </td>
+
+                                        <td style="width:10px; text-align:center; padding:0 2px;">
+                                            :
+                                        </td>
+
+                                        <td style="text-align:right; padding:0;">
+                                            <b>
+                                                <t t-esc="'%.2f' % rounded_discount"/>
+                                            </b>
+                                        </td>
+
+                                    </tr>
+
+                                    <tr>
+
+                                        <td style="text-align:right; padding-top:3px;">
+                                            <b>Grand Total</b>
+                                        </td>
+
+                                        <td style="width:10px; text-align:center; padding-top:3px;">
+                                            :
+                                        </td>
+
+                                        <td style="text-align:right; padding-top:3px;">
+                                            <b>
+                                                <t t-esc="'%.2f' % final_total"/>
+                                            </b>
+                                        </td>
+
+                                    </tr>
+
+                                </table>
+
+                            </td>
+
+                        </tr>
+                    </table>
+                                                                                                        
+
+                    <div style="margin-top:8px; font-size:9px; line-height:1.4; word-wrap:break-word; white-space:normal;">
+                        <b>Amount Payable in Words:</b>
+                        <t t-esc="o.currency_id.amount_to_text(final_total).replace('And Zero Paise', '').replace(' and Zero Paise', '')"/> Only
+                    </div>
+                                         
+                    <hr style="border:0.1px solid #000; margin-top:8px;"/>
+
+                    <table style="width:100%; margin-top:10px; font-size:10px; border-collapse:collapse;">
+                        <tr>
+                            <td style="width:65%; vertical-align:top; padding-right:8px; line-height:1.6;">
+                                <div style="font-weight:bold; margin-bottom:4px; font-size:11px;">
+                                    Payment Details
+                                </div>
+                                <div>
+                                    <b>Bank:</b> HDFC Bank
+                                </div>
+                                <div>
+                                    <b>Account No:</b> 50200119008704
+                                </div>
+                                <div>
+                                    <b>IFSC:</b> HDFC0004033
+                                </div>
+                                <div>
+                                    <b>Recipient:</b> VESTIDO FABWASH STUDIO
+                                </div>
+                            </td>
+
+                            <td style="width:35%; vertical-align:top; text-align:center;">
+                                <t t-set="upi_attachment" t-value="o.env['ir.attachment'].sudo().search([('name', '=', 'upi_qr.png')], limit=1)"/>
+                                <t t-if="upi_attachment">
+                                    <img t-att-src="image_data_uri(upi_attachment.datas)" 
+                                         style="width:100px;height:100px;"/>
+                                </t>
+                                <t t-else="">
+                                    <div style="font-size:8px; color:red; border:1px solid red; padding:5px;">
+                                        QR Attachment Missing<br/>(Upload 'upi_qr.png')
+                                    </div>
+                                </t>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <hr style="border:0.1px solid #000; margin-top:8px;"/>
+
+                </div>
+
+                <div style="margin-top:8px; font-size:9px; line-height:1.4; padding:4px;">
+                    <b>Remarks:</b>
+                    <div style="word-wrap:break-word; white-space:normal;">
+                        <t t-if="o.remarks">
+                            <t t-esc="o.remarks"/>
+                        </t>
+                        <t t-else="">
+                            -
+                        </t>
+                    </div>
+                </div>
 
                 <hr style="border:0.1px solid #000; margin-top:8px;"/>
 
-            </div>
-
-            <div style="margin-top:8px; font-size:9px; line-height:1.4; padding:4px;">
-                <b>Remarks:</b>
-                <div style="word-wrap:break-word; white-space:normal;">
-                    <t t-if="o.remarks">
-                        <t t-esc="o.remarks"/>
-                    </t>
-                    <t t-else="">
-                        -
-                    </t>
+                <div style="margin-top:4px; text-align:center; font-style:normal; font-weight:normal; font-size:10px;">
+                    Thank you for your patronage!
                 </div>
-            </div>
 
-            <hr style="border:0.1px solid #000; margin-top:8px;"/>
-
-            <div style="margin-top:4px; text-align:center; font-style:normal; font-weight:normal; font-size:10px;">
-                Thank you for your patronage!
-            </div>
-
+            </t>
         </t>
-    </t>
-</template>     
+    </template>  
 </odoo>
