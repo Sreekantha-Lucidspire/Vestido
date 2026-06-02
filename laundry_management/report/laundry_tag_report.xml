@@ -216,7 +216,7 @@
                         </strong>
                     </div>
 
-                    <hr style="border:1px solid #666; margin-top:0px; margin-bottom:5px;"/>
+                    <hr style="border:0.1px solid #000; margin-top:0px; margin-bottom:5px;"/>
 
                     <table style="width:100%; font-size:11px; margin-top:5px;">
                         <tr>
@@ -236,7 +236,7 @@
                         </tr>
                     </table>
 
-                    <hr style="border:1px solid #666; margin-top:8px;"/>
+                    <hr style="border:0.1px solid #000; margin-top:8px;"/>
 
                     <table style="width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed;">
                         <thead>
@@ -281,7 +281,7 @@
                         </tbody>
                     </table>
 
-                    <hr style="border:1px solid #666; margin-top:8px;"/>
+                    <hr style="border:0.1px solid #000; margin-top:8px;"/>
 
                 </div>
 
@@ -295,7 +295,7 @@
                             -
                         </t>
                     </div>
-                    <hr style="border:1px solid #666; margin-top:8px;"/>
+                    <hr style="border:0.1px solid #000; margin-top:8px;"/>
                 </div>          
 
             </t>
@@ -925,7 +925,7 @@
                     </div>
                 </div>
 
-                <hr style="border:1px solid #666; margin-top:8px;"/>
+                <hr style="border:0.1px solid #000; margin-top:8px;"/>
 
                 <div style="margin-top:4px; text-align:center; font-style:normal; font-weight:normal; font-size:10px;">
                     Thank you for your patronage!
