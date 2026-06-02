@@ -121,7 +121,7 @@
 
                     </div>
 
-                    <hr style="border:0.1px solid #000;
+                    <hr style="border:1px solid #666;
                                margin-top:0px;
                                margin-bottom:5px;/"/>
 
@@ -190,7 +190,7 @@
 
                     </table>
 
-                    <hr style="border:0.1px solid #000;
+                    <hr style="border:1px solid #666;
                                margin-top:8px;"/>
 
                     <table style="width:100%;
@@ -373,7 +373,7 @@
 
                     </table>
 
-                    <hr style="border:0.1px solid #000;
+                    <hr style="border:1px solid #666;
                                margin-top:8px;"/>
 
                     <t t-set="discount_total"
@@ -575,7 +575,7 @@
 
                     </div>
 
-                    <hr style="border:0.1px solid #000;
+                    <hr style="border:1px solid #666;
                                margin-top:8px;"/>
 
                     <table style="width:100%;
@@ -652,7 +652,7 @@
 
                     </table>
 
-                    <hr style="border:0.1px solid #000;
+                    <hr style="border:1px solid #666;
                                margin-top:8px;"/>
 
                 </div>
@@ -681,7 +681,7 @@
 
                 </div>
 
-                <hr style="border:0.1px solid #000;
+                <hr style="border:1px solid #666;
                            margin-top:8px;"/>
 
                 <div style="margin-top:4px;
