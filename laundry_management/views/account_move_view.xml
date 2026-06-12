@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="view_move_form_inherit_pickup_discount" model="ir.ui.view">
         <field name="name">account.move.form.inherit.pickup.discount</field>
@@ -5,10 +6,18 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
 
-            <!-- Add inside invoice header section -->
+            <xpath expr="//header" position="inside">
+                <button name="action_send_invoice_whatsapp" 
+                        string="Send via WhatsApp" 
+                        type="object" 
+                        class="oe_highlight" 
+                        invisible="state != 'posted'"/>
+            </xpath>
+
             <xpath expr="//field[@name='ref']" position="after">
                 <field name="laundry_order_id" options="{'no_open': True, 'no_edit':True, 'no_create': True}"/>
             </xpath>
+
             <xpath expr="//notebook" position="inside">
                 <page name="extra_information" string="Extra Information">
                     <group string="Extra Information">
@@ -16,39 +25,28 @@
                         <field name="invoice_discount"/>
                     </group>
                 </page>
-
             </xpath>
+
             <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='name']" position="replace">
-
-                   <field name="premium_id" string="Premium Type"/>
-
-                   <field name="name" string="Items"/>
-
-                   <field name="service_type_id" string="Service Type"/>
-
-                   <field name="pricing_type" string="Pricing Type"/>
-
-                   <field name="quantity" string="Qty"/>
-
-                   <field name="weight" string="Weight"/>
-
-                   <field name="tax_ids" widget="many2many_tags" string="Taxes"/>
-
-                   <field name="price_tax" string="Tax Price" optional="hide"/>
-
+                <field name="premium_id" string="Premium Type"/>
+                <field name="name" string="Items"/>
+                <field name="service_type_id" string="Service Type"/>
+                <field name="pricing_type" string="Pricing Type"/>
+                <field name="quantity" string="Qty"/>
+                <field name="weight" string="Weight"/>
+                <field name="tax_ids" widget="many2many_tags" string="Taxes"/>
+                <field name="price_tax" string="Tax Price" optional="hide"/>
             </xpath>
 
-                   <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='weight']"
-                          position="after">
-                           
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='price_unit']" position="attributes">
+                <attribute name="column_invisible">True</attribute>
+            </xpath>
 
-                   <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='price_unit']"
-                          position="move"/>
+            <xpath expr="//field[@name='invoice_line_ids']/list" position="inside">
+                <field name="price_unit" string="Unit Price"/>
+                <field name="price_total" string="Total Price"/>
+            </xpath>
 
-                   </xpath>
-                   <xpath expr="//field[@name='invoice_line_ids']/list" position="inside">
-                        <field name="price_total" string="Total Price"/>
-                   </xpath>
         </field>
     </record>
 </odoo>

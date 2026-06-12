@@ -13,14 +13,14 @@ class AccountMoveLine(models.Model):
         string="Premium Type"
     )
 
+    premium_multiplier = fields.Float(string="Premium Multiplier")
+
     pricing_type = fields.Selection([
         ('per_item', 'Per Item'),
         ('per_kg', 'Per KG')
     ], string="Pricing Type")
 
     weight = fields.Float(string="Weight")
-
-    # ADD BELOW WEIGHT FIELD
 
     price_tax = fields.Monetary(
         string="Price Tax",
@@ -32,4 +32,5 @@ class AccountMoveLine(models.Model):
     @api.depends('price_total', 'price_subtotal')
     def _compute_custom_amounts(self):
         for line in self:
+            # Using price_subtotal (the standard Odoo field for price_unit * qty)
             line.price_tax = line.price_total - line.price_subtotal
