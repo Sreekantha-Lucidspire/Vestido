@@ -624,10 +624,9 @@
                                    t-value="o.env['ir.attachment'].sudo().search([('name', '=', 'upi_qr.png')], limit=1)"/>
 
                                 <t t-if="upi_attachment">
-
-                                    <img t-att-src="image_data_uri(upi_attachment.datas)"
-                                         style="width:100px;
-                                                height:100px;"/>
+                                    <img t-att-src="'data:image/png;base64,' + o.generate_payment_qr()" 
+                                         style="width:100px; height:100px;"/>
+                                    <div style="font-size: 8px; margin-top: 2px;">Scan to Pay</div>
 
                                 </t>
 

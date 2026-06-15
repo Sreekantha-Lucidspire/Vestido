@@ -2,6 +2,9 @@
 from odoo import models, fields, api
 import requests
 import json
+import base64
+import qrcode
+from io import BytesIO
 
 class AccountMove(models.Model):
     _inherit = "account.move"
@@ -9,6 +12,7 @@ class AccountMove(models.Model):
     pickup_delivery = fields.Char(string="Pickup & Delivery")
     invoice_discount = fields.Float(string="Discount")
     laundry_order_id = fields.Many2one('laundry.order', 'Laundry Ref', tracking=True)
+    is_whatsapp_sent = fields.Boolean(string="WhatsApp Sent", default=False)
 
     @api.depends('invoice_line_ids.price_subtotal', 'invoice_discount')
     def _compute_amount(self):
@@ -17,13 +21,30 @@ class AccountMove(models.Model):
         for move in self:
             move.amount_untaxed = max(move.amount_untaxed - move.invoice_discount, 0)
             move.amount_total = move.amount_untaxed + move.amount_tax
+    def generate_payment_qr(self):
+        """ Generates a base64 string of a QR code for the invoice total """
+        self.ensure_one()
+        upi_id = "sangeethasreekantha1-1@oksbi"
+        payee_name = "Vestido Fabwash Studio"
+        amount = f"{round(self.amount_total, 0):.2f}"
+        # Define the data you want in the QR (e.g., a payment link or amount)
+        qr_data = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
+        
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill='black', back_color='white')
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
     def action_send_invoice_whatsapp(self):
         """ Generates the invoice PDF and sends it via Meta WhatsApp API """
         self.ensure_one()
         
         # 1. SETUP CONFIGURATION
-        ACCESS_TOKEN = "EAAYONoZCXnFsBRndS9jD0v7k0nFYI6ZBuTIZCFZCu5UZBPHYVuxOZAHQ8s2TkZApo4mnApx17Awnsj9yoycQUZAgwT2AbmM0cRzbsMQ6PFnBRCZAK8e6HwvzrdJZBWlkwlmlfRfMtEQTZChKIGsWx84tERjyZBgPDl6jl25vlFT9VRtFqIlBCLB8yYvM5WFSi8ltZBOz8sCdyn6fVSIq51EZCdl2EZBRjX0nyFnDS2Fylnw8znrvRWOld7jNF6XdhwLGxJcKYfQc0mMylhIdUJRzDQZBiSrq31oi"
+        ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
         
         recipient_phone = self.partner_id.phone
@@ -116,6 +137,7 @@ class AccountMove(models.Model):
                     return False
                 
                 if send_response.status_code == 200:
+                    self.is_whatsapp_sent = True 
                     self.message_post(body=f"✅ Invoice PDF and message successfully sent via WhatsApp.")
                     # Trigger the update for your tracking logic here:
                     if self.laundry_order_id:

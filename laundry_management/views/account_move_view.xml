@@ -11,11 +11,12 @@
                         string="Send via WhatsApp" 
                         type="object" 
                         class="oe_highlight" 
-                        invisible="state != 'posted'"/>
+                        invisible="state != 'posted' or is_whatsapp_sent == True"/>
             </xpath>
 
             <xpath expr="//field[@name='ref']" position="after">
                 <field name="laundry_order_id" options="{'no_open': True, 'no_edit':True, 'no_create': True}"/>
+                <field name="is_whatsapp_sent" readonly="1" widget="boolean_toggle"/>
             </xpath>
 
             <xpath expr="//notebook" position="inside">

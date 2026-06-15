@@ -4,6 +4,9 @@ from odoo.exceptions import ValidationError, UserError
 import requests
 import json
 import logging
+import base64
+import qrcode
+from io import BytesIO
 
 _logger = logging.getLogger(__name__)
 
@@ -107,6 +110,23 @@ class LaundryOrder(models.Model):
             order.amount_tax = sum(order.order_line_ids.mapped('price_tax'))
             extra_total = sum(order.extra_line_ids.mapped('subtotal'))
             order.amount_total = order.amount_untaxed + order.amount_tax + extra_total
+    def generate_payment_qr(self):
+        """ Generates a base64 string of a QR code for the invoice total """
+        self.ensure_one()
+        upi_id = "sangeethasreekantha1-1@oksbi"
+        payee_name = "Vestido Fabwash Studio"
+        amount = f"{round(self.amount_total, 0):.2f}"
+        # Define the data you want in the QR (e.g., a payment link or amount)
+        qr_data = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
+        
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill='black', back_color='white')
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
     # =========================================================================
     # WHATSAPP & PROFORMA INTEGRATION (SPLIT OPERATIONS)
@@ -119,7 +139,7 @@ class LaundryOrder(models.Model):
         """ Renders the layout to PDF and delivers it via Meta APIs """
         self.ensure_one()
         
-        ACCESS_TOKEN = "EAAYONoZCXnFsBRndS9jD0v7k0nFYI6ZBuTIZCFZCu5UZBPHYVuxOZAHQ8s2TkZApo4mnApx17Awnsj9yoycQUZAgwT2AbmM0cRzbsMQ6PFnBRCZAK8e6HwvzrdJZBWlkwlmlfRfMtEQTZChKIGsWx84tERjyZBgPDl6jl25vlFT9VRtFqIlBCLB8yYvM5WFSi8ltZBOz8sCdyn6fVSIq51EZCdl2EZBRjX0nyFnDS2Fylnw8znrvRWOld7jNF6XdhwLGxJcKYfQc0mMylhIdUJRzDQZBiSrq31oi"
+        ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
         
         recipient_phone = "+919686570381" # Sandbox test number
@@ -196,7 +216,7 @@ class LaundryOrder(models.Model):
         self.ensure_one()
         
         # Ensure this token is refreshed and valid
-        ACCESS_TOKEN = "EAAYONoZCXnFsBRndS9jD0v7k0nFYI6ZBuTIZCFZCu5UZBPHYVuxOZAHQ8s2TkZApo4mnApx17Awnsj9yoycQUZAgwT2AbmM0cRzbsMQ6PFnBRCZAK8e6HwvzrdJZBWlkwlmlfRfMtEQTZChKIGsWx84tERjyZBgPDl6jl25vlFT9VRtFqIlBCLB8yYvM5WFSi8ltZBOz8sCdyn6fVSIq51EZCdl2EZBRjX0nyFnDS2Fylnw8znrvRWOld7jNF6XdhwLGxJcKYfQc0mMylhIdUJRzDQZBiSrq31oi" 
+        ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD" 
         PHONE_NUMBER_ID = "1126838393847539"
         
         # Fetch tracker sequence 8
@@ -462,7 +482,7 @@ class LaundryOrder(models.Model):
     def action_send_enquiry_received_whatsapp(self):
         self.ensure_one()
         # Ensure you use your valid credentials/constants
-        ACCESS_TOKEN = "EAAYONoZCXnFsBRndS9jD0v7k0nFYI6ZBuTIZCFZCu5UZBPHYVuxOZAHQ8s2TkZApo4mnApx17Awnsj9yoycQUZAgwT2AbmM0cRzbsMQ6PFnBRCZAK8e6HwvzrdJZBWlkwlmlfRfMtEQTZChKIGsWx84tERjyZBgPDl6jl25vlFT9VRtFqIlBCLB8yYvM5WFSi8ltZBOz8sCdyn6fVSIq51EZCdl2EZBRjX0nyFnDS2Fylnw8znrvRWOld7jNF6XdhwLGxJcKYfQc0mMylhIdUJRzDQZBiSrq31oi"
+        ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
         
         recipient_phone = self.partner_id.phone
@@ -505,7 +525,7 @@ class LaundryOrder(models.Model):
         agent_name = tracker.staff_id.name or "Our Pickup Agent"
 
         # Meta API Config
-        ACCESS_TOKEN = "EAAYONoZCXnFsBRndS9jD0v7k0nFYI6ZBuTIZCFZCu5UZBPHYVuxOZAHQ8s2TkZApo4mnApx17Awnsj9yoycQUZAgwT2AbmM0cRzbsMQ6PFnBRCZAK8e6HwvzrdJZBWlkwlmlfRfMtEQTZChKIGsWx84tERjyZBgPDl6jl25vlFT9VRtFqIlBCLB8yYvM5WFSi8ltZBOz8sCdyn6fVSIq51EZCdl2EZBRjX0nyFnDS2Fylnw8znrvRWOld7jNF6XdhwLGxJcKYfQc0mMylhIdUJRzDQZBiSrq31oi"
+        ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
         recipient_phone = "+919686570381" # Sandbox test number
 
@@ -540,7 +560,7 @@ class LaundryOrder(models.Model):
     def action_send_received_whatsapp(self):
         for rec in self:
 
-            ACCESS_TOKEN = "EAAYONoZCXnFsBRndS9jD0v7k0nFYI6ZBuTIZCFZCu5UZBPHYVuxOZAHQ8s2TkZApo4mnApx17Awnsj9yoycQUZAgwT2AbmM0cRzbsMQ6PFnBRCZAK8e6HwvzrdJZBWlkwlmlfRfMtEQTZChKIGsWx84tERjyZBgPDl6jl25vlFT9VRtFqIlBCLB8yYvM5WFSi8ltZBOz8sCdyn6fVSIq51EZCdl2EZBRjX0nyFnDS2Fylnw8znrvRWOld7jNF6XdhwLGxJcKYfQc0mMylhIdUJRzDQZBiSrq31oi"
+            ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
             PHONE_NUMBER_ID = "1126838393847539"
 
             recipient_phone = rec.partner_id.phone
@@ -605,7 +625,7 @@ class LaundryOrder(models.Model):
         self.ensure_one()
 
         # Replaced with your working Sandbox Tokens
-        ACCESS_TOKEN = "EAAYONoZCXnFsBRndS9jD0v7k0nFYI6ZBuTIZCFZCu5UZBPHYVuxOZAHQ8s2TkZApo4mnApx17Awnsj9yoycQUZAgwT2AbmM0cRzbsMQ6PFnBRCZAK8e6HwvzrdJZBWlkwlmlfRfMtEQTZChKIGsWx84tERjyZBgPDl6jl25vlFT9VRtFqIlBCLB8yYvM5WFSi8ltZBOz8sCdyn6fVSIq51EZCdl2EZBRjX0nyFnDS2Fylnw8znrvRWOld7jNF6XdhwLGxJcKYfQc0mMylhIdUJRzDQZBiSrq31oi"
+        ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
 
         recipient_phone = self.partner_id.phone
@@ -703,7 +723,7 @@ class LaundryOrder(models.Model):
 
     def action_send_delivered_whatsapp(self):
         for rec in self:
-            ACCESS_TOKEN = "EAAYONoZCXnFsBRndS9jD0v7k0nFYI6ZBuTIZCFZCu5UZBPHYVuxOZAHQ8s2TkZApo4mnApx17Awnsj9yoycQUZAgwT2AbmM0cRzbsMQ6PFnBRCZAK8e6HwvzrdJZBWlkwlmlfRfMtEQTZChKIGsWx84tERjyZBgPDl6jl25vlFT9VRtFqIlBCLB8yYvM5WFSi8ltZBOz8sCdyn6fVSIq51EZCdl2EZBRjX0nyFnDS2Fylnw8znrvRWOld7jNF6XdhwLGxJcKYfQc0mMylhIdUJRzDQZBiSrq31oi"
+            ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
             PHONE_NUMBER_ID = "1126838393847539"
 
             recipient_phone = "+919686570381" # Test number
@@ -752,7 +772,7 @@ class LaundryOrder(models.Model):
         return True
     def action_send_payment_received_whatsapp(self):
         self.ensure_one()
-        ACCESS_TOKEN = "EAAYONoZCXnFsBRndS9jD0v7k0nFYI6ZBuTIZCFZCu5UZBPHYVuxOZAHQ8s2TkZApo4mnApx17Awnsj9yoycQUZAgwT2AbmM0cRzbsMQ6PFnBRCZAK8e6HwvzrdJZBWlkwlmlfRfMtEQTZChKIGsWx84tERjyZBgPDl6jl25vlFT9VRtFqIlBCLB8yYvM5WFSi8ltZBOz8sCdyn6fVSIq51EZCdl2EZBRjX0nyFnDS2Fylnw8znrvRWOld7jNF6XdhwLGxJcKYfQc0mMylhIdUJRzDQZBiSrq31oi"
+        ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
         recipient_phone = "+919686570381" # Test number
 
@@ -787,7 +807,7 @@ class LaundryOrder(models.Model):
             raise UserError(f"Failed to send WhatsApp: {response.text}")
     def action_send_feedback_whatsapp(self):
         self.ensure_one()
-        ACCESS_TOKEN = "EAAYONoZCXnFsBRndS9jD0v7k0nFYI6ZBuTIZCFZCu5UZBPHYVuxOZAHQ8s2TkZApo4mnApx17Awnsj9yoycQUZAgwT2AbmM0cRzbsMQ6PFnBRCZAK8e6HwvzrdJZBWlkwlmlfRfMtEQTZChKIGsWx84tERjyZBgPDl6jl25vlFT9VRtFqIlBCLB8yYvM5WFSi8ltZBOz8sCdyn6fVSIq51EZCdl2EZBRjX0nyFnDS2Fylnw8znrvRWOld7jNF6XdhwLGxJcKYfQc0mMylhIdUJRzDQZBiSrq31oi"
+        ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
         recipient_phone = "+919686570381" # Test number
         google_review_link = "https://www.google.com/maps/place/Vestido+Fabwash+Studio/@12.8717514,77.5428859,17z/data=!3m1!4b1!4m6!3m5!1s0x3bae413df543c0fd:0x1aea1f2916cd29d2!8m2!3d12.8717514!4d77.5428859!16s%2Fg%2F11z2d4jgx5?entry=ttu&g_ep=EgoyMDI2MDYwMy4xIKXMDSoASAFQAw%3D%3D"
