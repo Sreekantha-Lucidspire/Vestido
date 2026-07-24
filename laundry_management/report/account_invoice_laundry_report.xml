@@ -498,35 +498,6 @@
                                     <tr>
 
                                         <td style="text-align:right;
-                                                   padding:1px 0;
-                                                   white-space:nowrap;">
-
-                                            <b>Discount</b>
-
-                                        </td>
-
-                                        <td style="width:10px;
-                                                   text-align:center;
-                                                   padding:0 2px;">
-
-                                            :
-
-                                        </td>
-
-                                        <td style="text-align:right;
-                                                   padding:0;">
-
-                                            <b>
-                                                <t t-esc="'%.2f' % rounded_discount"/>
-                                            </b>
-
-                                        </td>
-
-                                    </tr>
-
-                                    <tr>
-
-                                        <td style="text-align:right;
                                                    padding-top:3px;
                                                    white-space:nowrap;">
 
