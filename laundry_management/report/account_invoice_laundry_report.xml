@@ -292,19 +292,20 @@
                             <t t-set="manual_sum_total" t-value="0"/>
 
                             <tr t-foreach="o.laundry_order_id.order_line_ids"
-                                t-as="l"
-                                style="border-bottom:0.5px solid #eee;">
+                                t-as="l">
 
                                 <t t-set="i" t-value="i + 1"/>
 
                                 <td style="padding:3px;
-                                           text-align:left;">
+                                           text-align:left;
+                                           border-bottom:0.5px solid #eee;">
 
                                     <t t-esc="i"/>
 
                                 </td>
 
-                                <td style="padding:3px;">
+                                <td style="padding:3px;
+                                           border-bottom:0.5px solid #eee;">
 
                                     <div>
                                         <t t-esc="l.product_id.name"/>
@@ -328,21 +329,24 @@
                                 </td>
 
                                 <td style="padding:5px;
-                                           text-align:right;">
+                                           text-align:right;
+                                           border-bottom:0.5px solid #eee;">
 
                                     <t t-esc="l.qty"/>
 
                                 </td>
 
                                 <td style="padding:5px;
-                                           text-align:right;">
+                                           text-align:right;
+                                           border-bottom:0.5px solid #eee;">
 
                                     <t t-esc="'%.2f' % (l.weight or 0.0)"/>
 
                                 </td>
 
                                 <td style="padding:3px;
-                                           text-align:right;">
+                                           text-align:right;
+                                           border-bottom:0.5px solid #eee;">
 
                                     <t t-set="qty_val"
                                        t-value="l.qty if l.pricing_type == 'per_item' else l.weight"/>
@@ -355,7 +359,8 @@
                                 </td>
 
                                 <td style="padding:3px;
-                                           text-align:right;">
+                                           text-align:right;
+                                           border-bottom:0.5px solid #eee;">
 
                                     <t t-set="line_total"
                                        t-value="round(l.price_total, 2) if l.price_total else 0.0"/>
