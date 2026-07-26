@@ -250,14 +250,14 @@
 
                         <tbody>
                             <t t-set="i" t-value="0"/>
-                            <tr t-foreach="o.order_line_ids" t-as="l" style="border-bottom:0.5px solid #eee;">
+                            <tr t-foreach="o.order_line_ids" t-as="l">
                                 <t t-set="i" t-value="i + 1"/>
 
-                                <td style="padding:2px 0;">
+                                <td style="padding:2px 0; border-bottom:1px solid #ddd;">
                                     <t t-esc="i"/>
                                 </td>
 
-                                <td style="padding:2px 2px 2px 0; word-wrap:break-word;">
+                                <td style="padding:2px 2px 2px 0; word-wrap:break-word; border-bottom:1px solid #ddd;">
                                     <div>
                                         <t t-esc="l.product_id.name"/>
                                     </div>
@@ -270,11 +270,11 @@
                                     </div>
                                 </td>
 
-                                <td style="text-align:right; padding:2px 0;">
+                                <td style="text-align:right; padding:2px 0; border-bottom:1px solid #ddd;">
                                     <t t-esc="l.qty"/>
                                 </td>
 
-                                <td style="text-align:right; padding:2px 0;">
+                                <td style="text-align:right; padding:2px 0; border-bottom:1px solid #ddd;">
                                     <t t-esc="l.weight or 0.0"/>
                                 </td>
                             </tr>
@@ -406,12 +406,12 @@
                         <tbody>
                             <t t-set="i" t-value="0"/>
                             <t t-set="manual_sum_total" t-value="0"/>
-                            <tr t-foreach="o.order_line_ids" t-as="l" style="border-bottom:0.5px solid #eee;">
+                            <tr t-foreach="o.order_line_ids" t-as="l">
                                 <t t-set="i" t-value="i + 1"/>
-                                <td style="padding:3px; text-align:left;">
+                                <td style="padding:3px; text-align:left; border-bottom:1px solid #ddd;">
                                     <t t-esc="i"/>
                                 </td>
-                                <td style="padding:3px; word-wrap:break-word;">
+                                <td style="padding:3px; word-wrap:break-word; border-bottom:1px solid #ddd;">
                                     <div>
                                         <t t-esc="l.product_id.name"/>
                                     </div>
@@ -423,18 +423,18 @@
                                         </t>
                                     </div>
                                 </td>
-                                <td style="padding:5px; text-align:right;">
+                                <td style="padding:5px; text-align:right; border-bottom:1px solid #ddd;">
                                     <t t-esc="l.qty"/>
                                 </td>
-                                <td style="padding:5px; text-align:right;">
+                                <td style="padding:5px; text-align:right; border-bottom:1px solid #ddd;">
                                     <t t-esc="'%.2f' % (l.weight or 0.0)"/>
                                 </td>
-                                <td style="padding:3px; text-align:right;">
+                                <td style="padding:3px; text-align:right; border-bottom:1px solid #ddd;">
                                     <t t-set="qty_val" t-value="l.qty if l.pricing_type == 'per_item' else l.weight"/>
                                     <t t-set="unit_price_with_tax" t-value="(l.price_total / qty_val) if qty_val else 0.0"/>
                                     <t t-esc="'%.2f' % round(unit_price_with_tax, 0)"/>
                                 </td>
-                                <td style="padding:3px; text-align:right;">
+                                <td style="padding:3px; text-align:right; border-bottom:1px solid #ddd;">
                                    <t t-set="line_total" t-value="round(l.price_total, 2) if l.price_total else 0.0"/>
                                    <t t-set="manual_sum_total" t-value="manual_sum_total + line_total"/>
                                    <t t-esc="'%.2f' % round(line_total, 0)"/>
@@ -706,12 +706,12 @@
                         <tbody>
                             <t t-set="i" t-value="0"/>
                             <t t-set="manual_sum_total" t-value="0"/>
-                            <tr t-foreach="o.order_line_ids" t-as="l" style="border-bottom:0.5px solid #eee;">
+                            <tr t-foreach="o.order_line_ids" t-as="l">
                                 <t t-set="i" t-value="i + 1"/>
-                                <td style="padding:3px; text-align:left;">
+                                <td style="padding:3px; text-align:left; border-bottom:1px solid #ddd;">
                                     <t t-esc="i"/>
                                 </td>
-                                <td style="padding:3px; word-wrap:break-word;">
+                                <td style="padding:3px; word-wrap:break-word; border-bottom:1px solid #ddd;">
                                     <div>
                                         <t t-esc="l.product_id.name"/>
                                     </div>
@@ -723,18 +723,18 @@
                                         </t>
                                     </div>
                                 </td>
-                                <td style="padding:5px; text-align:right;">
+                                <td style="padding:5px; text-align:right; border-bottom:1px solid #ddd;">
                                     <t t-esc="l.qty"/>
                                 </td>
-                                <td style="padding:5px; text-align:right;">
+                                <td style="padding:5px; text-align:right; border-bottom:1px solid #ddd;">
                                     <t t-esc="'%.2f' % (l.weight or 0.0)"/>
                                 </td>
-                                <td style="padding:3px; text-align:right;">
+                                <td style="padding:3px; text-align:right; border-bottom:1px solid #ddd;">
                                     <t t-set="qty_val" t-value="l.qty if l.pricing_type == 'per_item' else l.weight"/>
                                     <t t-set="unit_price_with_tax" t-value="(l.price_total / qty_val) if qty_val else 0.0"/>
                                     <t t-esc="'%.2f' % round(unit_price_with_tax, 0)"/>
                                 </td>
-                                <td style="padding:3px; text-align:right;">
+                                <td style="padding:3px; text-align:right; border-bottom:1px solid #ddd;">
                                    <t t-set="line_total" t-value="round(l.price_total, 2) if l.price_total else 0.0"/>
                                    <t t-set="manual_sum_total" t-value="manual_sum_total + line_total"/>
                                    <t t-esc="'%.2f' % round(line_total, 0)"/>
