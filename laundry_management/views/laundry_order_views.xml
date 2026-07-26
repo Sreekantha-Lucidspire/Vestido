@@ -101,7 +101,7 @@
                             string="Tax Invoice" 
                             type="object" 
                             class="btn-primary" 
-                            invisible="state not in ('ready', 'delivered')"/>
+                            invisible="1"/>
 
                     <button name="action_tracker"
                             string="Operations Tracker"
