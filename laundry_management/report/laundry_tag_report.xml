@@ -455,13 +455,10 @@
 
                             <t t-set="rounded_other_charges" t-value="round(other_charges_total, 0)"/>
 
-                            <!-- Taxable base: line subtotals + other charges, after discount -->
-                            <t t-set="taxable_base" t-value="rounded_manual_sum + rounded_other_charges - rounded_discount"/>
+                            <!-- GST calculated forward at 18% on the line-items Total only (not on other charges, and not reduced by discount) -->
+                            <t t-set="rounded_gst" t-value="round(rounded_manual_sum * 0.18, 0)"/>
 
-                            <!-- GST calculated forward at 18% on the taxable base (post-discount), not reverse-divided out of a tax-inclusive total -->
-                            <t t-set="rounded_gst" t-value="round(taxable_base * 0.18, 0)"/>
-
-                            <t t-set="final_total" t-value="round(taxable_base + rounded_gst, 0)"/>
+                            <t t-set="final_total" t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount + rounded_gst, 0)"/>
 
                             <td style="width:60%; vertical-align:top;">
 
@@ -789,13 +786,10 @@
 
                             <t t-set="rounded_other_charges" t-value="round(other_charges_total, 0)"/>
 
-                            <!-- Taxable base: line subtotals + other charges, after discount -->
-                            <t t-set="taxable_base" t-value="rounded_manual_sum + rounded_other_charges - rounded_discount"/>
+                            <!-- GST calculated forward at 18% on the line-items Total only (not on other charges, and not reduced by discount) -->
+                            <t t-set="rounded_gst" t-value="round(rounded_manual_sum * 0.18, 0)"/>
 
-                            <!-- GST calculated forward at 18% on the taxable base (post-discount), not reverse-divided out of a tax-inclusive total -->
-                            <t t-set="rounded_gst" t-value="round(taxable_base * 0.18, 0)"/>
-
-                            <t t-set="final_total" t-value="round(taxable_base + rounded_gst, 0)"/>
+                            <t t-set="final_total" t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount + rounded_gst, 0)"/>
 
                             <td style="width:60%; vertical-align:top;">
 
