@@ -290,6 +290,7 @@
 
                             <t t-set="i" t-value="0"/>
                             <t t-set="manual_sum_total" t-value="0"/>
+                            <t t-set="manual_gst_total" t-value="0"/>
 
                             <tr t-foreach="o.laundry_order_id.order_line_ids"
                                 t-as="l">
@@ -348,13 +349,8 @@
                                            text-align:right;
                                            border-bottom:1px solid #ddd;">
 
-                                    <t t-set="qty_val"
-                                       t-value="l.qty if l.pricing_type == 'per_item' else l.weight"/>
-
-                                    <t t-set="unit_price_with_tax"
-                                       t-value="(l.price_total / qty_val) if qty_val else 0.0"/>
-
-                                    <t t-esc="'%.2f' % round(unit_price_with_tax, 0)"/>
+                                    <!-- Unit Price: pre-tax base price as entered on the order line (matches backend unit_price field) -->
+                                    <t t-esc="'%.2f' % round(l.unit_price, 0)"/>
 
                                 </td>
 
@@ -362,13 +358,17 @@
                                            text-align:right;
                                            border-bottom:1px solid #ddd;">
 
-                                    <t t-set="line_total"
-                                       t-value="round(l.price_total, 2) if l.price_total else 0.0"/>
+                                    <!-- Amt: pre-tax line subtotal, so Unit Price x Qty/Wt reconciles with this column. GST is shown separately in the summary below. -->
+                                    <t t-set="line_subtotal"
+                                       t-value="round(l.subtotal, 2) if l.subtotal else 0.0"/>
 
                                     <t t-set="manual_sum_total"
-                                       t-value="manual_sum_total + line_total"/>
+                                       t-value="manual_sum_total + line_subtotal"/>
 
-                                    <t t-esc="'%.2f' % round(line_total, 0)"/>
+                                    <t t-set="manual_gst_total"
+                                       t-value="manual_gst_total + (l.price_tax or 0.0)"/>
+
+                                    <t t-esc="'%.2f' % round(line_subtotal, 0)"/>
 
                                 </td>
 
@@ -405,14 +405,12 @@
                             <t t-set="rounded_other_charges"
                                t-value="round(other_charges_total, 0)"/>
 
+                            <!-- GST computed from actual per-line tax (l.price_tax), respecting each line's real tax_ids, instead of assuming a flat 18% on the whole invoice -->
+                            <t t-set="rounded_gst"
+                               t-value="round(manual_gst_total, 0)"/>
+
                             <t t-set="final_total"
-                               t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount, 0)"/>
-
-                            <t t-set="taxable_amount"
-                               t-value="final_total / 1.18"/>
-
-                            <t t-set="calculated_gst"
-                               t-value="final_total - taxable_amount"/>
+                               t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount + rounded_gst, 0)"/>
 
                             <td style="width:55%;
                                        vertical-align:top;">
@@ -427,9 +425,9 @@
 
                                 <div>
 
-                                    CGST + SGST (18%):
+                                    CGST + SGST:
 
-                                    <t t-esc="'%.2f' % round(calculated_gst, 0)"/>
+                                    <t t-esc="'%.2f' % rounded_gst"/>
 
                                 </div>
 
@@ -522,6 +520,35 @@
 
                                             <b>
                                                 <t t-esc="'%.2f' % rounded_discount"/>
+                                            </b>
+
+                                        </td>
+
+                                    </tr>
+
+                                    <tr>
+
+                                        <td style="text-align:right;
+                                                   padding:1px 0;
+                                                   white-space:nowrap;">
+
+                                            <b>GST</b>
+
+                                        </td>
+
+                                        <td style="width:10px;
+                                                   text-align:center;
+                                                   padding:0 2px;">
+
+                                            :
+
+                                        </td>
+
+                                        <td style="text-align:right;
+                                                   padding:0;">
+
+                                            <b>
+                                                <t t-esc="'%.2f' % rounded_gst"/>
                                             </b>
 
                                         </td>
