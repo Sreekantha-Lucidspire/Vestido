@@ -290,8 +290,7 @@
 
                             <t t-set="i" t-value="0"/>
                             <t t-set="manual_sum_total" t-value="0"/>
-                            <t t-set="manual_gst_total" t-value="0"/>
-
+                            
                             <tr t-foreach="o.laundry_order_id.order_line_ids"
                                 t-as="l">
 
@@ -365,8 +364,6 @@
                                     <t t-set="manual_sum_total"
                                        t-value="manual_sum_total + line_subtotal"/>
 
-                                    <t t-set="manual_gst_total"
-                                       t-value="manual_gst_total + (l.price_tax or 0.0)"/>
 
                                     <t t-esc="'%.2f' % round(line_subtotal, 0)"/>
 
@@ -405,12 +402,16 @@
                             <t t-set="rounded_other_charges"
                                t-value="round(other_charges_total, 0)"/>
 
-                            <!-- GST computed from actual per-line tax (l.price_tax), respecting each line's real tax_ids, instead of assuming a flat 18% on the whole invoice -->
+                            <!-- Taxable base: line subtotals + other charges, after discount -->
+                            <t t-set="taxable_base"
+                               t-value="rounded_manual_sum + rounded_other_charges - rounded_discount"/>
+
+                            <!-- GST calculated forward at 18% on the taxable base (post-discount), not reverse-divided out of a tax-inclusive total -->
                             <t t-set="rounded_gst"
-                               t-value="round(manual_gst_total, 0)"/>
+                               t-value="round(taxable_base * 0.18, 0)"/>
 
                             <t t-set="final_total"
-                               t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount + rounded_gst, 0)"/>
+                               t-value="round(taxable_base + rounded_gst, 0)"/>
 
                             <td style="width:55%;
                                        vertical-align:top;">
