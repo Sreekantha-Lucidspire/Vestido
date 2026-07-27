@@ -56,11 +56,9 @@ class LaundryOrder(models.Model):
 
     total_weight = fields.Float(compute='_compute_total_weight', store=True)
 
-    # FIX: amount_total now computed by _compute_amounts, which correctly
-    # includes GST (amount_tax) and extra charges/discounts.
-    # The old '_compute_total' method (item subtotal only, no tax, no
-    # extra charges) has been removed since it was silently overriding
-    # this field's value.
+    # amount_total is computed by _compute_amounts, which includes GST
+    # (18%) applied on (Items + Other Charges - Discount), matching the
+    # rule used in the Proforma/Invoice QWeb reports.
     amount_total = fields.Float(compute='_compute_amounts', store=True)
 
     state = fields.Selection([
@@ -112,10 +110,30 @@ class LaundryOrder(models.Model):
     @api.depends('order_line_ids.subtotal', 'order_line_ids.price_tax', 'extra_line_ids.subtotal')
     def _compute_amounts(self):
         for order in self:
-            order.amount_untaxed = sum(order.order_line_ids.mapped('subtotal'))
-            order.amount_tax = sum(order.order_line_ids.mapped('price_tax'))
-            extra_total = sum(order.extra_line_ids.mapped('subtotal'))
-            order.amount_total = order.amount_untaxed + order.amount_tax + extra_total
+            # Items (pre-tax) - kept for reference, not directly used below
+            items_subtotal = sum(order.order_line_ids.mapped('subtotal'))
+
+            # Split extra lines into charges vs discounts (mirrors report logic)
+            discount_total = sum(
+                order.extra_line_ids.filtered(
+                    lambda l: l.product_id.product_type == 'discount'
+                ).mapped('subtotal')
+            )
+            other_charges_total = sum(
+                order.extra_line_ids.filtered(
+                    lambda l: l.product_id.product_type == 'charge'
+                ).mapped('subtotal')
+            )
+
+            # Taxable base = Items + Other Charges - Discount
+            taxable_base = items_subtotal + other_charges_total - abs(discount_total)
+
+            # GST (18%) on the full taxable base, matching the report rule
+            gst = taxable_base * 0.18
+
+            order.amount_untaxed = taxable_base
+            order.amount_tax = gst
+            order.amount_total = taxable_base + gst
 
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
