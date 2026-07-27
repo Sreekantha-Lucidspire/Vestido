@@ -55,7 +55,13 @@ class LaundryOrder(models.Model):
     extra_line_ids = fields.One2many('laundry.order.extra.line', 'order_id', string="Extra Charges")
 
     total_weight = fields.Float(compute='_compute_total_weight', store=True)
-    amount_total = fields.Float(compute='_compute_total', store=True)
+
+    # FIX: amount_total now computed by _compute_amounts, which correctly
+    # includes GST (amount_tax) and extra charges/discounts.
+    # The old '_compute_total' method (item subtotal only, no tax, no
+    # extra charges) has been removed since it was silently overriding
+    # this field's value.
+    amount_total = fields.Float(compute='_compute_amounts', store=True)
 
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -110,6 +116,7 @@ class LaundryOrder(models.Model):
             order.amount_tax = sum(order.order_line_ids.mapped('price_tax'))
             extra_total = sum(order.extra_line_ids.mapped('subtotal'))
             order.amount_total = order.amount_untaxed + order.amount_tax + extra_total
+
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
         self.ensure_one()
@@ -135,6 +142,7 @@ class LaundryOrder(models.Model):
         """ Purely downloads/previews the Proforma Invoice report. """
         self.ensure_one()
         return self.env.ref('laundry_management.action_laundry_quotation').report_action(self)
+
     def action_send_proforma_whatsapp(self):
         """ Renders the layout to PDF and delivers it via Meta APIs """
         self.ensure_one()
@@ -212,6 +220,7 @@ class LaundryOrder(models.Model):
             'view_mode': 'form',
             'target': 'current',
         }
+
     def action_send_out_for_delivery_whatsapp(self):
         self.ensure_one()
         
@@ -274,6 +283,7 @@ class LaundryOrder(models.Model):
             self.action_send_payment_received_whatsapp()
         elif sequence == 11: # Feedback Requested
             self.action_send_feedback_whatsapp()
+
     # =========================================================================
     # EXTANT CORE OPERATIONS
     # =========================================================================
@@ -443,11 +453,6 @@ class LaundryOrder(models.Model):
 
         return orders
 
-    @api.depends('order_line_ids.subtotal')
-    def _compute_total(self):
-        for rec in self:
-            rec.amount_total = sum(line.subtotal for line in rec.order_line_ids)
-
     @api.onchange('total_weight')
     def _onchange_total_weight(self):
         if self.total_weight and self.total_weight < 4:
@@ -457,12 +462,6 @@ class LaundryOrder(models.Model):
                      'message': "Minimum recommended weight is 4 KG, you can still proceed."                
                 }
             }
-
-    @api.depends('order_line_ids.weight')
-    def _compute_total_weight(self):
-        for rec in self:
-            rec.total_weight = sum(line.weight for line in rec.order_line_ids)
-
 
     @api.depends('order_line_ids.weight')
     def _compute_total_weight(self):
@@ -479,6 +478,7 @@ class LaundryOrder(models.Model):
                 subtype_xmlid="mail.mt_comment"
             )
         return True
+
     def action_send_enquiry_received_whatsapp(self):
         self.ensure_one()
         # Ensure you use your valid credentials/constants
@@ -515,6 +515,7 @@ class LaundryOrder(models.Model):
         else:
             _logger.error(f"WhatsApp Error: {response.text}")
             raise UserError(f"Failed to send WhatsApp: {response.text}")
+
     def action_send_picked_up_whatsapp(self):
         self.ensure_one()
         # Fetch the specific tracker record for "Order Picked Up" (Sequence 3)
@@ -621,6 +622,7 @@ class LaundryOrder(models.Model):
                 raise UserError(error_msg)
 
         return True
+
     def action_send_work_started_whatsapp(self):
         self.ensure_one()
 
@@ -679,6 +681,7 @@ class LaundryOrder(models.Model):
         else:
             error_msg = result.get('error', {}).get('message', 'Unknown Error')
             raise UserError(f"Failed to send WhatsApp: {error_msg}")
+
     def action_washing(self):
         for rec in self:
             if not rec.tag_ids:
@@ -770,6 +773,7 @@ class LaundryOrder(models.Model):
                 error_msg = result.get('error', {}).get('message', 'Unknown Error')
                 raise UserError(error_msg)
         return True
+
     def action_send_payment_received_whatsapp(self):
         self.ensure_one()
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
@@ -805,6 +809,7 @@ class LaundryOrder(models.Model):
             self.message_post(body=f"💰 Payment Received WhatsApp sent for {self.name}")
         else:
             raise UserError(f"Failed to send WhatsApp: {response.text}")
+
     def action_send_feedback_whatsapp(self):
         self.ensure_one()
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
@@ -840,6 +845,7 @@ class LaundryOrder(models.Model):
         else:
             _logger.error(f"WhatsApp API Error: {response.text}")
             raise UserError(f"Failed to send WhatsApp: {response.json().get('error', {}).get('message', 'Unknown Error')}")
+
     def get_dashboard_data(self):
         result = {}
         orders = self.search([])
@@ -1143,6 +1149,8 @@ class LaundryOrderExtraLine(models.Model):
                 partner=rec.order_id.partner_id
             )
             rec.subtotal = taxes['total_excluded']
+
+
 class LaundryOrderTracker(models.Model):
     _name = 'laundry.order.tracker'
     _description = 'Laundry Order Tracker'
