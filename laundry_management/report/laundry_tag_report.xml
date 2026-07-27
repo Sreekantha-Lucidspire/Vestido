@@ -307,22 +307,25 @@
         SHARED GST NOTE (applies to report_laundry_quotation and
         report_laundry_invoice_bill below):
 
-        Business rule confirmed from the backend order form (Items tab):
-          - Item lines carry an "18% GST" tax badge  -> TAXABLE
-          - Discount / Other Charges (Extra Charges)  -> NOT taxed
-            (no tax badge shown on those lines in the UI)
+        UPDATED RULE: GST is now calculated on the taxable base that
+        includes Other Charges and is net of Discount:
 
-        Therefore GST must be computed as 18% of the item-lines subtotal
-        ONLY. It must NOT include Other Charges, and must NOT be reduced
-        by Discount. Grand Total = Items + Other Charges - Discount + GST.
+          taxable_base = Items + Other Charges - Discount
+          GST = 18% x taxable_base
+          Grand Total = taxable_base + GST
 
-        If you find the previous PDF didn't match this formula, check for
-        a duplicate/overriding <template id="report_laundry_quotation">
-        (or report_laundry_invoice_bill) in another file/module, or an
-        inherited view patching t-set="rounded_gst" — only ONE version of
-        each template id can be active, and Odoo caches the compiled
-        QWeb view, so a stale one can keep rendering until you upgrade
-        the module (-u <module>) after editing.
+        This differs from the earlier "items only" rule. If the
+        rendered PDF doesn't reflect this after deploying:
+          1. grep -r "report_laundry_quotation" (and
+             "report_laundry_invoice_bill") across every addon folder —
+             a duplicate <template id="..."> elsewhere will silently
+             override this one on load order.
+          2. Check Settings > Technical > Views (dev mode) for any view
+             with inherit_id pointing at these templates that patches
+             t-set="rounded_gst" via xpath.
+          3. After confirming only one copy exists, upgrade the module
+             so Odoo recompiles the cached QWeb view:
+               ./odoo-bin -u <your_module_name> -d <your_database>
         ================================================================
     -->
 
@@ -477,14 +480,16 @@
                     <t t-set="rounded_other_charges" t-value="round(other_charges_total, 0)"/>
 
                     <!--
-                        FIX: GST = 18% of ITEM LINES ONLY (rounded_manual_sum).
-                        Do NOT add other_charges or subtract discount before
-                        applying the tax rate — neither of those lines is
-                        taxed on the backend (see note above the template).
+                        UPDATED: taxable base now includes Other Charges and
+                        is net of Discount, i.e.:
+                        taxable_base = Items + Other Charges - Discount
+                        GST = 18% x taxable_base
                     -->
-                    <t t-set="rounded_gst" t-value="round(rounded_manual_sum * 0.18, 0)"/>
+                    <t t-set="taxable_base" t-value="rounded_manual_sum + rounded_other_charges - rounded_discount"/>
 
-                    <t t-set="final_total" t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount + rounded_gst, 0)"/>
+                    <t t-set="rounded_gst" t-value="round(taxable_base * 0.18, 0)"/>
+
+                    <t t-set="final_total" t-value="round(taxable_base + rounded_gst, 0)"/>
 
                     <table style="width:100%; font-size:11px; margin-top:10px;">
                         <tr>
@@ -507,7 +512,7 @@
 
                                     <tr>
                                         <td style="text-align:right; padding:1px 0; white-space:nowrap;">
-                                            <b>Total</b>
+                                            <b>Overall</b>
                                         </td>
                                         <td style="width:10px; text-align:center; padding:0 2px;">
                                             :
@@ -541,6 +546,19 @@
                                         <td style="text-align:right; padding:0;">
                                             <b>
                                                 <t t-esc="'%.2f' % rounded_discount"/>
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:right; padding:1px 0; white-space:nowrap;">
+                                            <b>Subtotal</b>
+                                        </td>
+                                        <td style="width:10px; text-align:center; padding:0 2px;">
+                                            :
+                                        </td>
+                                        <td style="text-align:right; padding:0;">
+                                            <b>
+                                                <t t-esc="'%.2f' % taxable_base"/>
                                             </b>
                                         </td>
                                     </tr>
@@ -797,14 +815,16 @@
                     <t t-set="rounded_other_charges" t-value="round(other_charges_total, 0)"/>
 
                     <!--
-                        FIX: GST = 18% of ITEM LINES ONLY (rounded_manual_sum).
-                        Do NOT add other_charges or subtract discount before
-                        applying the tax rate — neither of those lines is
-                        taxed on the backend (see note above report_laundry_quotation).
+                        UPDATED: taxable base now includes Other Charges and
+                        is net of Discount, i.e.:
+                        taxable_base = Items + Other Charges - Discount
+                        GST = 18% x taxable_base
                     -->
-                    <t t-set="rounded_gst" t-value="round(rounded_manual_sum * 0.18, 0)"/>
+                    <t t-set="taxable_base" t-value="rounded_manual_sum + rounded_other_charges - rounded_discount"/>
 
-                    <t t-set="final_total" t-value="round(rounded_manual_sum + rounded_other_charges - rounded_discount + rounded_gst, 0)"/>
+                    <t t-set="rounded_gst" t-value="round(taxable_base * 0.18, 0)"/>
+
+                    <t t-set="final_total" t-value="round(taxable_base + rounded_gst, 0)"/>
 
                     <table style="width:100%; font-size:11px; margin-top:10px;">
                         <tr>
@@ -827,7 +847,7 @@
 
                                     <tr>
                                         <td style="text-align:right; padding:1px 0; white-space:nowrap;">
-                                            <b>Total</b>
+                                            <b>Overall</b>
                                         </td>
                                         <td style="width:10px; text-align:center; padding:0 2px;">
                                             :
@@ -861,6 +881,19 @@
                                         <td style="text-align:right; padding:0;">
                                             <b>
                                                 <t t-esc="'%.2f' % rounded_discount"/>
+                                            </b>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="text-align:right; padding:1px 0; white-space:nowrap;">
+                                            <b>Subtotal</b>
+                                        </td>
+                                        <td style="width:10px; text-align:center; padding:0 2px;">
+                                            :
+                                        </td>
+                                        <td style="text-align:right; padding:0;">
+                                            <b>
+                                                <t t-esc="'%.2f' % taxable_base"/>
                                             </b>
                                         </td>
                                     </tr>
