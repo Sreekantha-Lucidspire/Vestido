@@ -470,7 +470,7 @@
                                                    padding:1px 0;
                                                    white-space:nowrap;">
 
-                                            <b>Overall</b>
+                                               Overall
 
                                         </td>
 
@@ -485,9 +485,9 @@
                                         <td style="text-align:right;
                                                    padding:0;">
 
-                                            <b>
+                                            
                                                 <t t-esc="'%.2f' % rounded_manual_sum"/>
-                                            </b>
+                                            
 
                                         </td>
 
@@ -499,7 +499,7 @@
                                                    padding:1px 0;
                                                    white-space:nowrap;">
 
-                                            <b>Other Charges</b>
+                                               Other Charges
 
                                         </td>
 
@@ -514,9 +514,9 @@
                                         <td style="text-align:right;
                                                    padding:0;">
 
-                                            <b>
+                                            
                                                 <t t-esc="'%.2f' % rounded_other_charges"/>
-                                            </b>
+                                            
 
                                         </td>
 
@@ -527,7 +527,7 @@
                                                    padding:1px 0;
                                                    white-space:nowrap;">
 
-                                            <b>Discount</b>
+                                               Discount
 
                                         </td>
 
@@ -542,9 +542,9 @@
                                         <td style="text-align:right;
                                                    padding:0;">
 
-                                            <b>
+                                            
                                                 <t t-esc="'%.2f' % rounded_discount"/>
-                                            </b>
+                                            
 
                                         </td>
 
@@ -556,7 +556,7 @@
                                                    padding:1px 0;
                                                    white-space:nowrap;">
 
-                                            <b>Subtotal</b>
+                                               Subtotal
 
                                         </td>
 
@@ -571,9 +571,9 @@
                                         <td style="text-align:right;
                                                    padding:0;">
 
-                                            <b>
+                                            
                                                 <t t-esc="'%.2f' % taxable_base"/>
-                                            </b>
+                                            
 
                                         </td>
 
@@ -585,7 +585,7 @@
                                                    padding:1px 0;
                                                    white-space:nowrap;">
 
-                                            <b>GST</b>
+                                               GST
 
                                         </td>
 
@@ -600,9 +600,9 @@
                                         <td style="text-align:right;
                                                    padding:0;">
 
-                                            <b>
+                                            
                                                 <t t-esc="'%.2f' % rounded_gst"/>
-                                            </b>
+                                            
 
                                         </td>
 
