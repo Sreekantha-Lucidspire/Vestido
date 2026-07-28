@@ -409,10 +409,9 @@
                             <tr>
 
                                 <td colspan="2"
-                                    style="padding:5px 3px;
-                                           text-align:left;
-                                           border-top:1.5px solid #000;
-                                           font-weight:bold;">
+                                    style="padding:3px;
+                                           text-align:right;
+                                           border-top:1.5px solid #ddd;">
 
                                     Overall
 
@@ -420,8 +419,7 @@
 
                                 <td style="padding:5px;
                                            text-align:right;
-                                           border-top:1.5px solid #000;
-                                           font-weight:bold;">
+                                           border-top:1.5px solid #ddd;">
 
                                     <t t-esc="qty_total"/>
 
@@ -429,21 +427,19 @@
 
                                 <td style="padding:5px;
                                            text-align:right;
-                                           border-top:1.5px solid #000;
-                                           font-weight:bold;">
+                                           border-top:1.5px solid #ddd;">
 
                                     <t t-esc="'%.2f' % weight_total"/>
 
                                 </td>
 
                                 <td style="padding:5px;
-                                           border-top:1.5px solid #000;">
+                                           border-top:1.5px solid #ddd;">
                                 </td>
 
                                 <td style="padding:5px;
                                            text-align:right;
-                                           border-top:1.5px solid #000;
-                                           font-weight:bold;">
+                                           border-top:1.5px solid #ddd;">
 
                                     <t t-esc="'%.2f' % round(manual_sum_total, 0)"/>
 
