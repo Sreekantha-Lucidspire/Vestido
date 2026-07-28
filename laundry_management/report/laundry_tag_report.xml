@@ -314,8 +314,14 @@
           GST = 18% x taxable_base
           Grand Total = taxable_base + GST
 
-        This differs from the earlier "items only" rule. If the
-        rendered PDF doesn't reflect this after deploying:
+        LAYOUT NOTE: The "Overall" (items subtotal) figure is now shown
+        as a totals row directly under the Items & Services table (bold,
+        with a top border), alongside the summed Qty and summed Weight
+        for that order — instead of being the first line inside the GST
+        Summary box. The GST Summary box now starts with "Other
+        Charges".
+
+        If the rendered PDF doesn't reflect this after deploying:
           1. grep -r "report_laundry_quotation" (and
              "report_laundry_invoice_bill") across every addon folder —
              a duplicate <template id="..."> elsewhere will silently
@@ -433,6 +439,8 @@
                         <tbody>
                             <t t-set="i" t-value="0"/>
                             <t t-set="manual_sum_total" t-value="0"/>
+                            <t t-set="qty_total" t-value="0"/>
+                            <t t-set="weight_total" t-value="0"/>
                             <tr t-foreach="o.order_line_ids" t-as="l">
                                 <t t-set="i" t-value="i + 1"/>
                                 <td style="padding:3px; text-align:left; border-bottom:1px solid #ddd;">
@@ -451,9 +459,11 @@
                                     </div>
                                 </td>
                                 <td style="padding:5px; text-align:right; border-bottom:1px solid #ddd;">
+                                    <t t-set="qty_total" t-value="qty_total + l.qty"/>
                                     <t t-esc="l.qty"/>
                                 </td>
                                 <td style="padding:5px; text-align:right; border-bottom:1px solid #ddd;">
+                                    <t t-set="weight_total" t-value="weight_total + (l.weight or 0.0)"/>
                                     <t t-esc="'%.2f' % (l.weight or 0.0)"/>
                                 </td>
                                 <td style="padding:3px; text-align:right; border-bottom:1px solid #ddd;">
@@ -465,6 +475,24 @@
                                    <t t-set="line_subtotal" t-value="round(l.subtotal, 2) if l.subtotal else 0.0"/>
                                    <t t-set="manual_sum_total" t-value="manual_sum_total + line_subtotal"/>
                                    <t t-esc="'%.2f' % round(line_subtotal, 0)"/>
+                                </td>
+                            </tr>
+
+                            <!-- OVERALL totals row: directly under Items table, with a bold line above.
+                                 Shows summed Qty, summed Weight, and the Overall Amount together. -->
+                            <tr>
+                                <td colspan="2" style="padding:5px 3px; text-align:left; border-top:1.5px solid #000; font-weight:bold;">
+                                    Overall
+                                </td>
+                                <td style="padding:5px; text-align:right; border-top:1.5px solid #000; font-weight:bold;">
+                                    <t t-esc="qty_total"/>
+                                </td>
+                                <td style="padding:5px; text-align:right; border-top:1.5px solid #000; font-weight:bold;">
+                                    <t t-esc="'%.2f' % weight_total"/>
+                                </td>
+                                <td style="padding:5px; border-top:1.5px solid #000;"></td>
+                                <td style="padding:5px; text-align:right; border-top:1.5px solid #000; font-weight:bold;">
+                                    <t t-esc="'%.2f' % round(manual_sum_total, 0)"/>
                                 </td>
                             </tr>
                         </tbody>
@@ -510,17 +538,6 @@
 
                                 <table style="width:100%; border-collapse:collapse; font-size:11px;">
 
-                                    <tr>
-                                        <td style="text-align:right; padding:1px 0; white-space:nowrap;">
-                                            Overall
-                                        </td>
-                                        <td style="width:10px; text-align:center; padding:0 2px;">
-                                            :
-                                        </td>
-                                        <td style="text-align:right; padding:0;">
-                                            <t t-esc="'%.2f' % rounded_manual_sum"/>
-                                        </td>
-                                    </tr>
                                     <tr>
                                         <td style="text-align:right; padding:1px 0; white-space:nowrap;">
                                             Other Charges
@@ -758,6 +775,8 @@
                         <tbody>
                             <t t-set="i" t-value="0"/>
                             <t t-set="manual_sum_total" t-value="0"/>
+                            <t t-set="qty_total" t-value="0"/>
+                            <t t-set="weight_total" t-value="0"/>
                             <tr t-foreach="o.order_line_ids" t-as="l">
                                 <t t-set="i" t-value="i + 1"/>
                                 <td style="padding:3px; text-align:left; border-bottom:1px solid #ddd;">
@@ -776,9 +795,11 @@
                                     </div>
                                 </td>
                                 <td style="padding:5px; text-align:right; border-bottom:1px solid #ddd;">
+                                    <t t-set="qty_total" t-value="qty_total + l.qty"/>
                                     <t t-esc="l.qty"/>
                                 </td>
                                 <td style="padding:5px; text-align:right; border-bottom:1px solid #ddd;">
+                                    <t t-set="weight_total" t-value="weight_total + (l.weight or 0.0)"/>
                                     <t t-esc="'%.2f' % (l.weight or 0.0)"/>
                                 </td>
                                 <td style="padding:3px; text-align:right; border-bottom:1px solid #ddd;">
@@ -790,6 +811,24 @@
                                    <t t-set="line_subtotal" t-value="round(l.subtotal, 2) if l.subtotal else 0.0"/>
                                    <t t-set="manual_sum_total" t-value="manual_sum_total + line_subtotal"/>
                                    <t t-esc="'%.2f' % round(line_subtotal, 0)"/>
+                                </td>
+                            </tr>
+
+                            <!-- OVERALL totals row: directly under Items table, with a bold line above.
+                                 Shows summed Qty, summed Weight, and the Overall Amount together. -->
+                            <tr>
+                                <td colspan="2" style="padding:5px 3px; text-align:left; border-top:1.5px solid #000; font-weight:bold;">
+                                    Overall
+                                </td>
+                                <td style="padding:5px; text-align:right; border-top:1.5px solid #000; font-weight:bold;">
+                                    <t t-esc="qty_total"/>
+                                </td>
+                                <td style="padding:5px; text-align:right; border-top:1.5px solid #000; font-weight:bold;">
+                                    <t t-esc="'%.2f' % weight_total"/>
+                                </td>
+                                <td style="padding:5px; border-top:1.5px solid #000;"></td>
+                                <td style="padding:5px; text-align:right; border-top:1.5px solid #000; font-weight:bold;">
+                                    <t t-esc="'%.2f' % round(manual_sum_total, 0)"/>
                                 </td>
                             </tr>
                         </tbody>
@@ -835,17 +874,6 @@
 
                                 <table style="width:100%; border-collapse:collapse; font-size:11px;">
 
-                                    <tr>
-                                        <td style="text-align:right; padding:1px 0; white-space:nowrap;">
-                                            Overall
-                                        </td>
-                                        <td style="width:10px; text-align:center; padding:0 2px;">
-                                            :
-                                        </td>
-                                        <td style="text-align:right; padding:0;">
-                                            <t t-esc="'%.2f' % rounded_manual_sum"/>
-                                        </td>
-                                    </tr>
                                     <tr>
                                         <td style="text-align:right; padding:1px 0; white-space:nowrap;">
                                             Other Charges
