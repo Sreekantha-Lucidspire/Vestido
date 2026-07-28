@@ -481,23 +481,50 @@
                             <!-- OVERALL totals row: directly under Items table, with a bold line above.
                                  Shows summed Qty, summed Weight, and the Overall Amount together. -->
                             <tr>
-                                <td colspan="2" style="padding:5px 3px; text-align:left; border-top:1.5px solid #000; font-weight:bold;">
-                                    Overall
-                                </td>
-                                <td style="padding:5px; text-align:right; border-top:1.5px solid #000; font-weight:bold;">
-                                    <t t-esc="qty_total"/>
-                                </td>
-                                <td style="padding:5px; text-align:right; border-top:1.5px solid #000; font-weight:bold;">
-                                    <t t-esc="'%.2f' % weight_total"/>
-                                </td>
-                                <td style="padding:5px; border-top:1.5px solid #000;"></td>
-                                <td style="padding:5px; text-align:right; border-top:1.5px solid #000; font-weight:bold;">
-                                    <t t-esc="'%.2f' % round(manual_sum_total, 0)"/>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
 
+                                <td colspan="2"
+                                    style="padding:3px;
+                                           text-align:center;
+                                           border-top:1.5px solid #ddd;">
+
+                                    Overall
+
+                                </td>
+
+                                <td style="padding:5px;
+                                           text-align:right;
+                                           border-top:1.5px solid #ddd;">
+
+                                    <t t-esc="qty_total"/>
+
+                                </td>
+
+                                <td style="padding:5px;
+                                           text-align:right;
+                                           border-top:1.5px solid #ddd;">
+
+                                    <t t-esc="'%.2f' % weight_total"/>
+
+                                </td>
+
+                                <td style="padding:5px;
+                                           border-top:1.5px solid #ddd;">
+                                </td>
+
+                                <td style="padding:5px;
+                                           text-align:right;
+                                           border-top:1.5px solid #ddd;">
+
+                                    <t t-esc="'%.2f' % round(manual_sum_total, 0)"/>
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+                               
                     <hr style="border:1px solid #666; margin-top:8px;"/>
 
                     <t t-set="discount_total" t-value="sum(o.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'discount').mapped('subtotal'))"/>
