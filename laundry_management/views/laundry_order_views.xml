@@ -186,8 +186,8 @@
                                     <field name="premium_multiplier" column_invisible="1"/>
                                     <field name="weight" sum="Total Weight" optional="show"/>
                                     <field name="unit_price" widget="monetary"/>
-                                    <field name="tax_ids" widget="many2many_tags"/>
                                     <field name="subtotal" widget="monetary" optional="show"/>
+                                    <field name="tax_ids" widget="many2many_tags"/>
                                     <field name="price_tax" widget="monetary" optional="show"/>
                                     <field name="price_total" widget="monetary" sum="Grand Total"/>
                                 </list>
