@@ -219,190 +219,70 @@
 
                     </table>
 
-                    <hr style="border:1px solid #666;
-                               margin-top:8px;"/>
+                    <hr style="border:1px solid #666; margin-top:8px;"/>
 
-                    <table style="width:100%;
-                                  border-collapse:collapse;
-                                  font-size:11px;">
-
+                    <table style="width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed;">
                         <thead>
-
                             <tr>
-
-                                <th style="text-align:left;
-                                           font-weight:bold;
-                                           padding:3px;
-                                           vertical-align:top;
-                                           line-height:1.2;">
-
-                                    S.No.
-
-                                </th>
-
-                                <th style="text-align:left;
-                                           font-weight:bold;
-                                           padding:3px;
-                                           vertical-align:top;
-                                           line-height:1.2;">
-
-                                    Items &amp; Services
-
-                                </th>
-
-                                <th style="text-align:right;
-                                           font-weight:bold;
-                                           padding:3px;
-                                           vertical-align:top;
-                                           line-height:1.2;">
-
-                                    Qty
-
-                                </th>
-
-                                <th style="text-align:right;
-                                           font-weight:bold;
-                                           padding:3px;
-                                           vertical-align:top;
-                                           line-height:1.2;">
-
-                                    Wt
-
-                                    <div style="font-size:9px;
-                                                color:#333;">
-
-                                        (Kg)
-
-                                    </div>
-
-                                </th>
-
-                                <th style="text-align:right;
-                                           font-weight:bold;
-                                           padding:3px;
-                                           vertical-align:top;
-                                           line-height:1.2;">
-
-                                    Unit Price
-
-                                    <div style="font-size:9px;
-                                                color:#333;">
-
-                                        (Rs.)
-
-                                    </div>
-
-                                </th>
-
-                                <th style="text-align:right;
-                                           font-weight:bold;
-                                           padding:3px;
-                                           vertical-align:top;
-                                           line-height:1.2;">
-
-                                    Amt
-
-                                    <div style="font-size:9px;
-                                                color:#333;">
-
-                                        (Rs.)
-
-                                    </div>
-
-                                </th>
-
+                               <th style="text-align:left; font-weight:bold; width:10%; padding:3px; vertical-align:top !important; line-height: 1.2;">S.No.</th>
+                               <th style="text-align:left; font-weight:bold; width:38%; padding:3px; vertical-align:top !important; line-height: 1.2;">Items &amp; Services</th>
+                               <th style="text-align:right; font-weight:bold; width:10%; padding:3px; vertical-align:top !important; line-height: 1.2;">Qty</th>
+                               <th style="text-align:right; font-weight:bold; width:12%; padding:3px; vertical-align:top !important; line-height: 1.2;">
+                                   Wt
+                                   <div style="font-size:9px; color:#333;">(Kg)</div>
+                               </th>
+                               <th style="text-align:right; font-weight:bold; width:15%; padding:3px; vertical-align:top !important; line-height: 1.2;">
+                                   Unit Price
+                                   <div style="font-size:9px; color:#333;">(Rs.)</div>
+                               </th>
+                               <th style="text-align:right; font-weight:bold; width:15%; padding:3px; vertical-align:top !important; line-height: 1.2;">
+                                   Amt
+                                  <div style="font-size:9px; color:#333;">(Rs.)</div>
+                               </th>
                             </tr>
-
                         </thead>
-
                         <tbody>
-
                             <t t-set="i" t-value="0"/>
                             <t t-set="manual_sum_total" t-value="0"/>
                             <t t-set="qty_total" t-value="0"/>
                             <t t-set="weight_total" t-value="0"/>
-
-                            <tr t-foreach="o.laundry_order_id.order_line_ids"
-                                t-as="l">
-
+                            <tr t-foreach="o.order_line_ids" t-as="l">
                                 <t t-set="i" t-value="i + 1"/>
-
-                                <td style="padding:3px;
-                                           text-align:left;
-                                           border-bottom:1px solid #ddd;">
-
+                                <td style="padding:3px; text-align:left; border-bottom:1px solid #ddd;">
                                     <t t-esc="i"/>
-
                                 </td>
-
-                                <td style="padding:3px;
-                                           border-bottom:1px solid #ddd;">
-
+                                <td style="padding:3px; word-wrap:break-word; border-bottom:1px solid #ddd;">
                                     <div>
                                         <t t-esc="l.product_id.name"/>
                                     </div>
-
-                                    <div style="font-size:9px;
-                                                color:#333;">
-
+                                    <div style="font-size:9px; color:#333;">
                                         <t t-esc="l.service_type_id.name"/>
-
                                         <t t-if="l.premium_id">
-
                                             <span> | </span>
-
-                                            <t t-esc="l.premium_id.name"/>
-
+                                            <t t-esc="l.premium_id.name"/> 
                                         </t>
-
                                     </div>
-
                                 </td>
-
-                                <td style="padding:5px;
-                                           text-align:right;
-                                           border-bottom:1px solid #ddd;">
-
+                                <td style="padding:5px; text-align:right; border-bottom:1px solid #ddd;">
                                     <t t-set="qty_total" t-value="qty_total + l.qty"/>
                                     <t t-esc="l.qty"/>
-
                                 </td>
-
-                                <td style="padding:5px;
-                                           text-align:right;
-                                           border-bottom:1px solid #ddd;">
-
+                                <td style="padding:5px; text-align:right; border-bottom:1px solid #ddd;">
                                     <t t-set="weight_total" t-value="weight_total + (l.weight or 0.0)"/>
                                     <t t-esc="'%.2f' % (l.weight or 0.0)"/>
-
                                 </td>
-
-                                <td style="padding:3px;
-                                           text-align:right;
-                                           border-bottom:1px solid #ddd;">
-
+                                <td style="padding:3px; text-align:right; border-bottom:1px solid #ddd;">
                                     <!-- Unit Price: pre-tax base price as entered on the order line (matches backend unit_price field) -->
                                     <t t-esc="'%.2f' % round(l.unit_price, 0)"/>
-
                                 </td>
-
-                                <td style="padding:3px;
-                                           text-align:right;
-                                           border-bottom:1px solid #ddd;">
-
-                                    <!-- Amt: pre-tax line subtotal, so Unit Price x Qty/Wt reconciles with this column. GST is shown separately in the summary below. -->
-                                    <t t-set="line_subtotal"
-                                       t-value="round(l.subtotal, 2) if l.subtotal else 0.0"/>
-
-                                    <t t-set="manual_sum_total"
-                                       t-value="manual_sum_total + line_subtotal"/>
-
-
-                                    <t t-esc="'%.2f' % round(line_subtotal, 0)"/>
-
+                                <td style="padding:3px; text-align:right; border-bottom:1px solid #ddd;">
+                                   <!-- Amt: pre-tax line subtotal, so Unit Price x Qty/Wt reconciles with this column. GST is shown separately in the summary below. -->
+                                   <t t-set="line_subtotal" t-value="round(l.subtotal, 2) if l.subtotal else 0.0"/>
+                                   <t t-set="manual_sum_total" t-value="manual_sum_total + line_subtotal"/>
+                                   <t t-esc="'%.2f' % round(line_subtotal, 0)"/>
                                 </td>
-
                             </tr>
+
 
                             <!-- OVERALL totals row: directly under Items table, with a bold line above.
                                  Shows summed Qty, summed Weight, and the Overall Amount together. -->
