@@ -405,13 +405,15 @@
                             </tr>
 
                             <!-- OVERALL totals row: directly under Items table, with a bold line above.
-                                 Shows summed Qty, summed Weight, and the Overall Amount together. -->
-                            <tr>
+                                 Shows summed Qty, summed Weight, and the Overall Amount together.
+                                 Entire row is bold. -->
+                            <tr style="font-weight:bold;">
 
                                 <td colspan="2"
                                     style="padding:3px;
                                            text-align:center;
-                                           border-top:1.5px solid #ddd;">
+                                           border-top:1.5px solid #ddd;
+                                           font-weight:bold;">
 
                                     Overall
 
@@ -419,7 +421,8 @@
 
                                 <td style="padding:5px;
                                            text-align:right;
-                                           border-top:1.5px solid #ddd;">
+                                           border-top:1.5px solid #ddd;
+                                           font-weight:bold;">
 
                                     <t t-esc="qty_total"/>
 
@@ -427,19 +430,22 @@
 
                                 <td style="padding:5px;
                                            text-align:right;
-                                           border-top:1.5px solid #ddd;">
+                                           border-top:1.5px solid #ddd;
+                                           font-weight:bold;">
 
                                     <t t-esc="'%.2f' % weight_total"/>
 
                                 </td>
 
                                 <td style="padding:5px;
-                                           border-top:1.5px solid #ddd;">
+                                           border-top:1.5px solid #ddd;
+                                           font-weight:bold;">
                                 </td>
 
                                 <td style="padding:5px;
                                            text-align:right;
-                                           border-top:1.5px solid #ddd;">
+                                           border-top:1.5px solid #ddd;
+                                           font-weight:bold;">
 
                                     <t t-esc="'%.2f' % round(manual_sum_total, 0)"/>
 
