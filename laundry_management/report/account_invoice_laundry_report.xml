@@ -485,10 +485,10 @@
                        t-value="rounded_manual_sum + rounded_other_charges - rounded_discount"/>
 
                     <t t-set="rounded_gst"
-                       t-value="round(taxable_base * 0.18, 0)"/>
+                       t-value="round(taxable_base * 0.18, 2)"/>
 
                     <t t-set="final_total"
-                       t-value="round(taxable_base + rounded_gst, 0)"/>
+                       t-value="round(taxable_base + rounded_gst, 2)"/>
 
                     <table style="width:100%;
                                   font-size:11px;
