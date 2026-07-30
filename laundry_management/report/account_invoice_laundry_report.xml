@@ -7,15 +7,20 @@
           GST is now calculated on the taxable base = Item Lines Total
           + Other Charges - Discount (not on item lines alone).
 
-          GST = 18% x (rounded_manual_sum + rounded_other_charges - rounded_discount)
-          Grand Total = taxable_base + GST
+          taxable_base = Items + Other Charges - Discount
+          GST = 18% x taxable_base
+          Grand Total = taxable_base + GST, rounded to the nearest
+          whole Rupee. The paise difference introduced by that final
+          rounding is shown explicitly as a "Rounding Off" line in the
+          GST Summary box (can be positive or negative).
 
         LAYOUT NOTE: The "Overall" (items subtotal) figure is now shown
         as a totals row directly under the Items & Services table (bold,
         with a top border), alongside the summed Qty and summed Weight
         for that order — instead of being the first line inside the GST
         Summary box. The GST Summary box now starts with "Other
-        Charges".
+        Charges", then Discount, Subtotal, GST, Rounding Off and
+        finally Grand Total.
 
         If the rendered PDF doesn't reflect this after deploying:
           1. grep -r "report_invoice_laundry_bill" across every addon
@@ -23,7 +28,7 @@
              elsewhere will silently override this one on load order.
           2. Check Settings > Technical > Views (dev mode) for any view
              with inherit_id pointing at this template that patches
-             t-set="rounded_gst" via xpath.
+             t-set="rounding_off" via xpath.
           3. After confirming only one copy exists, upgrade the module
              so Odoo recompiles the cached QWeb view:
                ./odoo-bin -u <your_module_name> -d <your_database>
@@ -480,15 +485,26 @@
                         is net of Discount, i.e.:
                         taxable_base = Items + Other Charges - Discount
                         GST = 18% x taxable_base
+
+                        The exact GST is kept to 2 decimal places, the
+                        Grand Total is then rounded to the nearest whole
+                        Rupee, and the paise difference introduced by
+                        that rounding is shown as "Rounding Off".
                     -->
                     <t t-set="taxable_base"
                        t-value="rounded_manual_sum + rounded_other_charges - rounded_discount"/>
 
-                    <t t-set="rounded_gst"
-                       t-value="round(taxable_base * 0.18, 0)"/>
+                    <t t-set="gst_amount"
+                       t-value="round(taxable_base * 0.18, 2)"/>
+
+                    <t t-set="total_before_rounding"
+                       t-value="taxable_base + gst_amount"/>
 
                     <t t-set="final_total"
-                       t-value="round(taxable_base + rounded_gst, 0)"/>
+                       t-value="round(total_before_rounding, 0)"/>
+
+                    <t t-set="rounding_off"
+                       t-value="round(final_total - total_before_rounding, 2)"/>
 
                     <table style="width:100%;
                                   font-size:11px;
@@ -511,7 +527,7 @@
 
                                     CGST + SGST:
 
-                                    <t t-esc="'%.2f' % rounded_gst"/>
+                                    <t t-esc="'%.2f' % gst_amount"/>
 
                                 </div>
 
@@ -632,7 +648,36 @@
                                                    padding:0;">
 
                                             
-                                                <t t-esc="'%.2f' % rounded_gst"/>
+                                                <t t-esc="'%.2f' % gst_amount"/>
+                                            
+
+                                        </td>
+
+                                    </tr>
+
+                                    <tr>
+
+                                        <td style="text-align:right;
+                                                   padding:1px 0;
+                                                   white-space:nowrap;">
+
+                                               Rounding Off
+
+                                        </td>
+
+                                        <td style="width:10px;
+                                                   text-align:center;
+                                                   padding:0 2px;">
+
+                                            :
+
+                                        </td>
+
+                                        <td style="text-align:right;
+                                                   padding:0;">
+
+                                            
+                                                <t t-esc="('+' if rounding_off &gt;= 0 else '') + '%.2f' % rounding_off"/>
                                             
 
                                         </td>
