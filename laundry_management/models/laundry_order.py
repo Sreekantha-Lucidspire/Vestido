@@ -7,7 +7,7 @@ import logging
 import base64
 import qrcode
 from io import BytesIO
-from urllib.parse import urlencode  
+from urllib.parse import urlencode, quote
 
 _logger = logging.getLogger(__name__)
 
@@ -135,7 +135,7 @@ class LaundryOrder(models.Model):
             order.amount_untaxed = taxable_base
             order.amount_tax = gst
             order.amount_total = taxable_base + gst
-            
+
     def generate_payment_qr(self, amount=None):
         """ Generates a base64 string of a QR code.
             Uses the given amount if provided (e.g. an invoice's
@@ -152,7 +152,7 @@ class LaundryOrder(models.Model):
             "am": amount_str,
             "cu": "INR",
         }
-        qr_data = "upi://pay?" + urlencode(params)
+        qr_data = "upi://pay?" + urlencode(params, quote_via=quote, safe='@')
 
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(qr_data)
