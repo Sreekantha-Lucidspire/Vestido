@@ -7,7 +7,6 @@ import logging
 import base64
 import qrcode
 from io import BytesIO
-from urllib.parse import urlencode, quote
 
 _logger = logging.getLogger(__name__)
 
@@ -136,33 +135,24 @@ class LaundryOrder(models.Model):
             order.amount_tax = gst
             order.amount_total = taxable_base + gst
 
-    def generate_payment_qr(self, amount=None):
-        """ Generates a base64 string of a QR code.
-            Uses the given amount if provided (e.g. an invoice's
-            amount_total), otherwise falls back to self.amount_total. """
+    def generate_payment_qr(self):
+        """ Generates a base64 string of a QR code for the invoice total """
         self.ensure_one()
         upi_id = "vestidofabwash@okhdfcbank"
         payee_name = "Vestido Fabwash Studio"
-        amt = amount if amount is not None else self.amount_total
-        amount_str = f"{round(amt, 2):.2f}"
-
-        params = {
-            "pa": upi_id,
-            "pn": payee_name,
-            "am": amount_str,
-            "cu": "INR",
-        }
-        qr_data = "upi://pay?" + urlencode(params, quote_via=quote, safe='@')
-        _logger.info("UPI QR DATA: %s", qr_data) 
-
+        amount = f"{round(self.amount_total, 0):.2f}"
+        # Define the data you want in the QR (e.g., a payment link or amount)
+        qr_data = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
+        
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(qr_data)
         qr.make(fit=True)
-
+        
         img = qr.make_image(fill='black', back_color='white')
         buffer = BytesIO()
         img.save(buffer, format="PNG")
         return base64.b64encode(buffer.getvalue()).decode('utf-8')
+
     # =========================================================================
     # WHATSAPP & PROFORMA INTEGRATION (SPLIT OPERATIONS)
     # =========================================================================
