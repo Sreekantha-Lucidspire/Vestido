@@ -202,7 +202,7 @@
                                        line-height:1.4;
                                        padding-left:16px;">
 
-                                <b>Order No:</b>
+                                <b>Invoice No:</b>
                                 <t t-esc="o.name"/>
                                 <br/>
 
