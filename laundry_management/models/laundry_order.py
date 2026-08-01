@@ -153,6 +153,7 @@ class LaundryOrder(models.Model):
             "cu": "INR",
         }
         qr_data = "upi://pay?" + urlencode(params, quote_via=quote, safe='@')
+        _logger.info("UPI QR DATA: %s", qr_data) 
 
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(qr_data)
