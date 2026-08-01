@@ -7,6 +7,7 @@ import logging
 import base64
 import qrcode
 from io import BytesIO
+from urllib.parse import urlencode  
 
 _logger = logging.getLogger(__name__)
 
@@ -134,6 +135,7 @@ class LaundryOrder(models.Model):
             order.amount_untaxed = taxable_base
             order.amount_tax = gst
             order.amount_total = taxable_base + gst
+            
     def generate_payment_qr(self, amount=None):
         """ Generates a base64 string of a QR code.
             Uses the given amount if provided (e.g. an invoice's
@@ -142,14 +144,20 @@ class LaundryOrder(models.Model):
         upi_id = "vestidofabwash@okhdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amt = amount if amount is not None else self.amount_total
-        amount_str = f"{round(amt, 0):.2f}"
-        # Define the data you want in the QR (e.g., a payment link or amount)
-        qr_data = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount_str}&cu=INR"
-        
+        amount_str = f"{round(amt, 2):.2f}"
+
+        params = {
+            "pa": upi_id,
+            "pn": payee_name,
+            "am": amount_str,
+            "cu": "INR",
+        }
+        qr_data = "upi://pay?" + urlencode(params)
+
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(qr_data)
         qr.make(fit=True)
-        
+
         img = qr.make_image(fill='black', back_color='white')
         buffer = BytesIO()
         img.save(buffer, format="PNG")
