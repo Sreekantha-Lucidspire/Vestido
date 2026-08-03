@@ -181,7 +181,7 @@ class LaundryOrder(models.Model):
             order.amount_untaxed = taxable_base   # Subtotal (no GST)
             order.amount_tax = gst                # GST
             order.rounding_off = rounding_off     # Rounding Off
-            order.amount_total = final_total - rounding_off       # Grand Total
+            order.amount_total = final_total      # Grand Total
 
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
