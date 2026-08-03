@@ -187,7 +187,7 @@
                                     <field name="weight" sum="Total Weight" optional="show"/>
                                     <field name="unit_price" widget="monetary"/>
                                     <field name="subtotal" widget="monetary" optional="show"/>
-                                    <field name="tax_ids" widget="many2many_tags"/>
+                                    <field name="tax_ids" widget="many2many_tags" column_invisible="1"/>
                                     <field name="price_tax" widget="monetary" optional="show"/>
                                     <field name="price_total" widget="monetary" sum="Grand Total"/>
                                 </list>
@@ -201,8 +201,8 @@
                                 <list editable="bottom">
                                     <field name="product_id"/>
                                     <field name="name"/>
-                                    <field name="price_unit" widget="monetary"/>
-                                    <field name="tax_ids" widget="many2many_tags"/>
+                                    <field name="price_unit" string="Unit Price" widget="monetary"/>
+                                    <field name="tax_ids" widget="many2many_tags" column_invisible="1"/>
                                     <field name="subtotal" widget="monetary"/>
                                 </list>
                             </field>
@@ -220,19 +220,28 @@
                             </field>
                         </page>
                     </notebook>
-                    
+
+                    <!--
+                        GST SUMMARY FOOTER
+                        Order and labels match the printed invoice/report exactly:
+                        Subtotal (no GST) -> GST -> Rounding Off -> Grand Total
+                    -->
                     <group class="oe_subtotal_footer oe_right">
                         <field name="total_weight" readonly="1" invisible="1"/>
                         <field name="currency_id" invisible="1"/>
-                        <field name="amount_untaxed" invisible="1"/>
-                        <field name="amount_tax" invisible="1"/>
-                        <field name="amount_total" widget="monetary"/>
+
+                        <field name="amount_untaxed" string="Subtotal" widget="monetary" readonly="1"/>
+                        <field name="amount_tax" string="GST" widget="monetary" readonly="1"/>
+                        <field name="rounding_off" string="Rounding Off" widget="monetary" readonly="1"/>
+
                         <field name="grand_total"
                                string="Grand Total"
                                widget="monetary"
                                options="{'currency_field': 'currency_id'}"
-                               readonly="1"/>
+                               readonly="1"
+                               class="oe_subtotal_footer_separator"/>
                     </group>
+                    <div class="clearfix"/>
 
                     <group>
                         <field name="remarks" placeholder="Enter any remarks here..."/>

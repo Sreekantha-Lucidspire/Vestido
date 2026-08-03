@@ -58,8 +58,14 @@ class LaundryOrder(models.Model):
 
     # amount_total is computed by _compute_amounts, which includes GST
     # (18%) applied on (Items + Other Charges - Discount), matching the
-    # rule used in the Proforma/Invoice QWeb reports.
-    amount_total = fields.Float(compute='_compute_amounts', store=True)
+    # rule used in the Proforma/Invoice QWeb reports. Every intermediate
+    # figure (Items, Discount, Other Charges) is rounded to the nearest
+    # rupee BEFORE the taxable base is built, exactly like the report.
+    amount_total = fields.Float(
+        string="Grand Total",
+        compute='_compute_amounts',
+        store=True
+    )
 
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -80,8 +86,25 @@ class LaundryOrder(models.Model):
     has_wash = fields.Boolean(compute='_compute_service_flags')
     has_iron = fields.Boolean(compute='_compute_service_flags')
 
-    amount_untaxed = fields.Float(string="Untaxed Amount", compute='_compute_amounts', store=True)
-    amount_tax = fields.Float(string="Tax Amount", compute='_compute_amounts', store=True)
+    # ---- GST Summary fields (mirror the PDF report labels exactly) ----
+    amount_untaxed = fields.Float(
+        string="Subtotal",
+        compute='_compute_amounts',
+        store=True,
+        help="Items + Other Charges - Discount, before GST (matches 'Subtotal' on the invoice)."
+    )
+    amount_tax = fields.Float(
+        string="GST",
+        compute='_compute_amounts',
+        store=True,
+        help="18% GST calculated on the Subtotal."
+    )
+    rounding_off = fields.Float(
+        string="Rounding Off",
+        compute='_compute_amounts',
+        store=True,
+        help="Paise adjustment applied to reach a whole-rupee Grand Total."
+    )
 
     currency_id = fields.Many2one(
         'res.currency',
@@ -109,8 +132,19 @@ class LaundryOrder(models.Model):
 
     @api.depends('order_line_ids.subtotal', 'order_line_ids.price_tax', 'extra_line_ids.subtotal')
     def _compute_amounts(self):
+        """
+        Mirrors the QWeb report (report_invoice_laundry_bill) exactly:
+
+            Subtotal      = round(Items, 0) + round(Other Charges, 0) - round(Discount, 0)
+                             -> this is the TAXABLE BASE, and it is WITHOUT GST
+            GST            = round(Subtotal * 18%, 2)
+            Grand Total    = round(Subtotal + GST, 0)
+            Rounding Off   = Grand Total - (Subtotal + GST)   [paise difference]
+        """
         for order in self:
-            # Items (pre-tax) - kept for reference, not directly used below
+            # Items (pre-tax) subtotal, summed from order lines (line.subtotal is
+            # already tax-excluded because order line _compute_tax uses
+            # taxes['total_excluded']).
             items_subtotal = sum(order.order_line_ids.mapped('subtotal'))
 
             # Split extra lines into charges vs discounts (mirrors report logic)
@@ -125,15 +159,29 @@ class LaundryOrder(models.Model):
                 ).mapped('subtotal')
             )
 
-            # Taxable base = Items + Other Charges - Discount
-            taxable_base = items_subtotal + other_charges_total - abs(discount_total)
+            # Round each component to the nearest rupee first, same as the report
+            rounded_items = round(items_subtotal, 0)
+            rounded_discount = round(abs(discount_total), 0)
+            rounded_other_charges = round(other_charges_total, 0)
 
-            # GST (18%) on the full taxable base, matching the report rule
-            gst = taxable_base * 0.18
+            # Subtotal (taxable base) = Items + Other Charges - Discount
+            # NOTE: this is WITHOUT GST — GST is calculated on top of it below.
+            taxable_base = rounded_items + rounded_other_charges - rounded_discount
 
-            order.amount_untaxed = taxable_base
-            order.amount_tax = gst
-            order.amount_total = taxable_base + gst
+            # GST (18%) applied on the taxable base, kept to 2 decimals
+            gst = round(taxable_base * 0.18, 2)
+
+            # Grand Total = Subtotal + GST, then rounded to the nearest rupee
+            total_before_rounding = taxable_base + gst
+            final_total = round(total_before_rounding, 0)
+
+            # Rounding Off = the paise difference introduced by that final rounding
+            rounding_off = round(final_total - total_before_rounding, 2)
+
+            order.amount_untaxed = taxable_base   # Subtotal (no GST)
+            order.amount_tax = gst                # GST
+            order.rounding_off = rounding_off     # Rounding Off
+            order.amount_total = final_total       # Grand Total
 
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
