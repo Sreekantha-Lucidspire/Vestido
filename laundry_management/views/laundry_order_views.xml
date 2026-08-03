@@ -189,7 +189,7 @@
                                     <field name="subtotal" widget="monetary" optional="show"/>
                                     <field name="tax_ids" widget="many2many_tags" column_invisible="1"/>
                                     <field name="price_tax" widget="monetary" optional="show"/>
-                                    <field name="price_total" widget="monetary" sum="Grand Total"/>
+                                    <field name="price_total" widget="monetary" sum="Grand Total" optional="show"/>
                                 </list>
                             </field>
                             
