@@ -29,9 +29,9 @@
                 <field name="name" string="Items"/>
                 <field name="service_type_id" string="Service Type"/>
                 <field name="pricing_type" string="Pricing Type"/>
-                <field name="quantity" string="Qty"/>
-                <field name="price_unit" string="Unit Price"/>
+                <field name="quantity" string="Quantity"/>
                 <field name="weight" string="Weight"/>
+                <field name="price_unit" string="Unit Price"/>
                 <field name="tax_ids" widget="many2many_tags" string="Taxes"/>
                 <field name="price_tax" string="Tax Price" optional="hide"/>
             </xpath>
