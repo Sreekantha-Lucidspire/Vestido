@@ -14,6 +14,7 @@ class LaundryOrder(models.Model):
     _name = 'laundry.order'
     _description = 'Laundry Order'
     _inherit = ['mail.thread', 'mail.activity.mixin']
+    _order = 'id desc'
 
     name = fields.Char(default='New', copy=False)
     partner_id = fields.Many2one('res.partner', required=True)
@@ -77,6 +78,12 @@ class LaundryOrder(models.Model):
     ], default='draft')
 
     invoice_id = fields.Many2one('account.move')
+    invoice_date = fields.Date(
+        string="Invoice Date",
+        related='invoice_id.invoice_date',
+        store=True,
+        readonly=True
+    )
 
     tag_type = fields.Selection([('order', 'Per Order'), ('line', 'Per Line')], default='order')
 
@@ -1104,6 +1111,46 @@ class LaundryOrderLine(models.Model):
             else:
                 rec.unit_price = base_price
 
+    @api.onchange('qty', 'weight')
+    def _onchange_qty_weight_zero_price_warning(self):
+        """
+        Pops a single confirmation dialog when the user enters a quantity
+        or weight for a line whose computed unit price is still zero
+        (e.g. no matching laundry.pricing record was found). This is a
+        pure UI warning — it does not block or alter saving, and does
+        not touch unit_price, pricing lookups, or any other logic.
+        """
+        for line in self:
+            entered_qty = line.qty if line.pricing_type == 'per_item' else line.weight
+            if entered_qty and line.unit_price == 0.0:
+                return {
+                    'warning': {
+                        'title': "Unit Price is Zero",
+                        'message': (
+                            f"Unit price for '{line.product_id.name}' is ₹0.00. "
+                            "Please check pricing before saving."
+                        ),
+                    }
+                }
+
+    @api.constrains('unit_price', 'qty', 'weight')
+    def _check_zero_unit_price(self):
+        """
+        Safety-net popup shown on Save if any line still has unit_price
+        of 0 despite a quantity/weight being entered (covers cases where
+        the onchange above did not fire, e.g. bulk/imported rows). Raises
+        one combined error listing all affected products, so the user
+        sees exactly one popup instead of one per line.
+        """
+        zero_price_lines = self.filtered(
+            lambda l: l.unit_price == 0.0 and (l.qty if l.pricing_type == 'per_item' else l.weight)
+        )
+        if zero_price_lines:
+            names = ", ".join(zero_price_lines.mapped('product_id.name'))
+            raise ValidationError(
+                f"Unit price is ₹0.00 for: {names}. Please check pricing before saving."
+            )
+
     @api.depends('qty', 'weight', 'unit_price', 'tax_ids', 'pricing_type')
     def _compute_tax(self):
         for line in self:
@@ -1182,7 +1229,16 @@ class LaundryOrderExtraLine(models.Model):
     name = fields.Char()
     quantity = fields.Float(default=1)
     price_unit = fields.Monetary(currency_field='currency_id')
-    tax_ids = fields.Many2many('account.tax', string="Taxes")
+    tax_ids = fields.Many2many(
+        'account.tax',
+        string="Taxes",
+        domain="[('type_tax_use', '=', 'sale')]",
+        default=lambda self: self.env['account.tax'].search([
+            ('amount', '=', 18.0),
+            ('type_tax_use', '=', 'sale'),
+            ('company_id', '=', self.env.company.id)
+        ], limit=1)
+    )
     subtotal = fields.Monetary(compute='_compute_total', store=True, currency_field='currency_id')
 
     @api.onchange('product_id')
@@ -1193,6 +1249,17 @@ class LaundryOrderExtraLine(models.Model):
             rec.name = rec.product_id.name
             if rec.product_id.product_type == 'discount':
                 rec.price_unit = -abs(rec.price_unit or 0)
+            # Self-heal: make sure 18% GST is attached even if this row
+            # existed before the default above was added, or if tax_ids
+            # was cleared for any reason.
+            if not rec.tax_ids:
+                gst_18 = self.env['account.tax'].search([
+                    ('amount', '=', 18.0),
+                    ('type_tax_use', '=', 'sale'),
+                    ('company_id', '=', self.env.company.id)
+                ], limit=1)
+                if gst_18:
+                    rec.tax_ids = [(6, 0, gst_18.ids)]
 
     @api.onchange('price_unit')
     def _onchange_price_unit(self):

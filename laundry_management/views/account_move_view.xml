@@ -32,7 +32,7 @@
                 <field name="quantity" string="Quantity"/>
                 <field name="weight" string="Weight"/>
                 <field name="price_unit" string="Unit Price"/>
-                <field name="tax_ids" widget="many2many_tags" string="Taxes"/>
+                <field name="tax_ids" widget="many2many_tags" string="Taxes" optional="hide"/>
                 <field name="price_tax" string="Tax Price" optional="hide"/>
             </xpath>
             <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='price_unit']" position="attributes">
@@ -67,20 +67,61 @@
                 reflects the real accounting total, which will NOT match
                 this Grand Total. Payments/reconciliation follow Amount
                 Due, not the number shown here.
+
+                NOTE ON LAYOUT: We deliberately do NOT use a <group> with
+                the legacy "oe_subtotal_footer" class here. That class was
+                built for the old table-based totals layout; in current
+                Odoo, <group> renders via CSS Grid, and the legacy class
+                doesn't apply correctly to it — the label text and the
+                monetary value end up overlapping. Using plain flexbox
+                divs below avoids that entirely.
             -->
             <xpath expr="//field[@name='tax_totals']" position="attributes">
                 <attribute name="invisible">1</attribute>
             </xpath>
+
+            <!--
+                "Amount Due" (amount_residual) lives inside the SAME native
+                oe_subtotal_footer group as tax_totals. Hiding tax_totals
+                above does not hide that group, so amount_residual keeps
+                rendering through the same broken CSS-grid layout and
+                overlaps too. We hide the native field here and re-add it
+                as a clean row inside our own flexbox block below.
+            -->
+            <xpath expr="//group[hasclass('oe_subtotal_footer')]//field[@name='amount_residual']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
             <xpath expr="//field[@name='tax_totals']" position="after">
-                <group class="oe_subtotal_footer oe_right">
-                    <field name="amount_untaxed" string="Subtotal" widget="monetary" readonly="1"/>
-                    <field name="gst_amount" string="GST" widget="monetary" readonly="1"/>
-                    <field name="rounding_off" string="Rounding Off" widget="monetary" readonly="1"/>
-                    <field name="display_grand_total"
-                           string="Grand Total"
-                           widget="monetary"
-                           readonly="1"/>
-                </group>
+                <div class="oe_right"
+                     style="width: fit-content; margin-left: auto; display: grid;
+                            grid-template-columns: max-content max-content;
+                            column-gap: 12px; row-gap: 2px;">
+                    <span style="white-space: nowrap;">Subtotal</span>
+                    <div style="white-space: nowrap; overflow: visible; text-align: right;">
+                        <field name="amount_untaxed" widget="monetary" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <span style="white-space: nowrap;">GST</span>
+                    <div style="white-space: nowrap; overflow: visible; text-align: right;">
+                        <field name="gst_amount" widget="monetary" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <span style="white-space: nowrap;">Rounding Off</span>
+                    <div style="white-space: nowrap; overflow: visible; text-align: right;">
+                        <field name="rounding_off" widget="monetary" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <span class="fw-bold" style="white-space: nowrap; border-top: 1px solid #ccc; padding-top: 4px;">Grand Total</span>
+                    <div class="fw-bold" style="white-space: nowrap; overflow: visible; text-align: right; border-top: 1px solid #ccc; padding-top: 4px;">
+                        <field name="display_grand_total" widget="monetary" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <span style="white-space: nowrap;">Amount Due</span>
+                    <div style="white-space: nowrap; overflow: visible; text-align: right;">
+                        <field name="amount_residual" widget="monetary" readonly="1" nolabel="1"/>
+                    </div>
+                </div>
                 <div class="clearfix"/>
             </xpath>
         </field>

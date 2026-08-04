@@ -301,6 +301,9 @@
             <kanban default_group_by="state">
                 <field name="name"/>
                 <field name="partner_id"/>
+                <field name="order_date"/>
+                <field name="invoice_id"/>
+                <field name="invoice_date"/>
                 <field name="amount_total"/>
                 <field name="state"/>
                 <templates>
@@ -311,6 +314,29 @@
                             </div>
                             <div>
                                 <field name="partner_id"/>
+                            </div>
+                            <!--
+                                "Order Received" label + date on one line:
+                                widget="date"/"datetime" fields render as
+                                block-level elements inside kanban templates
+                                by default, so they drop to a new line no
+                                matter what surrounds them. Forcing a flex
+                                row here (instead of the plain <div> the
+                                <strong> and <field> previously sat in)
+                                keeps both pieces on the same line.
+
+                                Color: switched from text-secondary (muted
+                                gray) to text-dark so these lines match the
+                                customer name's dark color instead of
+                                looking greyed-out/disabled.
+                            -->
+                            <div class="text-dark small d-flex align-items-center flex-nowrap" style="gap: 4px;">
+                                <strong class="text-nowrap">Order Received:</strong>
+                                <field name="order_date" widget="date" class="text-nowrap"/>
+                            </div>
+                            <div class="text-dark small d-flex align-items-center flex-nowrap" style="gap: 4px;" invisible="not invoice_id">
+                                <strong class="text-nowrap">Invoice Date:</strong>
+                                <field name="invoice_date" widget="date" class="text-nowrap"/>
                             </div>
                             <div>
                                 <strong>₹ </strong>
