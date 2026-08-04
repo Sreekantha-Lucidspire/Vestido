@@ -1128,7 +1128,7 @@ class LaundryOrderLine(models.Model):
                         'title': "Unit Price is Zero",
                         'message': (
                             f"Unit price for '{line.product_id.name}' is ₹0.00. "
-                            "Please check pricing before saving."
+                            "Please check pricing configuration before saving."
                         ),
                     }
                 }
