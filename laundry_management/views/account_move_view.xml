@@ -38,6 +38,17 @@
             <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='price_unit']" position="attributes">
                 <attribute name="column_invisible">False</attribute>
             </xpath>
+
+            <!-- Hide the ORIGINAL quantity/price_unit columns still present
+                 later in the row (inherited from account.view_move_form),
+                 which duplicate the "Qty" / "Unit Price" fields added above -->
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='quantity'][2]" position="attributes">
+                <attribute name="column_invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='invoice_line_ids']/list/field[@name='price_unit'][2]" position="attributes">
+                <attribute name="column_invisible">1</attribute>
+            </xpath>
+
             <xpath expr="//field[@name='invoice_line_ids']/list" position="inside">
                 <field name="price_total" string="Total Price" optional="hide"/>
             </xpath>
