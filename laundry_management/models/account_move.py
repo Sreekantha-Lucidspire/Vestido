@@ -5,7 +5,8 @@ import json
 import base64
 import qrcode
 from io import BytesIO
-
+import hashlib
+import hmac
 
 class AccountMove(models.Model):
     _inherit = "account.move"
@@ -90,13 +91,42 @@ class AccountMove(models.Model):
             'target': 'self',
         }
     def action_open_pay_page(self):
-        """ Opens the QR + Pay Now page, without changing generate_payment_qr() """
         self.ensure_one()
         return {
             'type': 'ir.actions.act_url',
-            'url': f'/laundry/pay/{self.id}',
+            'url': f'/laundry/pay/{self._get_pay_token()}',
             'target': 'new',
         }
+    def _get_pay_token(self):
+        """ Builds a signed token encoding this invoice's ID, so the
+            payment URL can't be tampered with or guessed sequentially """
+        self.ensure_one()
+        secret = self.env['ir.config_parameter'].sudo().get_param('database.secret')
+        raw = str(self.id).encode()
+        sig = hmac.new(secret.encode(), raw, hashlib.sha256).hexdigest()[:16]
+        token = base64.urlsafe_b64encode(raw).decode().rstrip('=') + '.' + sig
+        return token
+
+    @api.model
+    def _get_move_from_pay_token(self, token):
+        """ Reverses _get_pay_token: verifies the signature and returns
+            the matching move, or False if the token is invalid/tampered """
+        try:
+            b64_id, sig = token.split('.')
+            padding = '=' * (-len(b64_id) % 4)
+            raw = base64.urlsafe_b64decode(b64_id + padding)
+            move_id = int(raw.decode())
+        except Exception:
+            return False
+
+        secret = self.env['ir.config_parameter'].sudo().get_param('database.secret')
+        expected_sig = hmac.new(secret.encode(), raw, hashlib.sha256).hexdigest()[:16]
+        if not hmac.compare_digest(sig, expected_sig):
+            return False
+
+        move = self.sudo().browse(move_id)
+        return move if move.exists() else False
+
     def action_send_invoice_whatsapp(self):
         """ Generates the invoice PDF and sends it via Meta WhatsApp API """
         self.ensure_one()

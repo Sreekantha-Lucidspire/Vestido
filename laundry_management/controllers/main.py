@@ -20,11 +20,10 @@ class PaymentQRController(http.Controller):
                 ('Content-Disposition', f'inline; filename="{filename}"'),
             ]
         )
-
-    @http.route('/laundry/pay/<int:move_id>', type='http', auth='public')
-    def pay_page(self, move_id, **kwargs):
-        move = request.env['account.move'].sudo().browse(move_id)
-        if not move.exists():
+    @http.route('/laundry/pay/<string:token>', type='http', auth='public')
+    def pay_page(self, token, **kwargs):
+        move = request.env['account.move']._get_move_from_pay_token(token)
+        if not move:
             return request.not_found()
 
         upi_id = "pinelabs.STQ4596522@hdfcbank"
@@ -60,3 +59,4 @@ class PaymentQRController(http.Controller):
         </html>
         """
         return request.make_response(html, headers=[('Content-Type', 'text/html')])
+  
