@@ -81,6 +81,22 @@ class AccountMove(models.Model):
         img.save(buffer, format="PNG")
         return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
+    def action_download_payment_qr(self):
+        """ Opens the standalone QR PNG for download via the controller """
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/laundry/download_qr/{self.id}',
+            'target': 'self',
+        }
+    def action_open_pay_page(self):
+        """ Opens the QR + Pay Now page, without changing generate_payment_qr() """
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_url',
+            'url': f'/laundry/pay/{self.id}',
+            'target': 'new',
+        }
     def action_send_invoice_whatsapp(self):
         """ Generates the invoice PDF and sends it via Meta WhatsApp API """
         self.ensure_one()

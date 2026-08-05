@@ -11,6 +11,14 @@
                         type="object" 
                         class="oe_highlight" 
                         invisible="state != 'posted' or is_whatsapp_sent == True"/>
+                <button name="action_download_payment_qr" 
+                        string="Download QR Code" 
+                        type="object" 
+                        class="btn-secondary"/>
+                <button name="action_open_pay_page" 
+                        string="Pay Now Page" 
+                        type="object" 
+                        class="btn-primary"/>
             </xpath>
             <xpath expr="//field[@name='ref']" position="after">
                 <field name="laundry_order_id" options="{'no_open': True, 'no_edit':True, 'no_create': True}"/>
