@@ -14,9 +14,10 @@
                 <button name="action_download_payment_qr" 
                         string="Download QR Code" 
                         type="object" 
-                        class="btn-secondary"/>
+                        class="btn-secondary"
+                        invisible="1"/>
                 <button name="action_open_pay_page" 
-                        string="Pay Now Page" 
+                        string="Payment Link" 
                         type="object" 
                         class="btn-primary"/>
             </xpath>
