@@ -87,14 +87,18 @@ class AccountMove(models.Model):
         self.ensure_one()
         return {
             'type': 'ir.actions.act_url',
-            'url': f'/laundry/download_qr/{self.id}',
+            'url': f'/download_qr/{self.id}',
             'target': 'self',
         }
+
     def action_open_pay_page(self):
         self.ensure_one()
+        base_url = self.env['ir.config_parameter'].sudo().get_param(
+            'laundry.payment_base_url', 'https://payment.vestidofabwash.com'
+        )
         return {
             'type': 'ir.actions.act_url',
-            'url': f'/laundry/pay/{self._get_pay_token()}',
+            'url': f'{base_url}/pay/{self._get_pay_token()}',
             'target': 'new',
         }
     def _get_pay_token(self):

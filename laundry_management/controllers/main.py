@@ -5,7 +5,7 @@ import base64
 
 class PaymentQRController(http.Controller):
 
-    @http.route('/laundry/download_qr/<int:move_id>', type='http', auth='public')
+    @http.route('/download_qr/<int:move_id>', type='http', auth='public')
     def download_qr(self, move_id, **kwargs):
         move = request.env['account.move'].sudo().browse(move_id)
         if not move.exists():
@@ -20,18 +20,17 @@ class PaymentQRController(http.Controller):
                 ('Content-Disposition', f'inline; filename="{filename}"'),
             ]
         )
-    @http.route('/laundry/pay/<string:token>', type='http', auth='public')
+
+    @http.route('/pay/<string:token>', type='http', auth='public')
     def pay_page(self, token, **kwargs):
         move = request.env['account.move']._get_move_from_pay_token(token)
         if not move:
             return request.not_found()
-
         upi_id = "pinelabs.STQ4596522@hdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(move.display_grand_total, 0):.2f}"
         upi_url = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
-        qr_image_url = f"/laundry/download_qr/{move.id}"
-
+        qr_image_url = f"/download_qr/{move.id}"
         html = f"""
         <!DOCTYPE html>
         <html>
@@ -59,4 +58,3 @@ class PaymentQRController(http.Controller):
         </html>
         """
         return request.make_response(html, headers=[('Content-Type', 'text/html')])
-  
