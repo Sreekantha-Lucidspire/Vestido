@@ -57,6 +57,7 @@ class PaymentQRController(http.Controller):
         upi_id = "pinelabs.STQ4596522@hdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(move.display_grand_total, 0):.2f}"
+        invoice_date = move.invoice_date.strftime('%d %b %Y') if move.invoice_date else ""
         upi_url = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
         qr_image_url = f"/download_qr/{move.id}"
 
@@ -94,6 +95,10 @@ class PaymentQRController(http.Controller):
             f'<img class="logo" src="{logo_data_uri}" alt="Vestido Fabwash Studio"/>'
             if logo_data_uri else ""
         )
+        invoice_date_html = (
+            f'<div class="invoice-date">Invoice Date: {invoice_date}</div>'
+            if invoice_date else ""
+        )
         expiry_html = (
             f'<p class="expiry">This link expires on {expiry_text} IST</p>'
             if expiry_text else ""
@@ -108,7 +113,8 @@ class PaymentQRController(http.Controller):
                 body {{ font-family: Arial, sans-serif; text-align:center; padding-top:50px; }}
                 img.logo {{ width:120px; margin-bottom:20px; }}
                 img.qr {{ width:220px; height:220px; }}
-                .amount {{ font-size:18px; color:#333; margin-bottom:20px; }}
+                .invoice-date {{ font-size:14px; color:#666; margin-bottom:8px; }}
+                .amount {{ font-size:18px; color:#333; margin-bottom:20px; font-weight:bold; }}
                 .expiry {{ font-size:13px; color:#888; margin-top:14px; }}
                 a.pay-btn {{
                     display:inline-block; margin-top:20px; padding:14px 32px;
@@ -120,6 +126,7 @@ class PaymentQRController(http.Controller):
         <body>
             {logo_html}
             <h2>{move.name}</h2>
+            {invoice_date_html}
             <div class="amount">Amount: Rs. {amount}</div>
             <img class="qr" src="{qr_image_url}" alt="Payment QR"/>
             <p>Scan the QR above, or tap below to pay directly:</p>
