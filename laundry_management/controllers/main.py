@@ -31,6 +31,7 @@ class PaymentQRController(http.Controller):
         amount = f"{round(move.display_grand_total, 0):.2f}"
         upi_url = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
         qr_image_url = f"/download_qr/{move.id}"
+        logo_url = "/laundry_management/static/src/img/vestido_logo.png"
         html = f"""
         <!DOCTYPE html>
         <html>
@@ -39,7 +40,8 @@ class PaymentQRController(http.Controller):
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
                 body {{ font-family: Arial, sans-serif; text-align:center; padding-top:50px; }}
-                img {{ width:220px; height:220px; }}
+                img.logo {{ width:120px; margin-bottom:20px; }}
+                img.qr {{ width:220px; height:220px; }}
                 .amount {{ font-size:18px; color:#333; margin-bottom:20px; }}
                 a.pay-btn {{
                     display:inline-block; margin-top:20px; padding:14px 32px;
@@ -49,9 +51,10 @@ class PaymentQRController(http.Controller):
             </style>
         </head>
         <body>
+            <img class="logo" src="{logo_url}" alt="Vestido Fabwash Studio"/>
             <h2>{move.name}</h2>
             <div class="amount">Amount: Rs. {amount}</div>
-            <img src="{qr_image_url}" alt="Payment QR"/>
+            <img class="qr" src="{qr_image_url}" alt="Payment QR"/>
             <p>Scan the QR above, or tap below to pay directly:</p>
             <a class="pay-btn" href="{upi_url}">Pay Now</a>
         </body>
