@@ -2,6 +2,7 @@ from odoo import http
 from odoo.http import request
 import base64
 import os
+import datetime
 
 
 class PaymentQRController(http.Controller):
@@ -55,6 +56,22 @@ class PaymentQRController(http.Controller):
         amount = f"{round(move.display_grand_total, 0):.2f}"
         upi_url = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
         qr_image_url = f"/download_qr/{move.id}"
+
+        # Decode the token's timestamp to show the customer when this
+        # link expires (48 hours after it was generated). Purely for
+        # display — the actual validity check already happened above.
+        expiry_text = ""
+        try:
+            b64_id, _sig = token.split('.')
+            padding = '=' * (-len(b64_id) % 4)
+            raw = base64.urlsafe_b64decode(b64_id + padding)
+            _move_id_str, timestamp_str = raw.decode().split(':')
+            generated_at = datetime.datetime.fromtimestamp(int(timestamp_str))
+            expires_at = generated_at + datetime.timedelta(hours=48)
+            expiry_text = expires_at.strftime('%d %b %Y, %I:%M %p')
+        except Exception:
+            pass
+
         # Embed logo as base64 directly in the HTML — avoids a separate
         # HTTP request for a static file, which the payment.* nginx
         # config intentionally blocks (only /pay/ and /download_qr/ are
@@ -74,6 +91,10 @@ class PaymentQRController(http.Controller):
             f'<img class="logo" src="{logo_data_uri}" alt="Vestido Fabwash Studio"/>'
             if logo_data_uri else ""
         )
+        expiry_html = (
+            f'<p class="expiry">This link expires on {expiry_text}</p>'
+            if expiry_text else ""
+        )
         html = f"""
         <!DOCTYPE html>
         <html>
@@ -85,6 +106,7 @@ class PaymentQRController(http.Controller):
                 img.logo {{ width:120px; margin-bottom:20px; }}
                 img.qr {{ width:220px; height:220px; }}
                 .amount {{ font-size:18px; color:#333; margin-bottom:20px; }}
+                .expiry {{ font-size:13px; color:#888; margin-top:14px; }}
                 a.pay-btn {{
                     display:inline-block; margin-top:20px; padding:14px 32px;
                     background:#0b8043; color:white; text-decoration:none;
@@ -99,6 +121,7 @@ class PaymentQRController(http.Controller):
             <img class="qr" src="{qr_image_url}" alt="Payment QR"/>
             <p>Scan the QR above, or tap below to pay directly:</p>
             <a class="pay-btn" href="{upi_url}">Pay Now</a>
+            {expiry_html}
         </body>
         </html>
         """
