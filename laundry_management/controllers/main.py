@@ -25,14 +25,36 @@ class PaymentQRController(http.Controller):
     @http.route('/pay/<string:token>', type='http', auth='public')
     def pay_page(self, token, **kwargs):
         move = request.env['account.move']._get_move_from_pay_token(token)
+
+        if move == 'expired':
+            html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Link Expired</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                    body { font-family: Arial, sans-serif; text-align:center; padding-top:80px; }
+                    h2 { color:#b00020; }
+                </style>
+            </head>
+            <body>
+                <h2>This payment link has expired</h2>
+                <p>Please contact Vestido Fabwash Studio for a new payment link.</p>
+                <p>📞 8296777380</p>
+            </body>
+            </html>
+            """
+            return request.make_response(html, headers=[('Content-Type', 'text/html')])
+
         if not move:
             return request.not_found()
+
         upi_id = "pinelabs.STQ4596522@hdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(move.display_grand_total, 0):.2f}"
         upi_url = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
         qr_image_url = f"/download_qr/{move.id}"
-
         # Embed logo as base64 directly in the HTML — avoids a separate
         # HTTP request for a static file, which the payment.* nginx
         # config intentionally blocks (only /pay/ and /download_qr/ are
@@ -48,12 +70,10 @@ class PaymentQRController(http.Controller):
             logo_data_uri = f"data:image/png;base64,{logo_base64}"
         except FileNotFoundError:
             pass  # gracefully skip the logo if the file isn't found
-
         logo_html = (
             f'<img class="logo" src="{logo_data_uri}" alt="Vestido Fabwash Studio"/>'
             if logo_data_uri else ""
         )
-
         html = f"""
         <!DOCTYPE html>
         <html>
@@ -83,5 +103,3 @@ class PaymentQRController(http.Controller):
         </html>
         """
         return request.make_response(html, headers=[('Content-Type', 'text/html')])
-
-        
