@@ -3,6 +3,9 @@ from odoo.http import request
 import base64
 import os
 import datetime
+import zoneinfo
+
+IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 
 
 class PaymentQRController(http.Controller):
@@ -58,15 +61,15 @@ class PaymentQRController(http.Controller):
         qr_image_url = f"/download_qr/{move.id}"
 
         # Decode the token's timestamp to show the customer when this
-        # link expires (48 hours after it was generated). Purely for
-        # display — the actual validity check already happened above.
+        # link expires (48 hours after it was generated), always shown
+        # in IST regardless of the server's own system timezone.
         expiry_text = ""
         try:
             b64_id, _sig = token.split('.')
             padding = '=' * (-len(b64_id) % 4)
             raw = base64.urlsafe_b64decode(b64_id + padding)
             _move_id_str, timestamp_str = raw.decode().split(':')
-            generated_at = datetime.datetime.fromtimestamp(int(timestamp_str))
+            generated_at = datetime.datetime.fromtimestamp(int(timestamp_str), tz=IST)
             expires_at = generated_at + datetime.timedelta(hours=48)
             expiry_text = expires_at.strftime('%d %b %Y, %I:%M %p')
         except Exception:
@@ -92,7 +95,7 @@ class PaymentQRController(http.Controller):
             if logo_data_uri else ""
         )
         expiry_html = (
-            f'<p class="expiry">This link expires on {expiry_text}</p>'
+            f'<p class="expiry">This link expires on {expiry_text} IST</p>'
             if expiry_text else ""
         )
         html = f"""
