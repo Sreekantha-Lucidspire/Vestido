@@ -1,6 +1,7 @@
 from odoo import http
 from odoo.http import request
 import base64
+import os
 
 
 class PaymentQRController(http.Controller):
@@ -31,7 +32,28 @@ class PaymentQRController(http.Controller):
         amount = f"{round(move.display_grand_total, 0):.2f}"
         upi_url = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
         qr_image_url = f"/download_qr/{move.id}"
-        logo_url = "/laundry_management/static/src/img/vestido_logo.png"
+
+        # Embed logo as base64 directly in the HTML — avoids a separate
+        # HTTP request for a static file, which the payment.* nginx
+        # config intentionally blocks (only /pay/ and /download_qr/ are
+        # allowed through on that subdomain).
+        logo_data_uri = ""
+        try:
+            logo_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                'static', 'src', 'img', 'vestido_logo.png'
+            )
+            with open(logo_path, 'rb') as f:
+                logo_base64 = base64.b64encode(f.read()).decode('utf-8')
+            logo_data_uri = f"data:image/png;base64,{logo_base64}"
+        except FileNotFoundError:
+            pass  # gracefully skip the logo if the file isn't found
+
+        logo_html = (
+            f'<img class="logo" src="{logo_data_uri}" alt="Vestido Fabwash Studio"/>'
+            if logo_data_uri else ""
+        )
+
         html = f"""
         <!DOCTYPE html>
         <html>
@@ -51,7 +73,7 @@ class PaymentQRController(http.Controller):
             </style>
         </head>
         <body>
-            <img class="logo" src="{logo_url}" alt="Vestido Fabwash Studio"/>
+            {logo_html}
             <h2>{move.name}</h2>
             <div class="amount">Amount: Rs. {amount}</div>
             <img class="qr" src="{qr_image_url}" alt="Payment QR"/>
