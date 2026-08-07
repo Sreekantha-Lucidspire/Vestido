@@ -83,3 +83,5 @@ class PaymentQRController(http.Controller):
         </html>
         """
         return request.make_response(html, headers=[('Content-Type', 'text/html')])
+
+        
