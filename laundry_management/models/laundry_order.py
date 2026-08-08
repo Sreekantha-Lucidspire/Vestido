@@ -57,11 +57,6 @@ class LaundryOrder(models.Model):
 
     total_weight = fields.Float(compute='_compute_total_weight', store=True)
 
-    # amount_total is computed by _compute_amounts, which includes GST
-    # (18%) applied on (Items + Other Charges - Discount), matching the
-    # rule used in the Proforma/Invoice QWeb reports. Every intermediate
-    # figure (Items, Discount, Other Charges) is rounded to the nearest
-    # rupee BEFORE the taxable base is built, exactly like the report.
     amount_total = fields.Float(
         string="Grand Total",
         compute='_compute_amounts',
@@ -93,7 +88,6 @@ class LaundryOrder(models.Model):
     has_wash = fields.Boolean(compute='_compute_service_flags')
     has_iron = fields.Boolean(compute='_compute_service_flags')
 
-    # ---- GST Summary fields (mirror the PDF report labels exactly) ----
     amount_untaxed = fields.Float(
         string="Subtotal",
         compute='_compute_amounts',
@@ -139,22 +133,9 @@ class LaundryOrder(models.Model):
 
     @api.depends('order_line_ids.subtotal', 'order_line_ids.price_tax', 'extra_line_ids.subtotal')
     def _compute_amounts(self):
-        """
-        Mirrors the QWeb report (report_invoice_laundry_bill) exactly:
-
-            Subtotal      = round(Items, 0) + round(Other Charges, 0) - round(Discount, 0)
-                             -> this is the TAXABLE BASE, and it is WITHOUT GST
-            GST            = round(Subtotal * 18%, 2)
-            Grand Total    = round(Subtotal + GST, 0)
-            Rounding Off   = Grand Total - (Subtotal + GST)   [paise difference]
-        """
         for order in self:
-            # Items (pre-tax) subtotal, summed from order lines (line.subtotal is
-            # already tax-excluded because order line _compute_tax uses
-            # taxes['total_excluded']).
             items_subtotal = sum(order.order_line_ids.mapped('subtotal'))
 
-            # Split extra lines into charges vs discounts (mirrors report logic)
             discount_total = sum(
                 order.extra_line_ids.filtered(
                     lambda l: l.product_id.product_type == 'discount'
@@ -166,38 +147,33 @@ class LaundryOrder(models.Model):
                 ).mapped('subtotal')
             )
 
-            # Round each component to the nearest rupee first, same as the report
             rounded_items = round(items_subtotal, 0)
             rounded_discount = round(abs(discount_total), 0)
             rounded_other_charges = round(other_charges_total, 0)
 
-            # Subtotal (taxable base) = Items + Other Charges - Discount
-            # NOTE: this is WITHOUT GST — GST is calculated on top of it below.
             taxable_base = rounded_items + rounded_other_charges - rounded_discount
 
-            # GST (18%) applied on the taxable base, kept to 2 decimals
             gst = round(taxable_base * 0.18, 2)
 
-            # Grand Total = Subtotal + GST, then rounded to the nearest rupee
             total_before_rounding = taxable_base + gst
             final_total = round(total_before_rounding, 0)
 
-            # Rounding Off = the paise difference introduced by that final rounding
             rounding_off = round(final_total - total_before_rounding, 2)
 
-            order.amount_untaxed = taxable_base   # Subtotal (no GST)
-            order.amount_tax = gst                # GST
-            order.rounding_off = rounding_off     # Rounding Off
-            order.amount_total = final_total      # Grand Total
+            order.amount_untaxed = taxable_base
+            order.amount_tax = gst
+            order.rounding_off = rounding_off
+            order.amount_total = final_total
 
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
         self.ensure_one()
+        from urllib.parse import quote
         upi_id = "vestidofabwash@okhdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(self.amount_total, 0):.2f}"
         # Define the data you want in the QR (e.g., a payment link or amount)
-        qr_data = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
+        qr_data = f"upi://pay?pa={quote(upi_id)}&pn={quote(payee_name)}&am={amount}&cu=INR"
         
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(qr_data)
@@ -225,13 +201,9 @@ class LaundryOrder(models.Model):
         
         recipient_phone = "+919686570381" # Sandbox test number
         
-        # --- Data Preparation ---
-        # Qty number from sum of order lines
         total_qty = sum(line.qty for line in self.order_line_ids)
         
-        # Condition notes from the tracker remarks (Stage 5)
         tracker = self.tracker_ids.filtered(lambda t: t.sequence == 5)
-        # condition_notes = tracker.remarks if tracker and tracker.remarks else "Verified and inspected."
         condition_notes = self.remarks if self.remarks else "Verified and inspected."
 
         message_body = (
@@ -248,11 +220,9 @@ class LaundryOrder(models.Model):
         
         report_template = 'laundry_management.action_laundry_quotation'
         
-        # Generate PDF
         pdf_content, report_format = self.env['ir.actions.report']._render_qweb_pdf(report_template, res_ids=self.id)
         filename = f"Proforma_{self.name.replace('/', '_')}.pdf"
             
-        # Upload Media
         upload_url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/media"
         headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
         files = {"file": (filename, pdf_content, "application/pdf")}
@@ -264,7 +234,6 @@ class LaundryOrder(models.Model):
         if upload_response.status_code == 200 and "id" in upload_result:
             media_id = upload_result["id"]
             
-            # Send Message
             send_url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages"
             send_payload = {
                 "messaging_product": "whatsapp",
@@ -297,14 +266,11 @@ class LaundryOrder(models.Model):
     def action_send_out_for_delivery_whatsapp(self):
         self.ensure_one()
         
-        # Ensure this token is refreshed and valid
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD" 
         PHONE_NUMBER_ID = "1126838393847539"
         
-        # Fetch tracker sequence 8
         delivery_tracker = self.tracker_ids.filtered(lambda t: t.sequence == 8)
         
-        # Use the name of the staff assigned to this tracker stage
         agent_name = delivery_tracker.staff_id.name if delivery_tracker.staff_id else "Our Delivery Partner"
         
         message_body = (
@@ -317,7 +283,6 @@ class LaundryOrder(models.Model):
             f"— Team Vestido Fabwash Studio"
         )
         
-        # API Payload
         send_url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages"
         payload = {
             "messaging_product": "whatsapp",
@@ -339,22 +304,21 @@ class LaundryOrder(models.Model):
     def trigger_whatsapp_for_tracker(self, sequence):
         self.ensure_one()
         
-        # Mapping sequences to their specific action methods
         if sequence == 1:
             self.action_send_enquiry_received_whatsapp()
-        elif sequence == 3:  # Matches the sequence of your Picked Up stage
+        elif sequence == 3:
             self.action_send_picked_up_whatsapp()
         elif sequence == 5:
-            self.action_send_proforma_whatsapp() # Triggers your existing proforma method
+            self.action_send_proforma_whatsapp()
         elif sequence == 6: 
             self.action_send_work_started_whatsapp()
-        elif sequence == 8:  # Added: Out for Delivery
+        elif sequence == 8:
             self.action_send_out_for_delivery_whatsapp()
         elif sequence == 9:
             self.action_send_delivered_whatsapp()
-        elif sequence == 10: # Payment Received
+        elif sequence == 10:
             self.action_send_payment_received_whatsapp()
-        elif sequence == 11: # Feedback Requested
+        elif sequence == 11:
             self.action_send_feedback_whatsapp()
 
     # =========================================================================
@@ -445,7 +409,7 @@ class LaundryOrder(models.Model):
         if tracker and not tracker.completed:
             tracker.write({
                 'completed': True,
-                'stage_datetime': fields.Datetime.now(), # Automatically captures current time
+                'stage_datetime': fields.Datetime.now(),
                 'staff_id': self.env.user.id,
             })
 
@@ -554,7 +518,6 @@ class LaundryOrder(models.Model):
 
     def action_send_enquiry_received_whatsapp(self):
         self.ensure_one()
-        # Ensure you use your valid credentials/constants
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
         
@@ -562,7 +525,6 @@ class LaundryOrder(models.Model):
         if not recipient_phone:
             raise UserError("Customer phone number is missing.")
             
-        # Meta Sandbox Bypass if needed, otherwise clean the number
         recipient_phone = "+919686570381" 
         customer_name = self.partner_id.name or "Valued Customer"
         message_body = (
@@ -591,17 +553,14 @@ class LaundryOrder(models.Model):
 
     def action_send_picked_up_whatsapp(self):
         self.ensure_one()
-        # Fetch the specific tracker record for "Order Picked Up" (Sequence 3)
         tracker = self.tracker_ids.filtered(lambda t: t.sequence == 3)
         
-        # Pull data from the form fields
         pickup_date = tracker.stage_datetime.strftime('%d-%b %H:%M') if tracker.stage_datetime else "Not recorded"
         agent_name = tracker.staff_id.name or "Our Pickup Agent"
 
-        # Meta API Config
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
-        recipient_phone = "+919686570381" # Sandbox test number
+        recipient_phone = "+919686570381"
 
         message_body = (
             f"Hello {self.partner_id.name},\n\n"
@@ -613,7 +572,6 @@ class LaundryOrder(models.Model):
             f"— Team Vestido Fabwash Studio"
         )
 
-        # Standard API request logic
         send_url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages"
         headers = {"Authorization": f"Bearer {ACCESS_TOKEN}", "Content-Type": "application/json"}
         payload = {
@@ -699,7 +657,6 @@ class LaundryOrder(models.Model):
     def action_send_work_started_whatsapp(self):
         self.ensure_one()
 
-        # Replaced with your working Sandbox Tokens
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
 
@@ -707,11 +664,10 @@ class LaundryOrder(models.Model):
         if not recipient_phone:
             raise UserError("Customer phone number is missing.")
 
-        recipient_phone = "+919686570381"   # Sandbox test number
+        recipient_phone = "+919686570381"
 
         customer_name = self.partner_id.name or "Customer"
 
-        # Formatted exactly to your specifications
         message_body = (
             f"Hello {customer_name},\n\n"
             f"We have received your confirmation — work has begun on your order! 🧵✨\n\n"
@@ -802,9 +758,8 @@ class LaundryOrder(models.Model):
             ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
             PHONE_NUMBER_ID = "1126838393847539"
 
-            recipient_phone = "+919686570381" # Test number
+            recipient_phone = "+919686570381"
 
-            # Format current date for the message
             delivery_date = fields.Datetime.context_timestamp(self.with_context(tz='Asia/Kolkata'), fields.Datetime.now()).strftime('%d-%m-%Y')
 
             message_body = (
@@ -851,7 +806,7 @@ class LaundryOrder(models.Model):
         self.ensure_one()
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
-        recipient_phone = "+919686570381" # Test number
+        recipient_phone = "+919686570381"
 
         payment_date = fields.Datetime.context_timestamp(self.with_context(tz='Asia/Kolkata'), fields.Datetime.now()).strftime('%d-%m-%Y')
 
@@ -887,7 +842,7 @@ class LaundryOrder(models.Model):
         self.ensure_one()
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
-        recipient_phone = "+919686570381" # Test number
+        recipient_phone = "+919686570381"
         google_review_link = "https://www.google.com/maps/place/Vestido+Fabwash+Studio/@12.8717514,77.5428859,17z/data=!3m1!4b1!4m6!3m5!1s0x3bae413df543c0fd:0x1aea1f2916cd29d2!8m2!3d12.8717514!4d77.5428859!16s%2Fg%2F11z2d4jgx5?entry=ttu&g_ep=EgoyMDI2MDYwMy4xIKXMDSoASAFQAw%3D%3D"
 
         message_body = (
@@ -1105,7 +1060,6 @@ class LaundryOrderLine(models.Model):
             ], limit=1)
             base_price = pricing.price if pricing else 0.0
             
-            # Clean compound price protection math
             if rec.premium_id:
                 rec.unit_price = base_price * rec.premium_id.multiplier
             else:
@@ -1113,13 +1067,6 @@ class LaundryOrderLine(models.Model):
 
     @api.onchange('qty', 'weight')
     def _onchange_qty_weight_zero_price_warning(self):
-        """
-        Pops a single confirmation dialog when the user enters a quantity
-        or weight for a line whose computed unit price is still zero
-        (e.g. no matching laundry.pricing record was found). This is a
-        pure UI warning — it does not block or alter saving, and does
-        not touch unit_price, pricing lookups, or any other logic.
-        """
         for line in self:
             entered_qty = line.qty if line.pricing_type == 'per_item' else line.weight
             if entered_qty and line.unit_price == 0.0:
@@ -1135,13 +1082,6 @@ class LaundryOrderLine(models.Model):
 
     @api.constrains('unit_price', 'qty', 'weight')
     def _check_zero_unit_price(self):
-        """
-        Safety-net popup shown on Save if any line still has unit_price
-        of 0 despite a quantity/weight being entered (covers cases where
-        the onchange above did not fire, e.g. bulk/imported rows). Raises
-        one combined error listing all affected products, so the user
-        sees exactly one popup instead of one per line.
-        """
         zero_price_lines = self.filtered(
             lambda l: l.unit_price == 0.0 and (l.qty if l.pricing_type == 'per_item' else l.weight)
         )
@@ -1249,9 +1189,6 @@ class LaundryOrderExtraLine(models.Model):
             rec.name = rec.product_id.name
             if rec.product_id.product_type == 'discount':
                 rec.price_unit = -abs(rec.price_unit or 0)
-            # Self-heal: make sure 18% GST is attached even if this row
-            # existed before the default above was added, or if tax_ids
-            # was cleared for any reason.
             if not rec.tax_ids:
                 gst_18 = self.env['account.tax'].search([
                     ('amount', '=', 18.0),
@@ -1328,15 +1265,12 @@ class LaundryOrderTracker(models.Model):
     )
 
     def write(self, vals):
-        # 1. Identify which records are changing from False to True
         trackers_to_trigger = self.env['laundry.order.tracker']
         if vals.get('wa_sent') is True:
             trackers_to_trigger = self.filtered(lambda t: not t.wa_sent)
             
-        # 2. Perform the standard write operation
         res = super(LaundryOrderTracker, self).write(vals)
         
-        # 3. Trigger the WhatsApp method for the filtered records
         for tracker in trackers_to_trigger:
             tracker.order_id.trigger_whatsapp_for_tracker(tracker.sequence)
             

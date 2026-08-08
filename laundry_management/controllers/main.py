@@ -1,5 +1,6 @@
 from odoo import http
 from odoo.http import request
+from urllib.parse import quote
 import base64
 import os
 import datetime
@@ -58,7 +59,7 @@ class PaymentQRController(http.Controller):
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(move.display_grand_total, 0):.2f}"
         invoice_date = move.invoice_date.strftime('%d %b %Y') if move.invoice_date else ""
-        upi_url = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
+        upi_url = f"upi://pay?pa={quote(upi_id)}&pn={quote(payee_name)}&am={amount}&cu=INR"
         qr_image_url = f"/download_qr/{move.id}"
 
         # Decode the token's timestamp to show the customer when this
