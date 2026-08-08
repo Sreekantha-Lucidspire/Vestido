@@ -164,7 +164,7 @@ class LaundryOrder(models.Model):
             order.amount_tax = gst
             order.rounding_off = rounding_off
             order.amount_total = final_total
-            
+
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
         self.ensure_one()
@@ -181,14 +181,12 @@ class LaundryOrder(models.Model):
             f"&tn={quote('Payment for ' + self.name)}"
             f"&am={amount}"
             f"&cu=INR"
-            f"&mode=02"
-            f"&purpose=00"
         )
 
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(qr_data)
         qr.make(fit=True)
-
+        
         img = qr.make_image(fill='black', back_color='white')
         buffer = BytesIO()
         img.save(buffer, format="PNG")

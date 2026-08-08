@@ -62,7 +62,6 @@ class PaymentQRController(http.Controller):
         invoice_date = move.invoice_date.strftime('%d %b %Y') if move.invoice_date else ""
 
         txn_ref = uuid.uuid4().hex[:12]
-        # Standardized NPCI parameters (mode=02 for static/B2C QR intent)
         upi_url = (
             f"upi://pay?pa={quote(upi_id)}"
             f"&pn={quote(payee_name)}"
@@ -70,11 +69,12 @@ class PaymentQRController(http.Controller):
             f"&tn={quote('Payment for ' + move.name)}"
             f"&am={amount}"
             f"&cu=INR"
-            f"&mode=02"
-            f"&purpose=00"
         )
         qr_image_url = f"/download_qr/{move.id}"
 
+        # Decode the token's timestamp to show the customer when this
+        # link expires (48 hours after it was generated), always shown
+        # in IST regardless of the server's own system timezone.
         expiry_text = ""
         try:
             b64_id, _sig = token.split('.')
@@ -87,6 +87,10 @@ class PaymentQRController(http.Controller):
         except Exception:
             pass
 
+        # Embed logo as base64 directly in the HTML — avoids a separate
+        # HTTP request for a static file, which the payment.* nginx
+        # config intentionally blocks (only /pay/ and /download_qr/ are
+        # allowed through on that subdomain).
         logo_data_uri = ""
         try:
             logo_path = os.path.join(
@@ -97,8 +101,7 @@ class PaymentQRController(http.Controller):
                 logo_base64 = base64.b64encode(f.read()).decode('utf-8')
             logo_data_uri = f"data:image/png;base64,{logo_base64}"
         except FileNotFoundError:
-            pass
-
+            pass  # gracefully skip the logo if the file isn't found
         logo_html = (
             f'<img class="logo" src="{logo_data_uri}" alt="Vestido Fabwash Studio"/>'
             if logo_data_uri else ""
@@ -111,7 +114,6 @@ class PaymentQRController(http.Controller):
             f'<p class="expiry">This link expires on {expiry_text} IST</p>'
             if expiry_text else ""
         )
-
         html = f"""
         <!DOCTYPE html>
         <html>
@@ -119,64 +121,28 @@ class PaymentQRController(http.Controller):
             <title>Pay {move.name}</title>
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
-                body {{ font-family: Arial, sans-serif; text-align:center; padding: 30px 15px; background-color: #f9f9f9; color: #333; }}
-                .card {{ max-width: 400px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }}
-                img.logo {{ width:120px; margin-bottom:15px; }}
-                img.qr {{ width:210px; height:210px; border: 1px solid #eee; border-radius: 8px; padding: 5px; }}
+                body {{ font-family: Arial, sans-serif; text-align:center; padding-top:50px; }}
+                img.logo {{ width:120px; margin-bottom:20px; }}
+                img.qr {{ width:220px; height:220px; }}
                 .invoice-date {{ font-size:14px; color:#666; margin-bottom:8px; }}
-                .amount {{ font-size:22px; color:#111; margin: 15px 0; font-weight:bold; }}
-                .expiry {{ font-size:12px; color:#888; margin-top:18px; }}
+                .amount {{ font-size:18px; color:#333; margin-bottom:20px; font-weight:bold; }}
+                .expiry {{ font-size:13px; color:#888; margin-top:14px; }}
                 a.pay-btn {{
-                    display:block; width: 100%; box-sizing: border-box; margin-top:15px; padding:14px;
+                    display:inline-block; margin-top:20px; padding:14px 32px;
                     background:#0b8043; color:white; text-decoration:none;
-                    border-radius:8px; font-size:16px; font-weight:bold;
+                    border-radius:8px; font-size:17px; font-weight:bold;
                 }}
-                .upi-box {{
-                    margin-top: 15px; background: #f1f3f4; padding: 10px; border-radius: 8px;
-                    display: flex; align-items: center; justify-content: space-between; font-size: 13px;
-                }}
-                .copy-btn {{
-                    background: #1a73e8; color: white; border: none; padding: 6px 12px;
-                    border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;
-                }}
-                .note {{ font-size: 12px; color: #666; margin-top: 12px; background: #fff8e1; padding: 8px; border-radius: 6px; border: 1px solid #ffe082; }}
             </style>
         </head>
         <body>
-            <div class="card">
-                {logo_html}
-                <h2 style="margin: 0 0 5px 0;">{move.name}</h2>
-                {invoice_date_html}
-                <div class="amount">Amount: ₹{amount}</div>
-                <img class="qr" src="{qr_image_url}" alt="Payment QR"/>
-                
-                <a class="pay-btn" href="{upi_url}">Pay Now via UPI App</a>
-
-                <div class="upi-box">
-                    <span><strong>UPI ID:</strong> {upi_id}</span>
-                    <button class="copy-btn" onclick="copyUPI('{upi_id}')" id="copyBtn">Copy ID</button>
-                </div>
-
-                <div class="note">
-                    <strong>Note:</strong> If Google Pay shows a gallery warning, click <strong>Copy ID</strong> above and pay directly via <em>Pay UPI ID</em> in your app.
-                </div>
-
-                {expiry_html}
-            </div>
-
-            <script>
-                function copyUPI(upi) {{
-                    navigator.clipboard.writeText(upi).then(function() {{
-                        var btn = document.getElementById('copyBtn');
-                        btn.innerText = 'Copied!';
-                        btn.style.background = '#2e7d32';
-                        setTimeout(function() {{
-                            btn.innerText = 'Copy ID';
-                            btn.style.background = '#1a73e8';
-                        }}, 3000);
-                    }});
-                }}
-            </script>
+            {logo_html}
+            <h2>{move.name}</h2>
+            {invoice_date_html}
+            <div class="amount">Amount: Rs. {amount}</div>
+            <img class="qr" src="{qr_image_url}" alt="Payment QR"/>
+            <p>Scan the QR above, or tap below to pay directly:</p>
+            <a class="pay-btn" href="{upi_url}">Pay Now</a>
+            {expiry_html}
         </body>
         </html>
         """

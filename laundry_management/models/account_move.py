@@ -74,8 +74,6 @@ class AccountMove(models.Model):
             f"&tn={quote('Payment for ' + self.name)}"
             f"&am={amount}"
             f"&cu=INR"
-            f"&mode=02"
-            f"&purpose=00"
         )
 
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
@@ -153,6 +151,7 @@ class AccountMove(models.Model):
         """ Generates the invoice PDF and sends it via Meta WhatsApp API """
         self.ensure_one()
 
+        # 1. SETUP CONFIGURATION
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
 
@@ -172,12 +171,13 @@ class AccountMove(models.Model):
         recipient_phone = ''.join(c for c in recipient_phone if c.isdigit())
 
         # =========================================================================
-        # META SANDBOX OVERRIDE (Remove/comment in production)
+        # STEP 6: BYPASS FOR META SANDBOX ALLOWED LIST
         # =========================================================================
         recipient_phone = "+919686570381"
 
         if self.state == 'posted':
 
+            # 2. GENERATE PDF FROM ODOO (Using the correct Report Action ID)
             report_template = 'account.account_invoices'
             pdf_content, report_format = self.env['ir.actions.report']._render_qweb_pdf(
                 report_template,
@@ -185,6 +185,7 @@ class AccountMove(models.Model):
             )
             filename = f"{self.name.replace('/', '_')}.pdf"
 
+            # 3. UPLOAD PDF TO META WHATSAPP API
             upload_url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/media"
             headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
             data = {"messaging_product": "whatsapp"}
@@ -197,6 +198,7 @@ class AccountMove(models.Model):
                 self.message_post(body=f"❌ WhatsApp Upload Connection Timeout: {str(e)}")
                 return False
 
+            # 4. GET MEDIA_ID & SEND MESSAGE
             if upload_response.status_code == 200 and "id" in upload_result:
                 media_id = upload_result["id"]
 
@@ -206,6 +208,7 @@ class AccountMove(models.Model):
                     "Content-Type": "application/json"
                 }
 
+                # --- NEW: SEND TEXT MESSAGE FIRST ---
                 message_body = (
                     f"Hello {self.partner_id.name},\n\n"
                     f"Your garments are ready! 🎉\n\n"
@@ -222,6 +225,7 @@ class AccountMove(models.Model):
                 }
                 requests.post(send_url, headers=send_headers, data=json.dumps(text_payload))
 
+                # --- EXISTING: SEND DOCUMENT ---
                 doc_payload = {
                     "messaging_product": "whatsapp",
                     "recipient_type": "individual",
