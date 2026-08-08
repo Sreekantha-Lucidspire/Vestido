@@ -6,4 +6,3 @@ from . import laundry_order
 from . import laundry_tag
 from . import account_move_line
 from . import account_move
-from . import res_partner
