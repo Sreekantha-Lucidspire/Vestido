@@ -5,6 +5,7 @@ import base64
 import os
 import datetime
 import zoneinfo
+import uuid
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 
@@ -59,7 +60,16 @@ class PaymentQRController(http.Controller):
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(move.display_grand_total, 0):.2f}"
         invoice_date = move.invoice_date.strftime('%d %b %Y') if move.invoice_date else ""
-        upi_url = f"upi://pay?pa={quote(upi_id)}&pn={quote(payee_name)}&am={amount}&cu=INR"
+
+        txn_ref = uuid.uuid4().hex[:12]
+        upi_url = (
+            f"upi://pay?pa={quote(upi_id)}"
+            f"&pn={quote(payee_name)}"
+            f"&tr={txn_ref}"
+            f"&tn={quote('Payment for ' + move.name)}"
+            f"&am={amount}"
+            f"&cu=INR"
+        )
         qr_image_url = f"/download_qr/{move.id}"
 
         # Decode the token's timestamp to show the customer when this

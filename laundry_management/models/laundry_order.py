@@ -169,12 +169,20 @@ class LaundryOrder(models.Model):
         """ Generates a base64 string of a QR code for the invoice total """
         self.ensure_one()
         from urllib.parse import quote
+        import uuid
         upi_id = "vestidofabwash@okhdfcbank"
         payee_name = "Vestido Fabwash Studio"
-        amount = f"{round(self.amount_total, 0):.2f}"
-        # Define the data you want in the QR (e.g., a payment link or amount)
-        qr_data = f"upi://pay?pa={quote(upi_id)}&pn={quote(payee_name)}&am={amount}&cu=INR"
-        
+        amount = f"{round(self.display_grand_total, 0):.2f}"
+        txn_ref = uuid.uuid4().hex[:12]
+        qr_data = (
+            f"upi://pay?pa={quote(upi_id)}"
+            f"&pn={quote(payee_name)}"
+            f"&tr={txn_ref}"
+            f"&tn={quote('Payment for ' + self.name)}"
+            f"&am={amount}"
+            f"&cu=INR"
+        )
+
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(qr_data)
         qr.make(fit=True)
