@@ -61,7 +61,7 @@ class AccountMove(models.Model):
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
         self.ensure_one()
-        upi_id = "pinelabs.STQ4596522@hdfcbank"
+        upi_id = "vestidofabwash@okhdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(self.display_grand_total, 0):.2f}"
         qr_data = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"

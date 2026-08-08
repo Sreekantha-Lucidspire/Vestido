@@ -54,7 +54,7 @@ class PaymentQRController(http.Controller):
         if not move:
             return request.not_found()
 
-        upi_id = "pinelabs.STQ4596522@hdfcbank"
+        upi_id = "vestidofabwash@okhdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(move.display_grand_total, 0):.2f}"
         invoice_date = move.invoice_date.strftime('%d %b %Y') if move.invoice_date else ""
