@@ -309,12 +309,14 @@
                 <templates>
                     <t t-name="card">
                         <div class="oe_kanban_card p-2">
-                            <div class="fw-bold">
-                                <field name="name"/>
+                            <div class="fw-bold small d-flex align-items-center flex-nowrap" style="gap: 4px;">
+                                <strong class="text-nowrap">Order No:</strong>
+                                <field name="name" class="text-nowrap"/>
                             </div>
                             <div>
                                 <field name="partner_id"/>
                             </div>
+
                             <!--
                                 "Order Received" label + date on one line:
                                 widget="date"/"datetime" fields render as
@@ -334,6 +336,17 @@
                                 <strong class="text-nowrap">Order Received:</strong>
                                 <field name="order_date" widget="date" class="text-nowrap"/>
                             </div>
+
+                            <!--
+                                Invoice No. line: shown only once the order
+                                actually has a linked invoice (invoice_id
+                                is set). Placed right after Order Received.
+                            -->
+                            <div class="text-dark small d-flex align-items-center flex-nowrap" style="gap: 4px;" invisible="not invoice_id">
+                                <strong class="text-nowrap">Invoice No:</strong>
+                                <field name="invoice_id" class="text-nowrap"/>
+                            </div>
+
                             <div class="text-dark small d-flex align-items-center flex-nowrap" style="gap: 4px;" invisible="not invoice_id">
                                 <strong class="text-nowrap">Invoice Date:</strong>
                                 <field name="invoice_date" widget="date" class="text-nowrap"/>

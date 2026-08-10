@@ -19,13 +19,6 @@ class AccountMove(models.Model):
     # =====================================================================
     # DISPLAY-ONLY GST CALCULATION
     # =====================================================================
-    # These fields are calculated purely for display on the invoice form
-    # and printed report. They do NOT touch amount_untaxed / amount_tax /
-    # amount_total, so they never affect journal entries, Amount Due,
-    # payment reconciliation, or GST filing/tax reports. If those need to
-    # reflect real GST, actual tax records must be attached to invoice
-    # lines instead (a completely separate mechanism from this).
-    # =====================================================================
     gst_amount = fields.Monetary(
         string="GST",
         compute="_compute_gst_display",
@@ -68,7 +61,7 @@ class AccountMove(models.Model):
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
         self.ensure_one()
-        upi_id = "pinelabs.STQ4596522@hdfcbank"
+        upi_id = "vestidofabwash@okhdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(self.display_grand_total, 0):.2f}"
         qr_data = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
@@ -101,12 +94,15 @@ class AccountMove(models.Model):
             'url': f'{base_url}/pay/{self._get_pay_token()}',
             'target': 'new',
         }
+
     def _get_pay_token(self):
-        """ Builds a signed token encoding this invoice's ID, so the
-            payment URL can't be tampered with or guessed sequentially """
+        """ Builds a signed token encoding this invoice's ID and the
+            current timestamp, so the payment URL can't be tampered
+            with or guessed sequentially, and expires after 48 hours """
         self.ensure_one()
         secret = self.env['ir.config_parameter'].sudo().get_param('database.secret')
-        raw = str(self.id).encode()
+        timestamp = int(fields.Datetime.now().timestamp())
+        raw = f"{self.id}:{timestamp}".encode()
         sig = hmac.new(secret.encode(), raw, hashlib.sha256).hexdigest()[:16]
         token = base64.urlsafe_b64encode(raw).decode().rstrip('=') + '.' + sig
         return token
@@ -114,12 +110,18 @@ class AccountMove(models.Model):
     @api.model
     def _get_move_from_pay_token(self, token):
         """ Reverses _get_pay_token: verifies the signature and returns
-            the matching move, or False if the token is invalid/tampered """
+            the matching move. Returns False if invalid/tampered, or
+            the string 'expired' if the signature is valid but the
+            48-hour window has passed. """
+        TOKEN_VALIDITY_SECONDS = 48 * 60 * 60  # 48 hours
+
         try:
             b64_id, sig = token.split('.')
             padding = '=' * (-len(b64_id) % 4)
             raw = base64.urlsafe_b64decode(b64_id + padding)
-            move_id = int(raw.decode())
+            move_id_str, timestamp_str = raw.decode().split(':')
+            move_id = int(move_id_str)
+            timestamp = int(timestamp_str)
         except Exception:
             return False
 
@@ -127,6 +129,10 @@ class AccountMove(models.Model):
         expected_sig = hmac.new(secret.encode(), raw, hashlib.sha256).hexdigest()[:16]
         if not hmac.compare_digest(sig, expected_sig):
             return False
+
+        current_timestamp = int(fields.Datetime.now().timestamp())
+        if current_timestamp - timestamp > TOKEN_VALIDITY_SECONDS:
+            return 'expired'
 
         move = self.sudo().browse(move_id)
         return move if move.exists() else False
