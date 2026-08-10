@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
 import requests
 import json
@@ -7,6 +7,7 @@ import logging
 import base64
 import qrcode
 from io import BytesIO
+from urllib.parse import quote
 
 _logger = logging.getLogger(__name__)
 
@@ -137,6 +138,60 @@ class LaundryOrder(models.Model):
     )
     invoice_whatsapp_shared = fields.Boolean(string="WhatsApp Invoice Shared", default=False)
 
+    # =========================================================================
+    # INVOICE LOCK PROTECTION
+    # =========================================================================
+    # Fields that represent the "composition" of the order — once an
+    # invoice exists, these should not be editable from the order form.
+    # 'state' and 'invoice_id' are intentionally excluded so the existing
+    # status-bar workflow (Receive/Deliver) and WhatsApp tracking fields
+    # keep working normally after invoicing.
+    _INVOICE_LOCKED_FIELDS = {
+        'partner_id', 'order_date', 'delivery_date', 'tag_type', 'remarks',
+        'order_line_ids', 'extra_line_ids',
+    }
+
+    def write(self, vals):
+        if not self.env.context.get('allow_invoiced_write'):
+            locked = self._INVOICE_LOCKED_FIELDS & set(vals.keys())
+            if locked:
+                for order in self:
+                    if order.invoice_id:
+                        raise UserError(_(
+                            "This order (%s) has already been invoiced (%s). "
+                            "Please contact the administrator before making any changes."
+                        ) % (order.name, order.invoice_id.name))
+        return super().write(vals)
+
+    @api.onchange('order_line_ids', 'extra_line_ids')
+    def _onchange_lines_invoice_lock(self):
+        """
+        Pops the 'contact administrator' warning STRICTLY the moment the
+        user clicks 'Add a line' on an already-invoiced order — not on
+        every edit to an existing line. A freshly added, not-yet-saved
+        row has a virtual NewId (not a real database int id), which is
+        how we distinguish "a new line was just added" from "an existing
+        line's field was edited". This is a UI-level heads-up only; the
+        write() override above is what actually blocks the save if the
+        user proceeds anyway (covers edits/deletes too).
+        """
+        if not self.invoice_id:
+            return
+
+        new_order_lines = self.order_line_ids.filtered(lambda l: not isinstance(l.id, int))
+        new_extra_lines = self.extra_line_ids.filtered(lambda l: not isinstance(l.id, int))
+
+        if new_order_lines or new_extra_lines:
+            return {
+                'warning': {
+                    'title': "Order Already Invoiced",
+                    'message': (
+                        "This order (%s) has already been invoiced (%s). "
+                        "Please contact the administrator before making any changes."
+                    ) % (self.name, self.invoice_id.name),
+                }
+            }
+
     @api.depends('order_line_ids.subtotal', 'order_line_ids.price_tax', 'extra_line_ids.subtotal')
     def _compute_amounts(self):
         """
@@ -195,14 +250,30 @@ class LaundryOrder(models.Model):
         self.ensure_one()
         upi_id = "vestidofabwash@okhdfcbank"
         payee_name = "Vestido Fabwash Studio"
+        # NOTE: laundry.order has no display_grand_total field (that only
+        # exists on account.move). Use this model's own Grand Total
+        # (amount_total / grand_total, both computed from the same
+        # _compute_amounts) instead.
         amount = f"{round(self.amount_total, 0):.2f}"
-        # Define the data you want in the QR (e.g., a payment link or amount)
-        qr_data = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
-        
+
+        # FIX: URL-encode every UPI parameter (matches the fix applied in
+        # payment_qr_controller.py's pay_page()). payee_name contains
+        # spaces which were previously inserted raw into the upi:// URI;
+        # encoding them keeps this QR consistent with the "Pay Now" link
+        # and avoids any chance of a scanning app misparsing the string.
+        qr_data = (
+            "upi://pay"
+            f"?pa={quote(upi_id)}"
+            f"&pn={quote(payee_name)}"
+            f"&am={quote(amount)}"
+            f"&cu=INR"
+            f"&tn={quote('Payment for ' + self.name)}"
+        )
+
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(qr_data)
         qr.make(fit=True)
-        
+
         img = qr.make_image(fill='black', back_color='white')
         buffer = BytesIO()
         img.save(buffer, format="PNG")
@@ -1084,6 +1155,51 @@ class LaundryOrderLine(models.Model):
     price_tax = fields.Monetary(compute='_compute_tax', store=True, currency_field='currency_id')
     price_total = fields.Monetary(string="Total Price", compute='_compute_tax', store=True, currency_field='currency_id')
 
+    def write(self, vals):
+        if not self.env.context.get('allow_invoiced_write'):
+            for line in self:
+                if line.order_id.invoice_id:
+                    raise UserError(_(
+                        "Order %s has already been invoiced. "
+                        "Please contact the administrator before making any changes."
+                    ) % line.order_id.name)
+        return super().write(vals)
+
+    def unlink(self):
+        if not self.env.context.get('allow_invoiced_write'):
+            for line in self:
+                if line.order_id.invoice_id:
+                    raise UserError(_(
+                        "Order %s has already been invoiced. "
+                        "Please contact the administrator before making any changes."
+                    ) % line.order_id.name)
+        return super().unlink()
+
+    @api.onchange('premium_id')
+    def _onchange_premium_invoice_lock(self):
+        """
+        Pops the 'contact administrator' warning the moment the user
+        touches the first field (Premium Type) of a new line on an
+        already-invoiced order. premium_id has a default value, so the
+        web client includes it in the very first onchange call fired
+        right after 'Add a line' is clicked — this is the earliest
+        possible point a warning can be shown, since Odoo's client does
+        not call the server on the click itself, only once the row's
+        first field is touched. The write() override above is what
+        actually blocks the save if the user proceeds anyway.
+        """
+        for line in self:
+            if line.order_id and line.order_id.invoice_id:
+                return {
+                    'warning': {
+                        'title': "Order Already Invoiced",
+                        'message': (
+                            "This order (%s) has already been invoiced (%s). "
+                            "Please contact the administrator before making any changes."
+                        ) % (line.order_id.name, line.order_id.invoice_id.name),
+                    }
+                }
+
     @api.onchange('product_id', 'service_type_id')
     def fetch_pricing_type(self):
         for line in self:
@@ -1229,6 +1345,32 @@ class LaundryOrderExtraLine(models.Model):
     name = fields.Char()
     quantity = fields.Float(default=1)
     price_unit = fields.Monetary(currency_field='currency_id')
+
+    # ---- Percentage-based discount support ----
+    # Plain boolean, computed on this same model, so the list view's
+    # invisible= expressions don't need to dot into product_id.product_type
+    # (a cross-relation path that isn't reliably prefetched for row-level
+    # invisible evaluation inside a one2many sub-list, and can silently
+    # evaluate to "hidden" -> an unclickable cell).
+    is_discount_line = fields.Boolean(
+        compute='_compute_is_discount_line',
+        help="True when product_id is a Discount-type product."
+    )
+    discount_mode = fields.Selection([
+        ('amount', 'Amount (₹)'),
+        ('percent', 'Percent (%)'),
+    ], string="Discount Type", default='amount',
+       help="Only relevant for lines using a Discount product. "
+            "'Percent' auto-calculates the rupee price_unit from "
+            "the % entered, applied on Items + Other Charges.")
+    discount_percent = fields.Float(
+        string="Discount %",
+        help="Used only when Discount Type = Percent. Applied on the "
+             "order's Items + Other Charges (pre-GST), matching the "
+             "taxable-base logic in laundry.order._compute_amounts."
+    )
+    # --------------------------------------------
+
     tax_ids = fields.Many2many(
         'account.tax',
         string="Taxes",
@@ -1241,6 +1383,53 @@ class LaundryOrderExtraLine(models.Model):
     )
     subtotal = fields.Monetary(compute='_compute_total', store=True, currency_field='currency_id')
 
+    def write(self, vals):
+        if not self.env.context.get('allow_invoiced_write'):
+            for line in self:
+                if line.order_id.invoice_id:
+                    raise UserError(_(
+                        "Order %s has already been invoiced. "
+                        "Please contact the administrator before making any changes."
+                    ) % line.order_id.name)
+        return super().write(vals)
+
+    def unlink(self):
+        if not self.env.context.get('allow_invoiced_write'):
+            for line in self:
+                if line.order_id.invoice_id:
+                    raise UserError(_(
+                        "Order %s has already been invoiced. "
+                        "Please contact the administrator before making any changes."
+                    ) % line.order_id.name)
+        return super().unlink()
+
+    @api.onchange('quantity')
+    def _onchange_quantity_invoice_lock(self):
+        """
+        Pops the 'contact administrator' warning the moment the user
+        touches the first field of a new Extra Charges line on an
+        already-invoiced order. quantity has default=1, so it is
+        included in the very first onchange call fired right after
+        'Add a line' is clicked. The write() override above is what
+        actually blocks the save if the user proceeds anyway.
+        """
+        for line in self:
+            if line.order_id and line.order_id.invoice_id:
+                return {
+                    'warning': {
+                        'title': "Order Already Invoiced",
+                        'message': (
+                            "Order %s has already been invoiced. "
+                            "Please contact the administrator before making any changes."
+                        ) % line.order_id.name,
+                    }
+                }
+
+    @api.depends('product_id.product_type')
+    def _compute_is_discount_line(self):
+        for rec in self:
+            rec.is_discount_line = rec.product_id.product_type == 'discount'
+
     @api.onchange('product_id')
     def _onchange_product_id(self):
         for rec in self:
@@ -1249,6 +1438,17 @@ class LaundryOrderExtraLine(models.Model):
             rec.name = rec.product_id.name
             if rec.product_id.product_type == 'discount':
                 rec.price_unit = -abs(rec.price_unit or 0)
+                # Force a default so the Discount Type cell is never
+                # left blank (the field-level default='amount' only
+                # applies on brand-new records, not when product_id
+                # is set via this onchange).
+                if not rec.discount_mode:
+                    rec.discount_mode = 'amount'
+            else:
+                # Not a discount line -> reset the % fields so they
+                # don't linger/confuse if the product is switched later.
+                rec.discount_mode = 'amount'
+                rec.discount_percent = 0.0
             # Self-heal: make sure 18% GST is attached even if this row
             # existed before the default above was added, or if tax_ids
             # was cleared for any reason.
@@ -1264,8 +1464,34 @@ class LaundryOrderExtraLine(models.Model):
     @api.onchange('price_unit')
     def _onchange_price_unit(self):
         for rec in self:
-            if rec.product_id and rec.product_id.product_type == 'discount':
+            if rec.product_id and rec.product_id.product_type == 'discount' and rec.discount_mode == 'amount':
                 rec.price_unit = -abs(rec.price_unit)
+
+    @api.onchange('discount_mode', 'discount_percent')
+    def _onchange_discount_percent(self):
+        """ When in Percent mode, auto-derive price_unit (always
+            negative, matching the existing discount convention) from
+            discount_percent applied to the order's taxable base
+            (Items + Other Charges, excluding discount lines). """
+        for rec in self:
+            if rec.product_id and rec.product_id.product_type == 'discount' and rec.discount_mode == 'percent':
+                base = rec._get_discount_base()
+                rec.price_unit = -round(base * (rec.discount_percent or 0.0) / 100.0, 2)
+
+    def _get_discount_base(self):
+        """ Base on which % discount is calculated: Items + Other
+            Charges (pre-GST), matching laundry.order._compute_amounts
+            so the discount % behaves consistently with the invoice
+            totals shown elsewhere. """
+        self.ensure_one()
+        order = self.order_id
+        items_subtotal = round(sum(order.order_line_ids.mapped('subtotal')), 0)
+        other_charges = round(sum(
+            order.extra_line_ids.filtered(
+                lambda l: l.product_id.product_type == 'charge'
+            ).mapped('subtotal')
+        ), 0)
+        return items_subtotal + other_charges
 
     @api.depends('quantity', 'price_unit', 'tax_ids')
     def _compute_total(self):

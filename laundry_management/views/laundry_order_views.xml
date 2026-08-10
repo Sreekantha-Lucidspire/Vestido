@@ -201,7 +201,36 @@
                                 <list editable="bottom">
                                     <field name="product_id"/>
                                     <field name="name"/>
-                                    <field name="price_unit" string="Unit Price" widget="monetary"/>
+                                    <field name="is_discount_line" column_invisible="1"/>
+                                    <field name="discount_mode"
+                                           string="Discount Type"
+                                           invisible="not is_discount_line"/>
+                                    <field name="discount_percent"
+                                           string="Discount %"
+                                           invisible="not is_discount_line or discount_mode != 'percent'"/>
+                                    <!--
+                                        FIX: added force_save="1".
+                                        This field is conditionally readonly
+                                        (readonly when discount_mode == 'percent'),
+                                        and its value in that mode is set purely
+                                        by the _onchange_discount_percent() onchange
+                                        on the model, not typed in by the user.
+                                        Without force_save="1", the Odoo web client
+                                        excludes readonly fields from the values it
+                                        sends to write() on Save, so the onchange
+                                        value shown on screen was silently discarded
+                                        and the record was saved with its old/zero
+                                        price_unit instead. force_save="1" tells the
+                                        client to include the current in-memory value
+                                        of this field when saving, even though it's
+                                        readonly, which fixes the "correct before
+                                        save, wrong after save" bug.
+                                    -->
+                                    <field name="price_unit"
+                                           string="Unit Price"
+                                           widget="monetary"
+                                           readonly="is_discount_line and discount_mode == 'percent'"
+                                           force_save="1"/>
                                     <field name="tax_ids" widget="many2many_tags" column_invisible="1"/>
                                     <field name="subtotal" widget="monetary"/>
                                 </list>

@@ -7,6 +7,7 @@ import qrcode
 from io import BytesIO
 import hashlib
 import hmac
+from urllib.parse import quote
 
 class AccountMove(models.Model):
     _inherit = "account.move"
@@ -64,7 +65,20 @@ class AccountMove(models.Model):
         upi_id = "vestidofabwash@okhdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(self.display_grand_total, 0):.2f}"
-        qr_data = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
+
+        # FIX: URL-encode every UPI parameter (matches the fix applied in
+        # payment_qr_controller.py's pay_page()). payee_name contains
+        # spaces which were previously inserted raw into the upi:// URI;
+        # encoding them keeps this QR consistent with the "Pay Now" link
+        # and avoids any chance of a scanning app misparsing the string.
+        qr_data = (
+            "upi://pay"
+            f"?pa={quote(upi_id)}"
+            f"&pn={quote(payee_name)}"
+            f"&am={quote(amount)}"
+            f"&cu=INR"
+            f"&tn={quote('Payment for ' + self.name)}"
+        )
 
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(qr_data)

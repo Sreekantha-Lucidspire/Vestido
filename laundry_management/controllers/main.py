@@ -4,6 +4,7 @@ import base64
 import os
 import datetime
 import zoneinfo
+from urllib.parse import quote
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 
@@ -58,7 +59,29 @@ class PaymentQRController(http.Controller):
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(move.display_grand_total, 0):.2f}"
         invoice_date = move.invoice_date.strftime('%d %b %Y') if move.invoice_date else ""
-        upi_url = f"upi://pay?pa={upi_id}&pn={payee_name}&am={amount}&cu=INR"
+
+        # FIX: every UPI query parameter is now URL-encoded with quote().
+        # Previously payee_name ("Vestido Fabwash Studio") was inserted
+        # with raw, un-encoded spaces into the upi:// URL. When that URL
+        # was embedded in an <a href="..."> and tapped from a mobile
+        # browser, the unencoded spaces produced a malformed intent that
+        # some Android/GPay flows could not resolve cleanly — which is
+        # why tapping "Pay Now" kept bouncing back to the QR-gallery
+        # advisory instead of completing payment, even though manual
+        # UPI-ID entry and direct QR scanning (which never go through
+        # this string) both worked fine.
+        # A "tn" (transaction note) param is also added, which is
+        # optional per the UPI spec but recommended for clarity on the
+        # customer's payment app.
+        upi_url = (
+            "upi://pay"
+            f"?pa={quote(upi_id)}"
+            f"&pn={quote(payee_name)}"
+            f"&am={quote(amount)}"
+            f"&cu=INR"
+            f"&tn={quote('Payment for ' + move.name)}"
+        )
+
         qr_image_url = f"/download_qr/{move.id}"
 
         # Decode the token's timestamp to show the customer when this
