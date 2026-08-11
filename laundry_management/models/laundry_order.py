@@ -248,7 +248,14 @@ class LaundryOrder(models.Model):
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
         self.ensure_one()
-        upi_id = "vestidofabwash@okhdfcbank"
+        # Using the Pine Labs merchant VPA (verified as "Vestido Fabwash
+        # Studio" — a proper business account) instead of the earlier
+        # personal-account VPA (vestidofabwash@okhdfcbank), which was
+        # the root cause of the "Pay Now" deep link failing after PIN
+        # entry — confirmed via both Google Pay and PhonePe resolving
+        # that VPA to a personal account holder name rather than the
+        # business name.
+        upi_id = "pinelabs.STQ4596522@hdfcbank"
         payee_name = "Vestido Fabwash Studio"
         # NOTE: laundry.order has no display_grand_total field (that only
         # exists on account.move). Use this model's own Grand Total

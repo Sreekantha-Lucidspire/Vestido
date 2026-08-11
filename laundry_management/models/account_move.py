@@ -62,7 +62,11 @@ class AccountMove(models.Model):
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
         self.ensure_one()
-        upi_id = "vestidofabwash@okhdfcbank"
+        # Using the Pine Labs merchant VPA (verified as "Vestido Fabwash
+        # Studio" — a proper business account) instead of the earlier
+        # personal-account VPA, which was the root cause of the
+        # "Pay Now" deep link failing after PIN entry.
+        upi_id = "pinelabs.STQ4596522@hdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(self.display_grand_total, 0):.2f}"
 

@@ -55,7 +55,11 @@ class PaymentQRController(http.Controller):
         if not move:
             return request.not_found()
 
-        upi_id = "vestidofabwash@okhdfcbank"
+        # Using the Pine Labs merchant VPA (verified as "Vestido Fabwash
+        # Studio" — a proper business account) instead of the earlier
+        # personal-account VPA, which was the root cause of the
+        # "Pay Now" deep link failing after PIN entry.
+        upi_id = "pinelabs.STQ4596522@hdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(move.display_grand_total, 0):.2f}"
         invoice_date = move.invoice_date.strftime('%d %b %Y') if move.invoice_date else ""
@@ -152,7 +156,8 @@ class PaymentQRController(http.Controller):
             {invoice_date_html}
             <div class="amount">Amount: Rs. {amount}</div>
             <img class="qr" src="{qr_image_url}" alt="Payment QR"/>
-            <p>Scan the QR above, or tap below to pay directly:</p>
+            <p><b>Scan the QR above with any UPI app to pay.</b><br/>
+               If tapping below doesn't complete payment, please use the QR scan instead:</p>
             <a class="pay-btn" href="{upi_url}">Pay Now</a>
             {expiry_html}
         </body>
