@@ -48,8 +48,16 @@ class AccountMove(models.Model):
 
     @api.depends('amount_untaxed', 'invoice_discount')
     def _compute_gst_display(self):
+        """
+        Taxable base is now the EXACT (unrounded-to-whole-rupee) figure —
+        Untaxed Amount - Discount, kept to normal 2-decimal currency
+        precision — matching laundry.order._compute_amounts. Only the
+        final Grand Total is rounded to the nearest whole Rupee; the
+        paise difference introduced by that single rounding step is
+        shown in "Rounding Off".
+        """
         for move in self:
-            taxable_base = round(max(move.amount_untaxed - move.invoice_discount, 0), 0)
+            taxable_base = round(max(move.amount_untaxed - move.invoice_discount, 0), 2)
             gst = round(taxable_base * 0.18, 2)
             total_before_rounding = taxable_base + gst
             final_total = round(total_before_rounding, 0)

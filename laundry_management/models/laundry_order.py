@@ -192,13 +192,45 @@ class LaundryOrder(models.Model):
                 }
             }
 
+    @api.onchange('order_line_ids', 'extra_line_ids')
+    def _onchange_lines_recompute_percent_discount(self):
+        """
+        Keeps any Discount line whose Discount Type = 'Percent' in sync
+        with whatever it's a percentage OF (Items + Other Charges).
+
+        Without this, a percent discount line only recalculates its own
+        price_unit when a field ON THAT SAME LINE changes (see
+        LaundryOrderExtraLine._onchange_discount_percent). Editing an
+        Item line's qty/weight/price, or another Extra Charges line
+        (e.g. "Other Charges"), does not touch the Discount line's own
+        fields, so its price_unit was silently going stale (e.g. Other
+        Charges 100 -> 200 but the 10% discount amount stayed frozen at
+        the value calculated against the old base).
+
+        This order-level onchange watches both order_line_ids and
+        extra_line_ids as a whole, so any change to Items OR Extra
+        Charges re-triggers the base recalculation for every percent-mode
+        discount line, using the exact same _get_discount_base() /
+        formula the line itself already uses. Pure UI-side recompute —
+        no other logic, fields, or save-time behavior is changed.
+        """
+        for line in self.extra_line_ids:
+            if line.product_id and line.product_id.product_type == 'discount' \
+               and line.discount_mode == 'percent':
+                base = line._get_discount_base()
+                line.price_unit = -round(base * (line.discount_percent or 0.0) / 100.0, 2)
+
     @api.depends('order_line_ids.subtotal', 'order_line_ids.price_tax', 'extra_line_ids.subtotal')
     def _compute_amounts(self):
         """
-        Mirrors the QWeb report (report_invoice_laundry_bill) exactly:
+        Subtotal is now the EXACT (unrounded-to-whole-rupee) taxable
+        base — Items + Other Charges - Discount, kept to normal 2-decimal
+        currency precision. Only the final Grand Total is rounded to the
+        nearest whole Rupee (as before); the paise difference introduced
+        by that single rounding step is shown in "Rounding Off".
 
-            Subtotal      = round(Items, 0) + round(Other Charges, 0) - round(Discount, 0)
-                             -> this is the TAXABLE BASE, and it is WITHOUT GST
+            Subtotal      = Items + Other Charges - Discount   (exact, 2-decimal;
+                             NOT rounded to the nearest whole rupee)
             GST            = round(Subtotal * 18%, 2)
             Grand Total    = round(Subtotal + GST, 0)
             Rounding Off   = Grand Total - (Subtotal + GST)   [paise difference]
@@ -221,16 +253,13 @@ class LaundryOrder(models.Model):
                 ).mapped('subtotal')
             )
 
-            # Round each component to the nearest rupee first, same as the report
-            rounded_items = round(items_subtotal, 0)
-            rounded_discount = round(abs(discount_total), 0)
-            rounded_other_charges = round(other_charges_total, 0)
+            # Subtotal (taxable base) = Items + Other Charges - Discount,
+            # kept to 2-decimal currency precision — NOT rounded to the
+            # nearest whole rupee (that whole-rupee rounding now happens
+            # only once, at the very end, on the Grand Total).
+            taxable_base = round(items_subtotal + other_charges_total - abs(discount_total), 2)
 
-            # Subtotal (taxable base) = Items + Other Charges - Discount
-            # NOTE: this is WITHOUT GST — GST is calculated on top of it below.
-            taxable_base = rounded_items + rounded_other_charges - rounded_discount
-
-            # GST (18%) applied on the taxable base, kept to 2 decimals
+            # GST (18%) applied on the exact taxable base, kept to 2 decimals
             gst = round(taxable_base * 0.18, 2)
 
             # Grand Total = Subtotal + GST, then rounded to the nearest rupee
@@ -240,7 +269,7 @@ class LaundryOrder(models.Model):
             # Rounding Off = the paise difference introduced by that final rounding
             rounding_off = round(final_total - total_before_rounding, 2)
 
-            order.amount_untaxed = taxable_base   # Subtotal (no GST)
+            order.amount_untaxed = taxable_base   # Subtotal (no GST) — exact, unrounded
             order.amount_tax = gst                # GST
             order.rounding_off = rounding_off     # Rounding Off
             order.amount_total = final_total      # Grand Total

@@ -7,7 +7,9 @@
           GST is now calculated on the taxable base = Item Lines Total
           + Other Charges - Discount (not on item lines alone).
 
-          taxable_base = Items + Other Charges - Discount
+          taxable_base = Items + Other Charges - Discount   (EXACT,
+          2-decimal currency precision — NOT rounded to the nearest
+          whole rupee; only the final Grand Total is rounded)
           GST = 18% x taxable_base
           Grand Total = taxable_base + GST, rounded to the nearest
           whole Rupee. The paise difference introduced by that final
@@ -471,28 +473,26 @@
                     <t t-set="other_charges_total"
                        t-value="sum(o.laundry_order_id.extra_line_ids.filtered(lambda l: l.product_id.product_type == 'charge').mapped('subtotal'))"/>
 
-                    <t t-set="rounded_manual_sum"
-                       t-value="round(manual_sum_total, 0)"/>
-
                     <t t-set="rounded_discount"
-                       t-value="round(abs(discount_total), 0)"/>
+                       t-value="round(abs(discount_total), 2)"/>
 
                     <t t-set="rounded_other_charges"
-                       t-value="round(other_charges_total, 0)"/>
+                       t-value="round(other_charges_total, 2)"/>
 
                     <!--
-                        UPDATED: taxable base now includes Other Charges and
-                        is net of Discount, i.e.:
+                        UPDATED: Subtotal (taxable base) is now the EXACT
+                        (unrounded-to-whole-rupee) figure, kept to normal
+                        2-decimal currency precision:
                         taxable_base = Items + Other Charges - Discount
                         GST = 18% x taxable_base
 
-                        The exact GST is kept to 2 decimal places, the
-                        Grand Total is then rounded to the nearest whole
-                        Rupee, and the paise difference introduced by
-                        that rounding is shown as "Rounding Off".
+                        Only the final Grand Total is rounded to the
+                        nearest whole Rupee, and the paise difference
+                        introduced by that single rounding step is shown
+                        as "Rounding Off".
                     -->
                     <t t-set="taxable_base"
-                       t-value="rounded_manual_sum + rounded_other_charges - rounded_discount"/>
+                       t-value="round(manual_sum_total + rounded_other_charges - rounded_discount, 2)"/>
 
                     <t t-set="gst_amount"
                        t-value="round(taxable_base * 0.18, 2)"/>
