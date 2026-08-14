@@ -324,6 +324,11 @@
         Charges", then Discount, Subtotal, GST, Rounding Off and
         finally Grand Total.
 
+        NOTE (Proforma Invoice / report_laundry_quotation only): the
+        "Payment Details" block (bank account info + UPI QR code) has
+        been removed from this template on request. It still remains
+        on report_laundry_invoice_bill (the Tax Invoice).
+
         If the rendered PDF doesn't reflect this after deploying:
           1. grep -r "report_laundry_quotation" (and
              "report_laundry_invoice_bill") across every addon folder —
@@ -662,44 +667,6 @@
                         <b>Amount Payable in Words:</b>
                         <t t-esc="o.currency_id.amount_to_text(final_total).replace('And Zero Paise', '').replace(' and Zero Paise', '')"/> Only
                     </div>
-                                         
-                    <hr style="border:1px solid #666; margin-top:8px;"/>
-
-                    <table style="width:100%; margin-top:10px; font-size:10px; border-collapse:collapse;">
-                        <tr>
-                            <td style="width:65%; vertical-align:top; padding-right:8px; line-height:1.6;">
-                                <div style="font-weight:bold; margin-bottom:4px; font-size:11px;">
-                                    Payment Details
-                                </div>
-                                <div>
-                                    <b>Bank:</b> HDFC Bank
-                                </div>
-                                <div>
-                                    <b>Account No:</b> 50200119008704
-                                </div>
-                                <div>
-                                    <b>IFSC:</b> HDFC0004033
-                                </div>
-                                <div>
-                                    <b>Recipient:</b> VESTIDO FABWASH STUDIO
-                                </div>
-                            </td>
-
-                            <td style="width:35%; vertical-align:top; text-align:center;">
-                                <t t-set="upi_attachment" t-value="o.env['ir.attachment'].sudo().search([('name', '=', 'upi_qr.png')], limit=1)"/>
-                                <t t-if="upi_attachment">
-                                    <img t-att-src="'data:image/png;base64,' + o.generate_payment_qr()" 
-                                         style="width:100px; height:100px;"/>
-                                    <div style="font-size: 8px; margin-top: 2px;">Scan to Pay</div>
-                                </t>
-                                <t t-else="">
-                                    <div style="font-size:8px; color:red; border:1px solid red; padding:5px;">
-                                        QR Attachment Missing<br/>(Upload 'upi_qr.png')
-                                    </div>
-                                </t>
-                            </td>
-                        </tr>
-                    </table>
 
                     <hr style="border:1px solid #666; margin-top:8px;"/>
 
