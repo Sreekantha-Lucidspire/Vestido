@@ -1589,17 +1589,42 @@ class LaundryOrderTracker(models.Model):
         default=False
     )
 
+    DELIVERED_STAGE_SEQUENCE = 9
+
     def write(self, vals):
-        # 1. Identify which records are changing from False to True
+        # 1. Identify which records are changing wa_sent from False to True
         trackers_to_trigger = self.env['laundry.order.tracker']
         if vals.get('wa_sent') is True:
             trackers_to_trigger = self.filtered(lambda t: not t.wa_sent)
-            
-        # 2. Perform the standard write operation
+
+        # 2. NEW: identify which records are the "Order Delivered" stage
+        #    flipping completed from False to True, so we can push that
+        #    onto the parent order's state after the write succeeds.
+        trackers_delivered_to_sync = self.env['laundry.order.tracker']
+        if vals.get('completed') is True:
+            trackers_delivered_to_sync = self.filtered(
+                lambda t: not t.completed and t.sequence == self.DELIVERED_STAGE_SEQUENCE
+            )
+
+        # 3. Perform the standard write operation
         res = super(LaundryOrderTracker, self).write(vals)
-        
-        # 3. Trigger the WhatsApp method for the filtered records
+
+        # 4. Trigger the WhatsApp method for the filtered records
         for tracker in trackers_to_trigger:
             tracker.order_id.trigger_whatsapp_for_tracker(tracker.sequence)
-            
+
+        # 5. NEW: sync the parent order's state to 'delivered' when the
+        #    "Order Delivered" tracker line is checked off directly from
+        #    the Operations Tracker (not via the order form's Deliver
+        #    button, which already does this the other way around).
+        #    Calling order_id.write() directly (not action_delivered())
+        #    avoids re-entering this same write() via _update_tracker.
+        for tracker in trackers_delivered_to_sync:
+            if tracker.order_id and tracker.order_id.state != 'delivered':
+                tracker.order_id.write({'state': 'delivered'})
+                tracker.order_id.message_post(
+                    body="🚚 Order marked as Delivered (via Operations Tracker).",
+                    subtype_xmlid="mail.mt_comment"
+                )
+
         return res
