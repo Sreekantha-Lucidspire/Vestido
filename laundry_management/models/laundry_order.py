@@ -1350,7 +1350,7 @@ class LaundryDashboard(models.TransientModel):
             'type': 'ir.actions.act_window',
             'name': 'Laundry Dashboard',
             'res_model': 'laundry.dashboard',
-            'view_mode': 'kanban,list',
+            'view_mode': 'kanban,list,form,graph,pivot',
             'target': 'current',
         }
 

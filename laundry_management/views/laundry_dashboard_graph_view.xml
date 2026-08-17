@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Graph view for the Laundry Dashboard (laundry.dashboard).
+        Shows Pending / Progress / Done as measures, grouped by product.
+        Add this file to your module's data files list in __manifest__.py.
+    -->
+    <record id="view_laundry_dashboard_graph" model="ir.ui.view">
+        <field name="name">laundry.dashboard.graph</field>
+        <field name="model">laundry.dashboard</field>
+        <field name="arch" type="xml">
+            <graph string="Laundry Dashboard" type="bar" sample="1">
+                <field name="product_id" type="row"/>
+                <field name="service_type_id" type="row"/>
+                <field name="pending" type="measure"/>
+                <field name="progress" type="measure"/>
+                <field name="done" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+</odoo>

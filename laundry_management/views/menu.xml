@@ -1,35 +1,29 @@
 <odoo>
-
     <!-- MAIN MENU -->
     <menuitem id="menu_laundry_root"
               name="Laundry"
+              action="action_laundry_order"
               sequence="10"/>
-
-
     <!-- <menuitem id="menu_laundry_dashboard"
               name="Dashboard"
               parent="menu_laundry_root"
               action="action_laundry_dashboard"
               sequence="1"/> -->
-
     <menuitem id="menu_laundry_dashboard"
           name="Dashboards"
           parent="menu_laundry_root"
           action="action_laundry_dashboard_server"
           sequence="1"/>
-
     <!-- ORDERS -->
     <menuitem id="menu_laundry_orders"
               name="Orders"
               parent="menu_laundry_root"
               action="action_laundry_order"/>
-
     <!-- PRODUCTS -->
     <menuitem id="menu_laundry_products"
               name="Products"
               parent="menu_laundry_root"
               action="action_laundry_product"/>
-
     <!-- PRICING -->
     
     <menuitem id="laundry_configuration" name="Configuration" parent="menu_laundry_root">
@@ -38,6 +32,4 @@
       <menuitem id="menu_laundry_service_type" name="Service Types" action="action_laundry_service_type"/>
       <menuitem id="menu_laundry_tags" name="Tags" action="action_laundry_tag" groups="base.group_no_one"/>
     </menuitem>
-
-
 </odoo>
