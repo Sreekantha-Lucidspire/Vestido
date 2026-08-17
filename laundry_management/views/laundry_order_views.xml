@@ -396,10 +396,34 @@
         </field>
     </record>
 
+    <record id="view_laundry_order_search" model="ir.ui.view">
+        <field name="name">laundry.order.search</field>
+        <field name="model">laundry.order</field>
+        <field name="arch" type="xml">
+            <search string="Search Laundry Orders">
+                <field name="name" string="Order"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="invoice_id" string="Invoice"/>
+                <field name="phone" string="Phone"/>
+                <field name="email" string="Email"/>
+                <field name="state"/>
+                <filter string="Draft" name="filter_draft" domain="[('state','=','draft')]"/>
+                <filter string="Received" name="filter_received" domain="[('state','=','received')]"/>
+                <filter string="Washing" name="filter_washing" domain="[('state','=','washing')]"/>
+                <filter string="Ironing" name="filter_ironing" domain="[('state','=','ironing')]"/>
+                <filter string="Ready" name="filter_ready" domain="[('state','=','ready')]"/>
+                <filter string="Delivered" name="filter_delivered" domain="[('state','=','delivered')]"/>
+                <filter string="Invoiced" name="filter_invoiced" domain="[('invoice_id','!=',False)]"/>
+                <filter string="Not Invoiced" name="filter_not_invoiced" domain="[('invoice_id','=',False)]"/>
+            </search>
+        </field>
+    </record>
+
     <record id="action_laundry_order" model="ir.actions.act_window">
         <field name="name">Laundry Orders</field>
         <field name="res_model">laundry.order</field>
         <field name="view_mode">kanban,list,form,calendar,activity</field>
+        <field name="search_view_id" ref="view_laundry_order_search"/>
     </record>
     <record id="view_laundry_order_tracker_list" model="ir.ui.view">
         <field name="name">laundry.order.tracker.list</field>
