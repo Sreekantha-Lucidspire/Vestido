@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ========================================
+         MONTHLY ANALYTICS - MAIN REPORT
+         ======================================== -->
+
+    <!-- LIST VIEW: Tabular format showing month-by-month data -->
+    <record id="view_laundry_monthly_analytics_list" model="ir.ui.view">
+        <field name="name">laundry.monthly.analytics.list</field>
+        <field name="model">laundry.monthly.analytics</field>
+        <field name="arch" type="xml">
+            <list create="0" delete="0" edit="0">
+                <field name="year_month" string="Month"/>
+                <field name="order_count" sum="Total Orders"/>
+                <field name="delivered_count" sum="Delivered"/>
+                <field name="invoiced_amount" sum="Revenue (Invoiced)"/>
+                <field name="total_amount" sum="Total Amount"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- PIVOT VIEW: Cross-tabulation for deeper analysis -->
+    <record id="view_laundry_monthly_analytics_pivot" model="ir.ui.view">
+        <field name="name">laundry.monthly.analytics.pivot</field>
+        <field name="model">laundry.monthly.analytics</field>
+        <field name="arch" type="xml">
+            <pivot string="Monthly Analytics">
+                <field name="year" type="row"/>
+                <field name="month_name" type="row"/>
+                <field name="order_count" type="measure"/>
+                <field name="delivered_count" type="measure"/>
+                <field name="invoiced_amount" type="measure"/>
+                <field name="total_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- GRAPH VIEW: Line chart showing revenue trend -->
+    <record id="view_laundry_monthly_analytics_graph" model="ir.ui.view">
+        <field name="name">laundry.monthly.analytics.graph</field>
+        <field name="model">laundry.monthly.analytics</field>
+        <field name="arch" type="xml">
+            <graph string="Revenue Trend" type="line" stacked="0">
+                <field name="year_month"/>
+                <field name="total_amount" type="measure"/>
+                <field name="order_count" type="measure"/>
+                <field name="delivered_count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- ACTION: Generate Monthly Analytics -->
+    <record id="action_laundry_monthly_analytics" model="ir.actions.server">
+        <field name="name">Monthly Revenue Report</field>
+        <field name="model_id" ref="model_laundry_monthly_analytics"/>
+        <field name="state">code</field>
+        <field name="code">
+action = env['laundry.monthly.analytics'].action_generate_monthly_analytics()
+        </field>
+    </record>
+
+    <!-- MENU: Add to Dashboards menu -->
+    <menuitem
+        id="menu_laundry_monthly_analytics"
+        name="Monthly Revenue"
+        parent="menu_laundry_dashboard"
+        action="action_laundry_monthly_analytics"
+        sequence="20"/>
+
+
+    <!-- ========================================
+         PRODUCT-WISE MONTHLY ANALYTICS
+         ======================================== -->
+
+    <!-- LIST VIEW: Product breakdown per month -->
+    <record id="view_laundry_monthly_product_analytics_list" model="ir.ui.view">
+        <field name="name">laundry.monthly.product.analytics.list</field>
+        <field name="model">laundry.monthly.product.analytics</field>
+        <field name="arch" type="xml">
+            <list create="0" delete="0" edit="0">
+                <field name="year"/>
+                <field name="month"/>
+                <field name="product_id"/>
+                <field name="service_type_id"/>
+                <field name="order_count" sum="Orders"/>
+                <field name="quantity" sum="Qty/Weight"/>
+                <field name="revenue" sum="Revenue"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- PIVOT VIEW: Product-wise analysis (most important view) -->
+    <record id="view_laundry_monthly_product_analytics_pivot" model="ir.ui.view">
+        <field name="name">laundry.monthly.product.analytics.pivot</field>
+        <field name="model">laundry.monthly.product.analytics</field>
+        <field name="arch" type="xml">
+            <pivot string="Product Revenue by Month">
+                <field name="year" type="row"/>
+                <field name="month" type="row"/>
+                <field name="product_id" type="col"/>
+                <field name="revenue" type="measure"/>
+                <field name="order_count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- GRAPH VIEW: Bar chart showing product revenue -->
+    <record id="view_laundry_monthly_product_analytics_graph" model="ir.ui.view">
+        <field name="name">laundry.monthly.product.analytics.graph</field>
+        <field name="model">laundry.monthly.product.analytics</field>
+        <field name="arch" type="xml">
+            <graph string="Product Revenue Comparison" type="bar">
+                <field name="product_id"/>
+                <field name="revenue" type="measure"/>
+                <field name="order_count" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- ACTION: Generate Product Analytics -->
+    <record id="action_laundry_monthly_product_analytics" model="ir.actions.server">
+        <field name="name">Product Revenue by Month</field>
+        <field name="model_id" ref="model_laundry_monthly_product_analytics"/>
+        <field name="state">code</field>
+        <field name="code">
+action = env['laundry.monthly.product.analytics'].action_generate_product_analytics()
+        </field>
+    </record>
+
+    <!-- MENU: Add to Dashboards menu -->
+    <menuitem
+        id="menu_laundry_monthly_product_analytics"
+        name="Product Revenue Breakdown"
+        parent="menu_laundry_dashboard"
+        action="action_laundry_monthly_product_analytics"
+        sequence="21"/>
+
+</odoo>

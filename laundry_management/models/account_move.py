@@ -46,6 +46,25 @@ class AccountMove(models.Model):
              "remains based on the invoice's real accounting total."
     )
 
+    # =====================================================================
+    # SYNC PAYMENT STATUS -> "Payment Received" TRACKER STAGE (seq 10)
+    # =====================================================================
+    # NOTE: payment_state is itself a stored COMPUTED field, driven by
+    # Odoo's core reconciliation logic. Overriding write() does not
+    # reliably catch changes to it, because the ORM persists recomputed
+    # stored fields through its internal flush/recompute path rather
+    # than a normal write({...}) call. Wrapping the compute method
+    # itself is the reliable hook: this runs the instant payment_state
+    # is actually assigned, no matter how it's later persisted.
+    PAYMENT_TRACKER_SEQUENCE = 10  # "Payment Received" stage in laundry.order.tracker
+
+    def _compute_payment_state(self):
+        res = super()._compute_payment_state()
+        for move in self:
+            if move.payment_state in ('paid', 'in_payment') and move.laundry_order_id:
+                move.laundry_order_id._update_tracker(self.PAYMENT_TRACKER_SEQUENCE)
+        return res
+
     @api.depends('amount_untaxed', 'invoice_discount')
     def _compute_gst_display(self):
         """

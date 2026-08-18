@@ -94,6 +94,34 @@ class LaundryOrder(models.Model):
     has_wash = fields.Boolean(compute='_compute_service_flags')
     has_iron = fields.Boolean(compute='_compute_service_flags')
 
+    # ---- Kanban stage tracking (11 granular stages) ----
+    # Lets the Kanban dashboard group orders by every individual
+    # Operations Tracker stage (1-11) instead of just the coarse
+    # 'state' selection (draft/received/washing/ironing/ready/delivered).
+    # current_stage is derived from tracker_ids: it's the sequence
+    # number of the first tracker step that is NOT yet completed. Once
+    # every stage is completed, it settles at '11' (Feedback Requested).
+    CURRENT_STAGE_SELECTION = [
+        ('1', '1. Enquiry Received'),
+        ('2', '2. Staff Assigned'),
+        ('3', '3. Picked Up'),
+        ('4', '4. At Studio'),
+        ('5', '5. Verified & Quoted'),
+        ('6', '6. In Progress'),
+        ('7', '7. Invoiced'),
+        ('8', '8. Out for Delivery'),
+        ('9', '9. Delivered'),
+        ('10', '10. Paid'),
+        ('11', '11. Feedback'),
+    ]
+
+    current_stage = fields.Selection(
+        CURRENT_STAGE_SELECTION,
+        string="Current Stage",
+        compute='_compute_current_stage',
+        store=True,
+    )
+
     # ---- GST Summary fields (mirror the PDF report labels exactly) ----
     amount_untaxed = fields.Float(
         string="Subtotal",
@@ -507,6 +535,30 @@ class LaundryOrder(models.Model):
             rec.has_wash = has_wash
             rec.has_iron = has_iron
 
+    @api.depends('tracker_ids.completed')
+    def _compute_current_stage(self):
+        """
+        current_stage = sequence of the HIGHEST-numbered tracker stage
+        that has been marked Completed. Stages in this app are often
+        toggled out of order (e.g. staff checks off stage 8 without
+        having checked stage 1 or 5 yet), so "furthest stage reached"
+        is a more accurate signal than "first gap in the sequence".
+        If nothing is completed yet, the order sits at '1'.
+        """
+        for order in self:
+            completed = order.tracker_ids.filtered(lambda t: t.completed).sorted('sequence')
+            order.current_stage = str(completed[-1].sequence) if completed else '1'
+
+    @api.model
+    def _expand_current_stage(self, states, domain, order):
+        """
+        group_expand callback for the Kanban view: forces every stage in
+        CURRENT_STAGE_SELECTION to render as a column, even stages with
+        zero orders currently in them, instead of only showing columns
+        that already contain at least one record.
+        """
+        return [key for key, _ in self._fields['current_stage'].selection]
+
     def _compute_tag_count(self):
         for rec in self:
             rec.tag_count = len(rec.tag_ids)
@@ -562,6 +614,16 @@ class LaundryOrder(models.Model):
                 'stage_datetime': fields.Datetime.now(),
                 'staff_id': self.env.user.id,
             })
+
+        # NEW: once "Payment Received" (tracker sequence 10) is
+        # completed — whether via the automatic account.move payment
+        # sync or a manual toggle on the Operations Tracker — archive
+        # the order. Archived (active=False) records drop out of every
+        # default List/Kanban dashboard automatically, but stay fully
+        # reachable any time via Filters > Archived in the search bar.
+        # Nothing is deleted; this is purely a visibility toggle.
+        if sequence_no == 10 and self.active:
+            self.active = False
 
     @api.model_create_multi
     def create(self, vals_list):

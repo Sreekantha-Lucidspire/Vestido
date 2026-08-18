@@ -327,7 +327,7 @@
         <field name="name">laundry.order.kanban</field>
         <field name="model">laundry.order</field>
         <field name="arch" type="xml">
-            <kanban default_group_by="state">
+            <kanban default_group_by="current_stage">
                 <field name="name"/>
                 <field name="partner_id"/>
                 <field name="order_date"/>
@@ -335,6 +335,7 @@
                 <field name="invoice_date"/>
                 <field name="amount_total"/>
                 <field name="state"/>
+                <field name="current_stage" group_expand="_expand_current_stage"/>
                 <templates>
                     <t t-name="card">
                         <div class="oe_kanban_card p-2">

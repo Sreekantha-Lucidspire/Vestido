@@ -23,6 +23,7 @@
 	    'views/menu.xml',
 	    'views/account_move_view.xml',
 	    'views/laundry_dashboard_graph_view.xml',
+	    'views/laundry_monthly_analytics_views.xml',
 	    'report/account_invoice_laundry_report.xml',
 	    # 'report/account_invoice_report_inherit.xml',
 	],
