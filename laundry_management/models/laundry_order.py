@@ -122,6 +122,24 @@ class LaundryOrder(models.Model):
         store=True,
     )
 
+    # ---- In Progress / Completed radio toggle (Search Panel) ----
+    # Buckets every one of the 11 granular stages into just two groups,
+    # so the Kanban dashboard's search panel can show a simple radio
+    # toggle: "In Progress" (default) vs "Completed" (Paid + Feedback).
+    # This is purely a view-layer convenience on top of current_stage —
+    # no other logic depends on it.
+    COMPLETED_STAGES = {'10', '11'}
+
+    stage_group = fields.Selection([
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+    ], string="Status", compute='_compute_stage_group', store=True)
+
+    @api.depends('current_stage')
+    def _compute_stage_group(self):
+        for order in self:
+            order.stage_group = 'completed' if order.current_stage in self.COMPLETED_STAGES else 'in_progress'
+
     # ---- GST Summary fields (mirror the PDF report labels exactly) ----
     amount_untaxed = fields.Float(
         string="Subtotal",

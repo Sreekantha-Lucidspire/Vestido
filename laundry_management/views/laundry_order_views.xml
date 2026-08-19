@@ -408,6 +408,7 @@
                 <field name="phone" string="Phone"/>
                 <field name="email" string="Email"/>
                 <field name="state"/>
+                <field name="stage_group" string="Status"/>
                 <filter string="Draft" name="filter_draft" domain="[('state','=','draft')]"/>
                 <filter string="Received" name="filter_received" domain="[('state','=','received')]"/>
                 <filter string="Washing" name="filter_washing" domain="[('state','=','washing')]"/>
@@ -416,6 +417,9 @@
                 <filter string="Delivered" name="filter_delivered" domain="[('state','=','delivered')]"/>
                 <filter string="Invoiced" name="filter_invoiced" domain="[('invoice_id','!=',False)]"/>
                 <filter string="Not Invoiced" name="filter_not_invoiced" domain="[('invoice_id','=',False)]"/>
+                <searchpanel>
+                    <field name="stage_group" string="Status" select="one" enable_counters="1"/>
+                </searchpanel>
             </search>
         </field>
     </record>
@@ -425,6 +429,7 @@
         <field name="res_model">laundry.order</field>
         <field name="view_mode">kanban,list,form,calendar,activity</field>
         <field name="search_view_id" ref="view_laundry_order_search"/>
+        <field name="context">{'searchpanel_default_stage_group': 'in_progress', 'active_test': False}</field>
     </record>
     <record id="view_laundry_order_tracker_list" model="ir.ui.view">
         <field name="name">laundry.order.tracker.list</field>
