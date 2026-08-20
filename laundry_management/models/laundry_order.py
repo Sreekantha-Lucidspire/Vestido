@@ -330,7 +330,7 @@ class LaundryOrder(models.Model):
         # entry — confirmed via both Google Pay and PhonePe resolving
         # that VPA to a personal account holder name rather than the
         # business name.
-        upi_id = "pinelabs.STQ4596522@hdfcbank"
+        upi_id = "pinelabs.stq3958132@pineaxis"
         payee_name = "Vestido Fabwash Studio"
         # NOTE: laundry.order has no display_grand_total field (that only
         # exists on account.move). Use this model's own Grand Total
