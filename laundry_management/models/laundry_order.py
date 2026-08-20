@@ -372,16 +372,16 @@ class LaundryOrder(models.Model):
     def action_send_proforma_whatsapp(self):
         """ Renders the layout to PDF and delivers it via Meta APIs """
         self.ensure_one()
-        
+
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
-        
+
         recipient_phone = "+919686570381" # Sandbox test number
-        
+
         # --- Data Preparation ---
         # Qty number from sum of order lines
         total_qty = sum(line.qty for line in self.order_line_ids)
-        
+
         # Condition notes from the tracker remarks (Stage 5)
         tracker = self.tracker_ids.filtered(lambda t: t.sequence == 5)
         # condition_notes = tracker.remarks if tracker and tracker.remarks else "Verified and inspected."
@@ -398,25 +398,25 @@ class LaundryOrder(models.Model):
             f"Upon completion of the order, we will be sharing the final invoice with you for making the payment.\n\n"
             f"— Team Vestido Fabwash Studio"
         )
-        
+
         report_template = 'laundry_management.action_laundry_quotation'
-        
+
         # Generate PDF
         pdf_content, report_format = self.env['ir.actions.report']._render_qweb_pdf(report_template, res_ids=self.id)
         filename = f"Proforma_{self.name.replace('/', '_')}.pdf"
-            
+
         # Upload Media
         upload_url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/media"
         headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
         files = {"file": (filename, pdf_content, "application/pdf")}
         data = {"messaging_product": "whatsapp"}
-        
+
         upload_response = requests.post(upload_url, headers=headers, data=data, files=files, timeout=10)
         upload_result = upload_response.json()
 
         if upload_response.status_code == 200 and "id" in upload_result:
             media_id = upload_result["id"]
-            
+
             # Send Message
             send_url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages"
             send_payload = {
@@ -426,9 +426,9 @@ class LaundryOrder(models.Model):
                 "type": "document",
                 "document": {"id": media_id, "filename": filename, "caption": message_body}
             }
-            
+
             requests.post(send_url, headers={"Authorization": f"Bearer {ACCESS_TOKEN}", "Content-Type": "application/json"}, data=json.dumps(send_payload), timeout=10)
-        
+
         self.whatsapp_sent_datetime = fields.Datetime.now()
         self.whatsapp_sent_by = self.env.user
         self.whatsapp_status = f"✅ Proforma Invoice successfully sent to {recipient_phone}"
@@ -449,17 +449,17 @@ class LaundryOrder(models.Model):
 
     def action_send_out_for_delivery_whatsapp(self):
         self.ensure_one()
-        
+
         # Ensure this token is refreshed and valid
-        ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD" 
+        ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
-        
+
         # Fetch tracker sequence 8
         delivery_tracker = self.tracker_ids.filtered(lambda t: t.sequence == 8)
-        
+
         # Use the name of the staff assigned to this tracker stage
         agent_name = delivery_tracker.staff_id.name if delivery_tracker.staff_id else "Our Delivery Partner"
-        
+
         message_body = (
             f"Hello {self.partner_id.name},\n\n"
             f"Your order is on its way! 🚚\n\n"
@@ -469,7 +469,7 @@ class LaundryOrder(models.Model):
             f"If you need to reach us:\n8296777380\n\n"
             f"— Team Vestido Fabwash Studio"
         )
-        
+
         # API Payload
         send_url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages"
         payload = {
@@ -478,11 +478,11 @@ class LaundryOrder(models.Model):
             "type": "text",
             "text": {"body": message_body}
         }
-        
+
         headers = {"Authorization": f"Bearer {ACCESS_TOKEN}", "Content-Type": "application/json"}
-        
+
         response = requests.post(send_url, headers=headers, data=json.dumps(payload), timeout=10)
-        
+
         if response.status_code == 200:
             self.message_post(body=f"🚚 Out for Delivery WhatsApp sent. Agent: {agent_name}")
         else:
@@ -491,7 +491,7 @@ class LaundryOrder(models.Model):
 
     def trigger_whatsapp_for_tracker(self, sequence):
         self.ensure_one()
-        
+
         # Mapping sequences to their specific action methods
         if sequence == 1:
             self.action_send_enquiry_received_whatsapp()
@@ -499,7 +499,7 @@ class LaundryOrder(models.Model):
             self.action_send_picked_up_whatsapp()
         elif sequence == 5:
             self.action_send_proforma_whatsapp() # Triggers your existing proforma method
-        elif sequence == 6: 
+        elif sequence == 6:
             self.action_send_work_started_whatsapp()
         elif sequence == 8:  # Added: Out for Delivery
             self.action_send_out_for_delivery_whatsapp()
@@ -532,7 +532,7 @@ class LaundryOrder(models.Model):
     @api.depends('amount_total')
     def _compute_grand_total(self):
         for rec in self:
-            rec.grand_total = rec.amount_total 
+            rec.grand_total = rec.amount_total
 
     @api.depends('company_id')
     def _compute_currency_id(self):
@@ -719,7 +719,60 @@ class LaundryOrder(models.Model):
             return {
                 'warning': {
                      'title': "Minimum Weight",
-                     'message': "Minimum recommended weight is 4 KG, you can still proceed."                
+                     'message': "Minimum recommended weight is 4 KG, you can still proceed."
+                }
+            }
+
+    @api.onchange('partner_id')
+    def _onchange_partner_id_active_order_warning(self):
+        """
+        Warns the user the moment a customer is selected on a NEW order if
+        that same customer already has an order that is still active AND
+        not actually paid.
+
+        An order's `active` flag is set to False the moment tracker stage
+        10 (Payment Received) is completed — see _update_tracker(). In the
+        normal flow that already keeps paid orders out of this warning,
+        since search() only returns active=True records by default.
+
+        This version adds a second, independent safety check on top of
+        that: even if an order is somehow still active=True (e.g. the
+        tracker/archive sync didn't fire for some reason), we now also
+        skip it here if its linked invoice's payment_state is already
+        'paid' or 'in_payment'. This makes the warning robust to that
+        edge case without changing the archiving behavior itself.
+
+        Purely a UI heads-up — does not block creating the order or invoice.
+        """
+        if not self.partner_id:
+            return
+
+        domain = [
+            ('partner_id', '=', self.partner_id.id),
+            ('id', '!=', self._origin.id),
+        ]
+        existing_orders = self.env['laundry.order'].search(domain)
+
+        # Belt-and-suspenders: drop any order whose invoice is already
+        # paid/in_payment, even if it slipped through still active=True.
+        existing_orders = existing_orders.filtered(
+            lambda o: not o.invoice_id or o.invoice_id.payment_state not in ('paid', 'in_payment')
+        )
+
+        if existing_orders:
+            lines = []
+            for o in existing_orders:
+                inv = f" (Invoice: {o.invoice_id.name})" if o.invoice_id else ""
+                lines.append(f"• {o.name} — {dict(o._fields['state'].selection).get(o.state)}{inv}")
+
+            return {
+                'warning': {
+                    'title': "Active Order Found for this Customer",
+                    'message': (
+                        f"{self.partner_id.name} already has {len(existing_orders)} "
+                        f"active order(s) with payment pending:\n\n" + "\n".join(lines) +
+                        "\n\nPlease confirm this is intended before creating a new order."
+                    ),
                 }
             }
 
@@ -744,13 +797,13 @@ class LaundryOrder(models.Model):
         # Ensure you use your valid credentials/constants
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
-        
+
         recipient_phone = self.partner_id.phone
         if not recipient_phone:
             raise UserError("Customer phone number is missing.")
-            
+
         # Meta Sandbox Bypass if needed, otherwise clean the number
-        recipient_phone = "+919686570381" 
+        recipient_phone = "+919686570381"
         customer_name = self.partner_id.name or "Valued Customer"
         message_body = (
             f"Hello {customer_name} 👋\n\n"
@@ -758,7 +811,7 @@ class LaundryOrder(models.Model):
             "We have received your laundry enquiry and our team will get back to you shortly.\n\n"
             "Team Vestido Fabwash Studio"
         )
-        
+
         send_url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages"
         headers = {"Authorization": f"Bearer {ACCESS_TOKEN}", "Content-Type": "application/json"}
         payload = {
@@ -769,7 +822,7 @@ class LaundryOrder(models.Model):
         }
 
         response = requests.post(send_url, headers=headers, data=json.dumps(payload), timeout=10)
-        
+
         if response.status_code == 200:
             self.message_post(body="✅ Enquiry acknowledgment sent via WhatsApp.")
         else:
@@ -780,7 +833,7 @@ class LaundryOrder(models.Model):
         self.ensure_one()
         # Fetch the specific tracker record for "Order Picked Up" (Sequence 3)
         tracker = self.tracker_ids.filtered(lambda t: t.sequence == 3)
-        
+
         # Pull data from the form fields
         pickup_date = tracker.stage_datetime.strftime('%d-%b %H:%M') if tracker.stage_datetime else "Not recorded"
         agent_name = tracker.staff_id.name or "Our Pickup Agent"
@@ -812,7 +865,7 @@ class LaundryOrder(models.Model):
         }
 
         response = requests.post(send_url, headers=headers, data=json.dumps(payload), timeout=10)
-        
+
         if response.status_code == 200:
             self.message_post(body="📦 WhatsApp Sent: Picked Up confirmation.")
         else:
@@ -836,7 +889,7 @@ class LaundryOrder(models.Model):
                 f"📦 Order ID: {rec.name}\n"
                 f"💰 Grand Total: ₹ {round(rec.grand_total, 0):,.2f}\n\n"
                 f"Thank you for choosing Vestido Fabwash Studio!"
-            ) 
+            )
 
             send_url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages"
 
@@ -1060,11 +1113,11 @@ class LaundryOrder(models.Model):
             "type": "text",
             "text": {"body": message_body}
         }
-        
+
         headers = {"Authorization": f"Bearer {ACCESS_TOKEN}", "Content-Type": "application/json"}
-        
+
         response = requests.post(send_url, headers=headers, data=json.dumps(payload), timeout=10)
-        
+
         if response.status_code == 200:
             self.message_post(body=f"💰 Payment Received WhatsApp sent for {self.name}")
         else:
@@ -1095,11 +1148,11 @@ class LaundryOrder(models.Model):
             "type": "text",
             "text": {"body": message_body}
         }
-        
+
         headers = {"Authorization": f"Bearer {ACCESS_TOKEN}", "Content-Type": "application/json"}
-        
+
         response = requests.post(send_url, headers=headers, data=json.dumps(payload), timeout=10)
-        
+
         if response.status_code == 200:
             self.message_post(body=f"⭐ Feedback Request WhatsApp sent for {self.name}")
         else:
@@ -1261,7 +1314,7 @@ class LaundryOrderLine(models.Model):
         string="Taxes",
         domain="[('type_tax_use', '=', 'sale')]",
         default=lambda self: self.env['account.tax'].search([
-            ('amount', '=', 18.0), 
+            ('amount', '=', 18.0),
             ('type_tax_use', '=', 'sale'),
             ('company_id', '=', self.env.company.id)
         ], limit=1)
@@ -1336,7 +1389,7 @@ class LaundryOrderLine(models.Model):
                 ('pricing_type', '=', rec.pricing_type)
             ], limit=1)
             base_price = pricing.price if pricing else 0.0
-            
+
             # Clean compound price protection math
             if rec.premium_id:
                 rec.unit_price = base_price * rec.premium_id.multiplier
@@ -1615,7 +1668,7 @@ class LaundryOrderExtraLine(models.Model):
             if not rec.tax_ids:
                 rec.subtotal = rec.quantity * rec.price_unit
                 continue
-            
+
             taxes = rec.tax_ids.compute_all(
                 rec.price_unit,
                 currency=rec.order_id.currency_id,
@@ -1670,6 +1723,7 @@ class LaundryOrderTracker(models.Model):
     )
 
     DELIVERED_STAGE_SEQUENCE = 9
+    PAYMENT_RECEIVED_STAGE_SEQUENCE = 10
 
     def write(self, vals):
         # 1. Identify which records are changing wa_sent from False to True
@@ -1684,6 +1738,17 @@ class LaundryOrderTracker(models.Model):
         if vals.get('completed') is True:
             trackers_delivered_to_sync = self.filtered(
                 lambda t: not t.completed and t.sequence == self.DELIVERED_STAGE_SEQUENCE
+            )
+
+        # 2b. NEW: identify which records are the "Payment Received" stage
+        #     flipping completed from False to True, so we can archive the
+        #     parent order after the write succeeds — mirrors what
+        #     _update_tracker(10) already does when payment is marked via
+        #     the order form button or the account.move payment sync.
+        trackers_payment_to_sync = self.env['laundry.order.tracker']
+        if vals.get('completed') is True:
+            trackers_payment_to_sync = self.filtered(
+                lambda t: not t.completed and t.sequence == self.PAYMENT_RECEIVED_STAGE_SEQUENCE
             )
 
         # 3. Perform the standard write operation
@@ -1706,5 +1771,16 @@ class LaundryOrderTracker(models.Model):
                     body="🚚 Order marked as Delivered (via Operations Tracker).",
                     subtype_xmlid="mail.mt_comment"
                 )
+
+        # 6. NEW: archive the order when "Payment Received" is checked
+        #    directly on the Operations Tracker, so it matches the
+        #    behaviour of _update_tracker(10) (order form button /
+        #    automatic account.move payment sync). Without this, an
+        #    order can show as "10. Paid" on the Kanban but stay
+        #    active=True, incorrectly still triggering the unpaid-order
+        #    warning on new orders for that customer.
+        for tracker in trackers_payment_to_sync:
+            if tracker.order_id and tracker.order_id.active:
+                tracker.order_id.active = False
 
         return res
