@@ -59,7 +59,7 @@ class PaymentQRController(http.Controller):
         # Studio" — a proper business account) instead of the earlier
         # personal-account VPA, which was the root cause of the
         # "Pay Now" deep link failing after PIN entry.
-        upi_id = "pinelabs.STQ4596522@hdfcbank"
+        upi_id = "pinelabs.stq3958132@pineaxis"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(move.display_grand_total, 0):.2f}"
         invoice_date = move.invoice_date.strftime('%d %b %Y') if move.invoice_date else ""
