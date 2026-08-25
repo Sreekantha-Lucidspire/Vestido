@@ -8,6 +8,7 @@ from io import BytesIO
 import hashlib
 import hmac
 from urllib.parse import quote
+import time
 
 class AccountMove(models.Model):
     _inherit = "account.move"
@@ -89,25 +90,31 @@ class AccountMove(models.Model):
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
         self.ensure_one()
-        # Using the Pine Labs merchant VPA (verified as "Vestido Fabwash
-        # Studio" — a proper business account) instead of the earlier
-        # personal-account VPA, which was the root cause of the
-        # "Pay Now" deep link failing after PIN entry.
-        upi_id = "vyapar.175694004198@hdfcbank"
+        # Pine Labs merchant VPA — confirmed MCC 7210 with HDFC/Pine Labs
+        # (laundry/dry-cleaning services), replacing the earlier
+        # unconfirmed vyapar.* VPA/MCC guess.
+        upi_id = "pinelabs.STQ4596522@hdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(self.display_grand_total, 0):.2f}"
 
-        # FIX: URL-encode every UPI parameter (matches the fix applied in
-        # payment_qr_controller.py's pay_page()). payee_name contains
-        # spaces which were previously inserted raw into the upi:// URI;
-        # encoding them keeps this QR consistent with the "Pay Now" link
-        # and avoids any chance of a scanning app misparsing the string.
+        # Unique transaction reference per generation attempt — required
+        # for P2M (merchant) UPI transactions per NPCI spec, and must not
+        # be reused across retries for the same invoice.
+        tr = f"{self.name.replace('/', '')}-{int(time.time())}"
+
+        # All UPI parameters URL-encoded (payee_name contains spaces,
+        # which must not be inserted raw into the upi:// URI). mc/tr
+        # added so this payload matches merchant-transaction spec —
+        # keep payment_qr_controller.py's pay_page() in sync with the
+        # same VPA/mc/tr if/when that file is updated.
         qr_data = (
             "upi://pay"
             f"?pa={quote(upi_id)}"
             f"&pn={quote(payee_name)}"
             f"&am={quote(amount)}"
             f"&cu=INR"
+            f"&mc=7210"
+            f"&tr={quote(tr)}"
             f"&tn={quote('Payment for ' + self.name)}"
         )
 
@@ -187,6 +194,9 @@ class AccountMove(models.Model):
         self.ensure_one()
 
         # 1. SETUP CONFIGURATION
+        # TODO (flagged, not changed): this token is hardcoded in
+        # plaintext. Should be moved to ir.config_parameter and rotated
+        # since it has now been shared outside your own systems.
         ACCESS_TOKEN = "EAAYONoZCXnFsBRhp12GEFTCl4TzJ1wgDNhAE4O5Q1ie4BNMmWwyYMPsrjiRcSdJvYkT2ftqsBHaZCRaWHZCaKNvkZB17mok4jtCzngzudpzHMaatR5I1ZCLTPHG4ZC0hsR9pX9jwDlQfG2wEYBdD5acWcDOcMl4Y7P14KK28vgp7gEPLZBrBZC1hUMkdvrYl3XiHj5K7xHtXQAbvC9l6BlNZAZCkdLmbv5hTI3IuWIPZBTRSh4ZAWIOaT95HULk212ekoHxY1KBZA9f9fUdA7x2qIlczDwITltgZDZD"
         PHONE_NUMBER_ID = "1126838393847539"
 
@@ -207,6 +217,11 @@ class AccountMove(models.Model):
 
         # =========================================================================
         # STEP 6: BYPASS FOR META SANDBOX ALLOWED LIST
+        # TODO (flagged, not changed): this overrides EVERY customer's real
+        # number with one fixed number. Every invoice currently goes to
+        # this number regardless of who the customer is. Remove this line
+        # (or gate it behind a debug/sandbox config flag) before this is
+        # used with real customers.
         # =========================================================================
         recipient_phone = "+919686570381"
 

@@ -8,6 +8,7 @@ import base64
 import qrcode
 from io import BytesIO
 from urllib.parse import quote
+import time
 
 _logger = logging.getLogger(__name__)
 
@@ -323,14 +324,8 @@ class LaundryOrder(models.Model):
     def generate_payment_qr(self):
         """ Generates a base64 string of a QR code for the invoice total """
         self.ensure_one()
-        # Using the Pine Labs merchant VPA (verified as "Vestido Fabwash
-        # Studio" — a proper business account) instead of the earlier
-        # personal-account VPA (vestidofabwash@okhdfcbank), which was
-        # the root cause of the "Pay Now" deep link failing after PIN
-        # entry — confirmed via both Google Pay and PhonePe resolving
-        # that VPA to a personal account holder name rather than the
-        # business name.
-        upi_id = "vyapar.175694004198@hdfcbank"
+        # Pine Labs merchant VPA (confirmed MCC 7210 with HDFC/Pine Labs).
+        upi_id = "pinelabs.STQ4596522@hdfcbank"
         payee_name = "Vestido Fabwash Studio"
         # NOTE: laundry.order has no display_grand_total field (that only
         # exists on account.move). Use this model's own Grand Total
@@ -338,17 +333,18 @@ class LaundryOrder(models.Model):
         # _compute_amounts) instead.
         amount = f"{round(self.amount_total, 0):.2f}"
 
-        # FIX: URL-encode every UPI parameter (matches the fix applied in
-        # payment_qr_controller.py's pay_page()). payee_name contains
-        # spaces which were previously inserted raw into the upi:// URI;
-        # encoding them keeps this QR consistent with the "Pay Now" link
-        # and avoids any chance of a scanning app misparsing the string.
+        # Unique transaction reference per generation attempt — required
+        # for P2M (merchant) UPI transactions per NPCI spec.
+        tr = f"{self.name.replace('/', '')}-{int(time.time())}"
+
         qr_data = (
             "upi://pay"
             f"?pa={quote(upi_id)}"
             f"&pn={quote(payee_name)}"
             f"&am={quote(amount)}"
             f"&cu=INR"
+            f"&mc=7210"
+            f"&tr={quote(tr)}"
             f"&tn={quote('Payment for ' + self.name)}"
         )
 

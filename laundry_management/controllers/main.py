@@ -5,6 +5,7 @@ import os
 import datetime
 import zoneinfo
 from urllib.parse import quote
+import time
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 
@@ -55,34 +56,29 @@ class PaymentQRController(http.Controller):
         if not move:
             return request.not_found()
 
-        # Using the Pine Labs merchant VPA (verified as "Vestido Fabwash
-        # Studio" — a proper business account) instead of the earlier
-        # personal-account VPA, which was the root cause of the
-        # "Pay Now" deep link failing after PIN entry.
-        upi_id = "vyapar.175694004198@hdfcbank"
+        # Pine Labs merchant VPA (confirmed MCC 7210 with HDFC/Pine Labs).
+        upi_id = "pinelabs.STQ4596522@hdfcbank"
         payee_name = "Vestido Fabwash Studio"
         amount = f"{round(move.display_grand_total, 0):.2f}"
         invoice_date = move.invoice_date.strftime('%d %b %Y') if move.invoice_date else ""
 
-        # FIX: every UPI query parameter is now URL-encoded with quote().
-        # Previously payee_name ("Vestido Fabwash Studio") was inserted
-        # with raw, un-encoded spaces into the upi:// URL. When that URL
-        # was embedded in an <a href="..."> and tapped from a mobile
-        # browser, the unencoded spaces produced a malformed intent that
-        # some Android/GPay flows could not resolve cleanly — which is
-        # why tapping "Pay Now" kept bouncing back to the QR-gallery
-        # advisory instead of completing payment, even though manual
-        # UPI-ID entry and direct QR scanning (which never go through
-        # this string) both worked fine.
-        # A "tn" (transaction note) param is also added, which is
-        # optional per the UPI spec but recommended for clarity on the
-        # customer's payment app.
+        # Unique transaction reference per page load — required for
+        # merchant (P2M) UPI transactions per NPCI spec, not reused
+        # across visits/retries to this same pay page.
+        tr = f"{move.name.replace('/', '')}-{int(time.time())}"
+
+        # All UPI parameters URL-encoded — payee_name contains spaces
+        # which must not be inserted raw into the upi:// URI. mc/tr
+        # added to match merchant-transaction spec (same values now
+        # used in account_move.py's generate_payment_qr()).
         upi_url = (
             "upi://pay"
             f"?pa={quote(upi_id)}"
             f"&pn={quote(payee_name)}"
             f"&am={quote(amount)}"
             f"&cu=INR"
+            f"&mc=7210"
+            f"&tr={quote(tr)}"
             f"&tn={quote('Payment for ' + move.name)}"
         )
 
