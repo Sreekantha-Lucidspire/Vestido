@@ -19,6 +19,151 @@ class AccountMove(models.Model):
     is_whatsapp_sent = fields.Boolean(string="WhatsApp Sent", default=False)
 
     # =====================================================================
+    # PHONE NUMBER (for Invoicing list view display)
+    # =====================================================================
+    partner_phone = fields.Char(
+        string="Phone",
+        related='partner_id.phone',
+        store=True,
+        readonly=True
+    )
+
+    # =====================================================================
+    # SERVICE TYPES (grouped with per-service subtotal, for list view display)
+    # =====================================================================
+    service_types_display = fields.Char(
+        string="Service Types",
+        compute="_compute_service_types_display",
+        store=True,
+    )
+
+    @api.depends('invoice_line_ids.service_type_id', 'invoice_line_ids.price_subtotal')
+    def _compute_service_types_display(self):
+        """
+        Groups invoice lines by service_type_id and sums price_subtotal
+        (tax-excluded) per group, formatted as:
+            "Steam Iron: ₹150.00, Dry Cleaning: ₹86.00"
+        Lines with no service_type_id (e.g. section/note lines, or lines
+        from extra charges/discounts that don't carry a service type)
+        are skipped entirely.
+        """
+        for move in self:
+            groups = {}
+            for line in move.invoice_line_ids:
+                if not line.service_type_id:
+                    continue
+                name = line.service_type_id.name
+                groups[name] = groups.get(name, 0.0) + line.price_subtotal
+
+            parts = [f"{name}: ₹{amount:,.2f}" for name, amount in sorted(groups.items())]
+            move.service_types_display = ', '.join(parts)
+
+    # =====================================================================
+    # PER-SERVICE-TYPE AMOUNT COLUMNS (Invoicing list view)
+    # =====================================================================
+    amount_wash_fold = fields.Monetary(
+        string="Wash & Fold", compute="_compute_service_type_amounts",
+        store=True, currency_field='currency_id'
+    )
+    amount_steam_iron = fields.Monetary(
+        string="Steam Iron", compute="_compute_service_type_amounts",
+        store=True, currency_field='currency_id'
+    )
+    amount_wash_iron = fields.Monetary(
+        string="Wash & Iron", compute="_compute_service_type_amounts",
+        store=True, currency_field='currency_id'
+    )
+    amount_dry_cleaning = fields.Monetary(
+        string="Dry Cleaning", compute="_compute_service_type_amounts",
+        store=True, currency_field='currency_id'
+    )
+    amount_add_ons = fields.Monetary(
+        string="Add-Ons", compute="_compute_service_type_amounts",
+        store=True, currency_field='currency_id'
+    )
+    amount_shoe_cleaning = fields.Monetary(
+        string="Shoe Cleaning", compute="_compute_service_type_amounts",
+        store=True, currency_field='currency_id'
+    )
+    amount_roll_pressing = fields.Monetary(
+        string="Roll Pressing", compute="_compute_service_type_amounts",
+        store=True, currency_field='currency_id'
+    )
+
+    # Maps laundry.service.type NAME -> field name on account.move.
+    # If you rename a service type in Configuration > Service Types,
+    # update the key here to match, or this type's amounts will stop
+    # being picked up (they'll just show as 0 for that type going
+    # forward, existing stored values won't retroactively break).
+    _SERVICE_TYPE_FIELD_MAP = {
+        'Wash & Fold': 'amount_wash_fold',
+        'Steam Iron': 'amount_steam_iron',
+        'Wash & Iron': 'amount_wash_iron',
+        'Dry Cleaning': 'amount_dry_cleaning',
+        'Add-Ons': 'amount_add_ons',
+        'Shoe Cleaning': 'amount_shoe_cleaning',
+        'Roll Pressing': 'amount_roll_pressing',
+    }
+
+    @api.depends('invoice_line_ids.service_type_id', 'invoice_line_ids.price_subtotal')
+    def _compute_service_type_amounts(self):
+        field_names = list(self._SERVICE_TYPE_FIELD_MAP.values())
+        for move in self:
+            totals = {fname: 0.0 for fname in field_names}
+            for line in move.invoice_line_ids:
+                if not line.service_type_id:
+                    continue
+                fname = self._SERVICE_TYPE_FIELD_MAP.get(line.service_type_id.name)
+                if fname:
+                    totals[fname] += line.price_subtotal
+            for fname in field_names:
+                setattr(move, fname, totals[fname])
+
+    # =====================================================================
+    # EXTRA CHARGES / DISCOUNT (from linked laundry.order, for list view)
+    # =====================================================================
+    extra_charges_amount = fields.Monetary(
+        string="Extra Charges",
+        compute="_compute_extra_charges_discount",
+        store=True,
+        currency_field='currency_id',
+        help="Sum of 'Other Charges' type extra lines on the linked Laundry Order."
+    )
+    discount_amount_display = fields.Monetary(
+        string="Discount",
+        compute="_compute_extra_charges_discount",
+        store=True,
+        currency_field='currency_id',
+        help="Sum of 'Discount' type extra lines on the linked Laundry Order (shown as a positive number)."
+    )
+
+    @api.depends(
+        'laundry_order_id.extra_line_ids.subtotal',
+        'laundry_order_id.extra_line_ids.product_id.product_type',
+    )
+    def _compute_extra_charges_discount(self):
+        for move in self:
+            order = move.laundry_order_id
+            if not order:
+                move.extra_charges_amount = 0.0
+                move.discount_amount_display = 0.0
+                continue
+
+            charges = sum(
+                order.extra_line_ids.filtered(
+                    lambda l: l.product_id.product_type == 'charge'
+                ).mapped('subtotal')
+            )
+            discount = sum(
+                order.extra_line_ids.filtered(
+                    lambda l: l.product_id.product_type == 'discount'
+                ).mapped('subtotal')
+            )
+
+            move.extra_charges_amount = charges
+            move.discount_amount_display = abs(discount)
+
+    # =====================================================================
     # DISPLAY-ONLY GST CALCULATION
     # =====================================================================
     gst_amount = fields.Monetary(

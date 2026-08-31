@@ -22,6 +22,8 @@
 	    'views/laundry_order_views.xml',
 	    'views/menu.xml',
 	    'views/account_move_view.xml',
+	    'views/account_move_list_view.xml',
+	    'views/service_type_pivot_view.xml',
 	    'views/laundry_dashboard_graph_view.xml',
 	    'views/laundry_monthly_analytics_views.xml',
 	    'report/account_invoice_laundry_report.xml',
