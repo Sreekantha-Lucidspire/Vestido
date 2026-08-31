@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <list position="inside">
                 <field name="partner_phone" string="Phone" optional="show"/>
-                <field name="service_types_display" string="Service Types" optional="show"/>
+                <field name="service_types_display" string="Service Types" optional="hide"/>
                 <field name="amount_wash_fold" widget="monetary" string="Wash &amp; Fold" optional="show"/>
                 <field name="amount_steam_iron" widget="monetary" string="Steam Iron" optional="show"/>
                 <field name="amount_wash_iron" widget="monetary" string="Wash &amp; Iron" optional="show"/>
