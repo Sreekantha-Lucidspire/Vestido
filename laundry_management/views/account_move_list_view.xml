@@ -17,8 +17,24 @@
                 <field name="amount_roll_pressing" widget="monetary" string="Roll Pressing" optional="show"/>
                 <field name="extra_charges_amount" widget="monetary" string="Extra Charges" optional="show"/>
                 <field name="discount_amount_display" widget="monetary" string="Discount" optional="show"/>
+                <field name="cgst_amount" widget="monetary" string="CGST" optional="show"/>
+                <field name="sgst_amount" widget="monetary" string="SGST" optional="show"/>
+                <field name="gst_amount" widget="monetary" string="GST" optional="show"/>
                 <field name="rounding_off" widget="monetary" string="Rounding Off" optional="show"/>
             </list>
+
+            <field name="cgst_amount" position="before">
+                <field name="amount_untaxed_in_currency_signed" position="move"/>
+            </field>
+
+            <field name="rounding_off" position="after">
+                <field name="amount_total_in_currency_signed" position="move"/>
+                <field name="display_grand_total" widget="monetary" string="Grand Total" optional="show"/>
+            </field>
+
+            <field name="amount_total_in_currency_signed" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </field>
         </field>
     </record>
 </odoo>

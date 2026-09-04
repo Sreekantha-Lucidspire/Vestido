@@ -166,14 +166,30 @@ class AccountMove(models.Model):
     # =====================================================================
     # DISPLAY-ONLY GST CALCULATION
     # =====================================================================
+    cgst_amount = fields.Monetary(
+        string="CGST",
+        compute="_compute_gst_display",
+        store=True,
+        currency_field='currency_id',
+        help="Display-only: 9% CGST calculated on (Untaxed Amount - Discount)."
+    )
+
+    sgst_amount = fields.Monetary(
+        string="SGST",
+        compute="_compute_gst_display",
+        store=True,
+        currency_field='currency_id',
+        help="Display-only: 9% SGST calculated on (Untaxed Amount - Discount)."
+    )
+
     gst_amount = fields.Monetary(
         string="GST",
         compute="_compute_gst_display",
         store=True,
         currency_field='currency_id',
-        help="Display-only: 18% calculated on (Untaxed Amount - Discount). "
-             "Not posted to accounting."
+        help="Display-only: total GST = CGST + SGST."
     )
+   
     rounding_off = fields.Monetary(
         string="Rounding Off",
         compute="_compute_gst_display",
@@ -223,11 +239,15 @@ class AccountMove(models.Model):
         """
         for move in self:
             taxable_base = round(max(move.amount_untaxed - move.invoice_discount, 0), 2)
-            gst = round(taxable_base * 0.18, 2)
+            cgst = round(taxable_base * 0.09, 2)
+            sgst = round(taxable_base * 0.09, 2)
+            gst = round(cgst + sgst, 2)
             total_before_rounding = taxable_base + gst
             final_total = round(total_before_rounding, 0)
             rounding_off = round(final_total - total_before_rounding, 2)
 
+            move.cgst_amount = cgst
+            move.sgst_amount = sgst
             move.gst_amount = gst
             move.rounding_off = rounding_off
             move.display_grand_total = final_total

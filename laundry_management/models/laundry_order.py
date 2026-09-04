@@ -141,19 +141,35 @@ class LaundryOrder(models.Model):
         for order in self:
             order.stage_group = 'completed' if order.current_stage in self.COMPLETED_STAGES else 'in_progress'
 
-    # ---- GST Summary fields (mirror the PDF report labels exactly) ----
+     # ---- GST Summary fields ----
     amount_untaxed = fields.Float(
         string="Subtotal",
         compute='_compute_amounts',
         store=True,
-        help="Items + Other Charges - Discount, before GST (matches 'Subtotal' on the invoice)."
+        help="Items + Other Charges - Discount, before GST."
     )
+
+    cgst_amount = fields.Float(
+        string="CGST",
+        compute='_compute_amounts',
+        store=True,
+        help="9% CGST calculated on the Subtotal."
+    )
+
+    sgst_amount = fields.Float(
+        string="SGST",
+        compute='_compute_amounts',
+        store=True,
+        help="9% SGST calculated on the Subtotal."
+    )
+
     amount_tax = fields.Float(
         string="GST",
         compute='_compute_amounts',
         store=True,
-        help="18% GST calculated on the Subtotal."
+        help="Total GST = CGST + SGST (18%)."
     )
+
     rounding_off = fields.Float(
         string="Rounding Off",
         compute='_compute_amounts',
@@ -306,8 +322,11 @@ class LaundryOrder(models.Model):
             # only once, at the very end, on the Grand Total).
             taxable_base = round(items_subtotal + other_charges_total - abs(discount_total), 2)
 
-            # GST (18%) applied on the exact taxable base, kept to 2 decimals
-            gst = round(taxable_base * 0.18, 2)
+   
+            # CGST 9% + SGST 9% = total GST 18% 
+            cgst = round(taxable_base * 0.09, 2)
+            sgst = round(taxable_base * 0.09, 2)
+            gst = round(cgst + sgst, 2)
 
             # Grand Total = Subtotal + GST, then rounded to the nearest rupee
             total_before_rounding = taxable_base + gst
@@ -317,6 +336,8 @@ class LaundryOrder(models.Model):
             rounding_off = round(final_total - total_before_rounding, 2)
 
             order.amount_untaxed = taxable_base   # Subtotal (no GST) — exact, unrounded
+            order.cgst_amount = cgst
+            order.sgst_amount = sgst
             order.amount_tax = gst                # GST
             order.rounding_off = rounding_off     # Rounding Off
             order.amount_total = final_total      # Grand Total
