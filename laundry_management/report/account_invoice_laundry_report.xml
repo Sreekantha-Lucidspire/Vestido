@@ -24,6 +24,21 @@
         Charges", then Discount, Subtotal, GST, Rounding Off and
         finally Grand Total.
 
+        CREDIT / OVERPAYMENT NOTE (NEW):
+          credit_applied = o.amount_total - o.amount_residual
+            > 0  -> a credit note was reconciled against this invoice
+                    (shown as "Credit Applied", deducted from Grand Total)
+            < 0  -> the customer paid more than the invoice amount
+                    (shown as "Advance Paid", deducted the same way,
+                    i.e. it further lowers the displayed Grand Total)
+            = 0  -> normal invoice, nothing extra shown, behaves EXACTLY
+                    as before this change (Grand Total = final_total)
+          balance_due = final_total - credit_applied
+          This row sits between GST and Rounding Off, and Grand Total /
+          "Amount Payable in Words" always reflect balance_due (which
+          equals final_total whenever credit_applied is 0, so normal
+          invoices are visually identical to before).
+
         If the rendered PDF doesn't reflect this after deploying:
           1. grep -r "report_invoice_laundry_bill" across every addon
              folder — a duplicate <template id="report_invoice_laundry_bill">
@@ -506,6 +521,16 @@
                     <t t-set="rounding_off"
                        t-value="round(final_total - total_before_rounding, 2)"/>
 
+                    <!-- credit_applied: positive when a credit note has been
+                         reconciled against this invoice; negative when the
+                         customer has paid more than the invoice amount
+                         (advance/overpayment); zero for a normal invoice. -->
+                    <t t-set="credit_applied"
+                       t-value="round(o.amount_total - o.amount_residual, 2)"/>
+
+                    <t t-set="balance_due"
+                       t-value="round(final_total - credit_applied, 2)"/>
+
                     <table style="width:100%;
                                   font-size:11px;
                                   margin-top:10px;">
@@ -655,6 +680,45 @@
 
                                     </tr>
 
+                                    <!-- Credit Applied / Advance Paid row — ONLY shown
+                                         when this invoice actually has a reconciled
+                                         credit note or an overpayment. For a normal
+                                         invoice (credit_applied == 0) this row is
+                                         skipped entirely and the invoice looks exactly
+                                         as it did before this change. -->
+                                    <t t-if="credit_applied != 0">
+
+                                        <tr>
+
+                                            <td style="text-align:right;
+                                                       padding:1px 0;
+                                                       white-space:nowrap;">
+
+                                                <t t-esc="'Credit Amount' if credit_applied &gt; 0 else 'Advance Paid'"/>
+
+                                            </td>
+
+                                            <td style="width:10px;
+                                                       text-align:center;
+                                                       padding:0 2px;">
+
+                                                :
+
+                                            </td>
+
+                                            <td style="text-align:right;
+                                                       padding:0;
+                                                       color:#006400;
+                                                       white-space:nowrap;">
+
+                                                -<t t-esc="'%.2f' % abs(credit_applied)"/>
+
+                                            </td>
+
+                                        </tr>
+
+                                    </t>
+
                                     <tr>
 
                                         <td style="text-align:right;
@@ -707,7 +771,7 @@
                                                    white-space:nowrap;">
 
                                             <b>
-                                                <t t-esc="'%.2f' % final_total"/>
+                                                <t t-esc="'%.2f' % balance_due"/>
                                             </b>
 
                                         </td>
@@ -730,7 +794,7 @@
 
                         <b>Amount Payable in Words:</b>
 
-                        <t t-esc="o.currency_id.amount_to_text(final_total).replace('And Zero Paise', '').replace(' and Zero Paise', '')"/>
+                        <t t-esc="o.currency_id.amount_to_text(balance_due).replace('And Zero Paise', '').replace(' and Zero Paise', '')"/>
 
                         Only
 
