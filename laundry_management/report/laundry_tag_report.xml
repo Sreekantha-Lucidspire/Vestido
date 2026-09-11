@@ -530,7 +530,7 @@
                                            border-top:1.5px solid #ddd;
                                            font-weight:bold;">
                                 </td>
-
+                                <t t-if="False">
                                 <td style="padding:5px;
                                            text-align:right;
                                            border-top:1.5px solid #ddd;
@@ -539,7 +539,7 @@
                                     <t t-esc="'%.2f' % round(manual_sum_total, 0)"/>
 
                                 </td>
-
+                                </t>
                             </tr>
 
                         </tbody>
