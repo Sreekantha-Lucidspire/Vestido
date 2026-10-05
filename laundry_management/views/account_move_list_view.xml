@@ -14,8 +14,8 @@
                 <field name="amount_dry_cleaning" widget="monetary" string="Dry Cleaning" optional="show"/>
                 <field name="amount_add_ons" widget="monetary" string="Add-Ons" optional="show"/>
                 <field name="amount_shoe_cleaning" widget="monetary" string="Shoe Cleaning" optional="show"/>
-                <field name="amount_roll_pressing" widget="monetary" string="Roll Pressing" optional="show"/>
-                <field name="extra_charges_amount" widget="monetary" string="Extra Charges" optional="show"/>
+                <field name="amount_roll_pressing" widget="monetary" string="Saree Polishing" optional="show"/>
+                <field name="extra_charges_amount" widget="monetary" string="Other Charges" optional="show"/>
                 <field name="discount_amount_display" widget="monetary" string="Discount" optional="show"/>
                 <field name="cgst_amount" widget="monetary" string="CGST 9%" optional="show"/>
                 <field name="sgst_amount" widget="monetary" string="SGST 9%" optional="show"/>
@@ -38,6 +38,13 @@
 
             <field name="amount_untaxed_in_currency_signed" position="attributes">
                 <attribute name="string">Gross Sales</attribute>
+            </field>
+            <field name="name" position="attributes">
+                <attribute name="string">Invoice Number</attribute>
+            </field>
+
+            <field name="invoice_partner_display_name" position="attributes">
+                <attribute name="string">Customer Name</attribute>
             </field>
         </field>
     </record>

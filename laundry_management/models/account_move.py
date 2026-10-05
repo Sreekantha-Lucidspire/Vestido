@@ -18,6 +18,10 @@ class AccountMove(models.Model):
     laundry_order_id = fields.Many2one('laundry.order', 'Laundry Ref', tracking=True)
     is_whatsapp_sent = fields.Boolean(string="WhatsApp Sent", default=False)
 
+    # Header label overrides (used in Excel export, filters and search)
+    name = fields.Char(string="Invoice Number")
+    invoice_partner_display_name = fields.Char(string="Customer Name")
+
     # =====================================================================
     # PHONE NUMBER (for Invoicing list view display)
     # =====================================================================
@@ -86,7 +90,7 @@ class AccountMove(models.Model):
         store=True, currency_field='currency_id'
     )
     amount_roll_pressing = fields.Monetary(
-        string="Roll Pressing", compute="_compute_service_type_amounts",
+        string="Saree Polishing", compute="_compute_service_type_amounts",
         store=True, currency_field='currency_id'
     )
 
@@ -102,7 +106,7 @@ class AccountMove(models.Model):
         'Dry Cleaning': 'amount_dry_cleaning',
         'Add-Ons': 'amount_add_ons',
         'Shoe Cleaning': 'amount_shoe_cleaning',
-        'Roll Pressing': 'amount_roll_pressing',
+        'Saree Polishing': 'amount_roll_pressing',
     }
 
     @api.depends('invoice_line_ids.service_type_id', 'invoice_line_ids.price_subtotal')
@@ -123,7 +127,7 @@ class AccountMove(models.Model):
     # EXTRA CHARGES / DISCOUNT (from linked laundry.order, for list view)
     # =====================================================================
     extra_charges_amount = fields.Monetary(
-        string="Extra Charges",
+        string="Other Charges",
         compute="_compute_extra_charges_discount",
         store=True,
         currency_field='currency_id',
@@ -167,7 +171,7 @@ class AccountMove(models.Model):
     # DISPLAY-ONLY GST CALCULATION
     # =====================================================================
     cgst_amount = fields.Monetary(
-        string="CGST",
+        string="CGST 9%",
         compute="_compute_gst_display",
         store=True,
         currency_field='currency_id',
@@ -175,7 +179,7 @@ class AccountMove(models.Model):
     )
 
     sgst_amount = fields.Monetary(
-        string="SGST",
+        string="SGST 9%",
         compute="_compute_gst_display",
         store=True,
         currency_field='currency_id',
@@ -183,7 +187,7 @@ class AccountMove(models.Model):
     )
 
     gst_amount = fields.Monetary(
-        string="GST",
+        string="GST 18%",
         compute="_compute_gst_display",
         store=True,
         currency_field='currency_id',
