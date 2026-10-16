@@ -685,7 +685,7 @@ class LaundryOrder(models.Model):
         for order in orders:
 
             stages = [
-                (1, "Customer Enquiry Received", False,
+                (1, "Customer Enquiry Received **", False,
                  "Acknowledge receipt; set expectations on response time"),
 
                 (2, "Enquiry Allocated to Field Staff", False,
@@ -697,25 +697,25 @@ class LaundryOrder(models.Model):
                 (4, "Order Received at Studio", False,
                  "Internal checkpoint — no customer comms needed. No WhatsApp message configured"),
 
-                (5, "Order Verification & Proforma Invoice Shared", False,
+                (5, "Order Verification & Proforma Invoice Shared *", False,
                  "Share garment checklist, condition notes, proforma invoice"),
 
                 (6, "Work Approved & Started", False,
                  "Confirm customer approval; share expected completion date"),
 
-                (7, "Work Completed — Invoice Raised", False,
+                (7, "Work Completed — Invoice Raised *", False,
                  "Please generate the invoice and use the 'Send via WhatsApp' feature on the invoice page to complete this order; request delivery slot"),
 
                 (8, "Order Out for Delivery", False,
                  "Share agent name, live tracking link if available"),
 
-                (9, "Order Delivered", False,
+                (9, "Order Delivered *", False,
                  "Confirm delivery; share payment link if pending"),
 
-                (10, "Payment Received", False,
+                (10, "Payment Received *", False,
                  "Acknowledge payment; share receipt"),
 
-                (11, "Feedback Requested", False,
+                (11, "Feedback Requested **", False,
                  "Request Google/WhatsApp review; thank customer"),
             ]
 
