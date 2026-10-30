@@ -178,7 +178,7 @@
                             <field name="order_line_ids">
                                 <list editable="bottom">
                                     <field name="premium_id"/>
-                                    <field name="product_id" />
+                                    <field name="product_id" domain="[('active', '=', True)]" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
                                     <field name="service_type_id"/>
                                     <field name="pricing_type"/>
                                     <field name="qty" sum="Total Qty"/>
@@ -199,7 +199,7 @@
                             
                             <field name="extra_line_ids">
                                 <list editable="bottom">
-                                    <field name="product_id"/>
+                                    <field name="product_id" domain="[('active', '=', True)]" options="{'no_create': True, 'no_create_edit': True, 'no_open': True}"/>
                                     <field name="name"/>
                                     <field name="is_discount_line" column_invisible="1"/>
                                     <field name="discount_mode"
