@@ -5,7 +5,7 @@ class LaundryPricing(models.Model):
     _description = 'Laundry Pricing'
 
     product_id = fields.Many2one('laundry.product', required=True)
-    name = fields.Char(string="Name",compute="_update_name")
+    name = fields.Char(string="Name", compute="_update_name", store=True)
     service_type_id = fields.Many2one('laundry.service.type',string="Service Type",required=True)
 
     pricing_type = fields.Selection([
