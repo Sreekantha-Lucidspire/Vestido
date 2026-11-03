@@ -9,3 +9,4 @@ from . import account_move
 from . import res_partner
 from . import laundry_monthly_analytics
 from . import laundry_whatsapp
+from . import whatsapp_inbound

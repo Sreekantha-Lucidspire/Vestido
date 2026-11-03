@@ -2,6 +2,8 @@
 import logging
 import requests
 
+from markupsafe import Markup    
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
@@ -137,6 +139,65 @@ class LaundryOrderWhatsapp(models.Model):
 
     def _wa_invoice_name(self):
         return self.invoice_id.name if self.invoice_id else 'N/A'
+
+    
+    # ------------------------------------------------------------------
+    # INBOUND: customer replies from WhatsApp          <-- add this comment
+    # ------------------------------------------------------------------
+
+    @api.model
+    def _wa_find_partner(self, wa_phone):
+        last10 = ''.join(c for c in (wa_phone or '') if c.isdigit())[-10:]
+        if len(last10) < 10:
+            return self.env['res.partner']
+        partners = self.env['res.partner'].sudo().search([('phone', '!=', False)])
+        return partners.filtered(
+            lambda p: ''.join(c for c in p.phone if c.isdigit())[-10:] == last10)[:1]
+
+    @api.model
+    def _wa_store_inbound(self, wamid, wa_phone, profile_name, text):
+        partner = self._wa_find_partner(wa_phone)
+        order = self.env['laundry.order']
+        if partner:
+            order = self.sudo().with_context(active_test=False).search(
+                [('partner_id', '=', partner.id)], order='id desc', limit=1)
+        self.env['laundry.whatsapp.inbound'].sudo().create({
+            'wamid': wamid, 'phone': wa_phone, 'body': text,
+            'order_id': order.id or False})
+        if not order:
+            _logger.warning("WhatsApp reply from %s has no matching order", wa_phone)
+            return
+        notify = [order.user_id.partner_id.id] if order.user_id else []
+        order.sudo().message_post(
+            body=Markup("📩 <b>WhatsApp reply</b> from %s (+%s):<br/>%s") % (
+                profile_name or partner.name, wa_phone, text),
+            message_type='comment', subtype_xmlid='mail.mt_comment',
+            author_id=partner.id, partner_ids=notify)
+
+    @api.model
+    def _wa_handle_webhook(self, payload):
+        Inbound = self.env['laundry.whatsapp.inbound'].sudo()
+        for entry in payload.get('entry', []):
+            for change in entry.get('changes', []):
+                value = change.get('value', {})
+                names = {c.get('wa_id'): (c.get('profile') or {}).get('name')
+                         for c in value.get('contacts', [])}
+                for st in value.get('statuses', []):
+                    if st.get('status') == 'failed':
+                        _logger.warning("WhatsApp delivery failed: %s", st)
+                for msg in value.get('messages', []):
+                    wamid = msg.get('id')
+                    if not wamid or Inbound.search_count([('wamid', '=', wamid)]):
+                        continue  # duplicate delivery
+                    mtype = msg.get('type')
+                    if mtype == 'text':
+                        text = (msg.get('text') or {}).get('body', '')
+                    elif mtype == 'button':
+                        text = (msg.get('button') or {}).get('text', '')
+                    else:
+                        text = f"[{mtype} message - open WhatsApp Manager to view]"
+                    self._wa_store_inbound(
+                        wamid, msg.get('from'), names.get(msg.get('from')), text)
 
     # ------------------------------------------------------------------
     # Stage 1 - Enquiry received (template has no variables)
