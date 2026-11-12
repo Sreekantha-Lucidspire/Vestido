@@ -164,37 +164,15 @@ class LaundryOrderWhatsapp(models.Model):
         self.env['laundry.whatsapp.inbound'].sudo().create({
             'wamid': wamid, 'phone': wa_phone, 'body': text,
             'order_id': order.id or False})
-        if not partner:
-            _logger.warning("WhatsApp reply from %s has no matching customer", wa_phone)
+        if not order:
+            _logger.warning("WhatsApp reply from %s has no matching order", wa_phone)
             return
-
-        who = profile_name or partner.name
-
-        # 1) Contact level: silent note, so the whole conversation is on the customer.
-        order_ref = Markup(" (latest order %s)") % order.name if order else Markup("")
-        partner.sudo().message_post(
-            body=Markup("📩 <b>WhatsApp reply</b> from %s (+%s)%s:<br/>%s") % (
-                who, wa_phone, order_ref, text),
-            message_type='comment', subtype_xmlid='mail.mt_note',
-            author_id=partner.id)
-
-        # 2) Order level: reaches the Odoo inbox (chat icon) of the right people.
-        if order:
-            recipients = self._wa_inbox_partners(order)
-            order.sudo().message_post(
-                body=Markup("📩 <b>WhatsApp reply</b> from %s (+%s):<br/>%s") % (
-                    who, wa_phone, text),
-                message_type='comment', subtype_xmlid='mail.mt_comment',
-                author_id=partner.id, partner_ids=recipients.ids)
-
-            # 3) Pop-up on screen with the message text.
-            for p in recipients:
-                self.env['bus.bus']._sendone(p, 'simple_notification', {
-                    'title': "WhatsApp reply from %s" % who,
-                    'message': (text or '')[:200],
-                    'type': 'info',
-                    'sticky': False,
-                })
+        notify = [order.user_id.partner_id.id] if order.user_id else []
+        order.sudo().message_post(
+            body=Markup("📩 <b>WhatsApp reply</b> from %s (+%s):<br/>%s") % (
+                profile_name or partner.name, wa_phone, text),
+            message_type='comment', subtype_xmlid='mail.mt_comment',
+            author_id=partner.id, partner_ids=notify)
 
     @api.model
     def _wa_handle_webhook(self, payload):
