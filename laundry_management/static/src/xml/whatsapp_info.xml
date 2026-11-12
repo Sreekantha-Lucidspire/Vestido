@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+  <t t-name="laundry_management.WhatsappInfo">
+    <div t-if="state.data" class="card p-3 shadow-sm border-0 mx-3 my-2"
+         style="border-left:4px solid #25D366; border-radius:8px;">
+      <div class="d-flex align-items-center mb-2">
+        <i class="fa fa-whatsapp me-2 text-success" style="font-size:20px;"/>
+        <h5 class="mb-0" style="font-weight:600; font-size:15px;">WhatsApp Information</h5>
+      </div>
+      <div class="mb-2">
+        <span class="text-muted d-block small fw-semibold">Status:</span>
+        <span class="text-success fw-bold" t-esc="state.data.status"/>
+      </div>
+      <div class="mb-2">
+        <span class="text-muted d-block small fw-semibold">Sent Time:</span>
+        <span class="font-monospace small" t-esc="state.data.sentTime"/>
+      </div>
+      <div>
+        <span class="text-muted d-block small fw-semibold">Sent By:</span>
+        <span class="text-secondary fw-semibold" t-esc="state.data.sentBy"/>
+      </div>
+    </div>
+  </t>
+
+  <t t-inherit="mail.Chatter" t-inherit-mode="extension">
+    <xpath expr="//Thread" position="before">
+      <WhatsappInfo t-if="props.threadModel === 'laundry.order'" resId="props.threadId"/>
+    </xpath>
+  </t>
+</templates>
