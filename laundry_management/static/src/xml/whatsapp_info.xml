@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
   <t t-name="laundry_management.WhatsappInfo">
-    <div t-if="state.data" class="card p-3 shadow-sm border-0 mx-3 my-2"
+    <div t-if="state.data" class="card p-3 shadow-sm border-0 mx-3 my-2 flex-shrink-0"
          style="border-left:4px solid #25D366; border-radius:8px;">
       <div class="d-flex align-items-center mb-2">
         <i class="fa fa-whatsapp me-2 text-success" style="font-size:20px;"/>
