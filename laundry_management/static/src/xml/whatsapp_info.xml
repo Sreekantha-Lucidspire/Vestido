@@ -23,7 +23,7 @@
   </t>
 
   <t t-inherit="mail.Chatter" t-inherit-mode="extension">
-    <xpath expr="//Thread" position="before">
+    <xpath expr="//div[hasclass('o-mail-Chatter-content')]/t" position="inside">
       <WhatsappInfo t-if="props.threadModel === 'laundry.order'" resId="props.threadId"/>
     </xpath>
   </t>
