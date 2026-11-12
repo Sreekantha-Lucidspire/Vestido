@@ -136,7 +136,31 @@
                             <field name="name" readonly="1"/>
                         </h1>
                     </div>
-
+                    <div class="card p-3 shadow-sm border-0 mb-3"
+                         style="background:#ffffff; border-radius:8px; border-left:4px solid #25D366; max-width:360px;">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fa fa-whatsapp me-2 text-success" style="font-size:20px;"/>
+                            <h5 class="mb-0 text-dark" style="font-weight:600; font-size:15px;">WhatsApp Information</h5>
+                        </div>
+                        <div class="mb-2">
+                            <span class="text-muted d-block small fw-semibold">Status:</span>
+                            <span class="text-success fw-bold d-flex align-items-center gap-1">
+                               <i class="fa fa-check-circle"/> <field name="whatsapp_status" readonly="1" nolabel="1"/>
+                            </span>
+                        </div>
+                        <div class="mb-2">
+                             <span class="text-muted d-block small fw-semibold">Sent Time:</span>
+                             <span class="text-dark font-monospace small">
+                                  <field name="whatsapp_sent_datetime" readonly="1" nolabel="1"/>
+                             </span>
+                        </div>
+                        <div>
+                             <span class="text-muted d-block small fw-semibold">Sent By:</span>
+                             <span class="text-secondary fw-semibold">
+                                  <field name="whatsapp_sent_by" readonly="1" nolabel="1"/>
+                             </span>
+                        </div>
+                    </div>
                     <group>
                         <group>
                             <field name="partner_id"
@@ -247,13 +271,6 @@
                                    <field name="remarks" string="Remarks"/>
                                </list>
                             </field>
-                        </page>
-                        <page string="WhatsApp" name="whatsapp_info">
-                            <group>
-                                <field name="whatsapp_status" readonly="1"/>
-                                <field name="whatsapp_sent_datetime" readonly="1"/>
-                                <field name="whatsapp_sent_by" readonly="1"/>
-                            </group>
                         </page>
                     </notebook>
 
