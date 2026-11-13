@@ -20,6 +20,7 @@
         'views/laundry_product_views.xml',
         'views/laundry_pricing_views.xml',
         'views/laundry_order_views.xml',
+        'views/res_partner_wa_views.xml',
         'views/menu.xml',
         'views/account_move_view.xml',
         'views/account_move_list_view.xml',
