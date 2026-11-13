@@ -3,7 +3,7 @@ import logging
 
 from markupsafe import Markup
 
-from odoo import models, api
+from odoo import models, api, fields
 
 _logger = logging.getLogger(__name__)
 
@@ -54,6 +54,11 @@ class LaundryOrderWhatsappNotify(models.Model):
             return
 
         who = profile_name or partner.name
+
+        partner.sudo().with_context(tracking_disable=True).write({
+            'wa_unread_count': partner.wa_unread_count + 1,
+            'wa_last_inbound': fields.Datetime.now(),
+        })
 
         # 1) Contact page: the full conversation for this customer (silent note).
         order_ref = Markup(" (latest order %s)") % order.name if order else Markup("")

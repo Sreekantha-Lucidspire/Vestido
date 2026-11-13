@@ -11,3 +11,4 @@ from . import laundry_monthly_analytics
 from . import laundry_whatsapp
 from . import whatsapp_inbound
 from . import laundry_whatsapp_notify
+from . import res_partner_wa

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_list_wa" model="ir.ui.view">
+        <field name="name">res.partner.list.wa</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="inside">
+                <field name="wa_unread_count" string="New WhatsApp"
+                       optional="show"
+                       decoration-danger="wa_unread_count &gt; 0"
+                       decoration-bf="wa_unread_count &gt; 0"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_partner_form_wa" model="ir.ui.view">
+        <field name="name">res.partner.form.wa</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_wa_mark_read" type="object"
+                        string="Mark WhatsApp read"
+                        class="btn-secondary"
+                        invisible="wa_unread_count == 0"/>
+            </xpath>
+            <xpath expr="//sheet" position="before">
+                <field name="wa_unread_count" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
