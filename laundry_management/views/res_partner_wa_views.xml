@@ -19,14 +19,14 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//header" position="inside">
-                <button name="action_wa_mark_read" type="object"
-                        string="Mark WhatsApp read"
-                        class="btn-secondary"
-                        invisible="wa_unread_count == 0"/>
-            </xpath>
             <xpath expr="//sheet" position="before">
-                <field name="wa_unread_count" invisible="1"/>
+                <header>
+                    <button name="action_wa_mark_read" type="object"
+                            string="Mark WhatsApp read"
+                            class="btn-secondary"
+                            invisible="wa_unread_count == 0"/>
+                    <field name="wa_unread_count" invisible="1"/>
+                </header>
             </xpath>
         </field>
     </record>
